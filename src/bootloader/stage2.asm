@@ -21,20 +21,27 @@ start:
 	mov si, ok_msg
 	call print
 	
-	call found_file
 	call kernel_load	; Загрузка ядра	
 	
 	call get_memmap
 	;call check_first_boot ; Проверка на первый запуск
 
-	mov si, lba_config		; Грузим конфиг
-	call disk_read			; 
-	mov bx, [lba_config+4]		; 0x1000
-	mov es, [lba_config+6]		; 0x0000
-	mov ah, [es:bx]			; читаем байт по 0x0000:0x1000
+	mov si, config
+	call found_file	
 
+	;mov si, lba_config		; Грузим конфиг
+	;call disk_read			; 
+	;mov bx, [lba_config+4]		; 0x1000
+	;mov es, [lba_config+6]		; 0x0000
+	;mov ah, [es:bx]			; читаем байт по 0x0000:0x1000
+	
 	mov si, get_cfg_msg
 	call print
+
+	xor ax, ax
+	mov es, ax
+	mov bx, 0x1000
+	mov ah, [es:bx]
 
 	cmp ah, 0xFF		; Сигнатура конфига
 	jnz .config_error	; Если сигнатура не найдена
@@ -775,44 +782,50 @@ compare_strings:
 
 files_table:
 	incbin "table.bin"
-
 found_file:
-	mov di, files_table
-	mov si, config
-
+	pusha
+	mov di, files_table 
 .find_loop:
-	xor ax, ax
-	mov al, [di]
-
+	xor ax, ax 
+	mov al, [di] 
+	
 	cmp al, 0
-	jz .file_not_found
+	jz .file_not_found 
+	 
+	call compare_strings 
 	
-	push si
-	mov si, di
-	call print
-	pop si
+	jz .file_found 
 
-	call compare_strings
-	jz .file_found
+	add di, 24 
 	
-	add di, 24
-	jmp .find_loop
+	jmp .find_loop 
+	;jmp .file_not_found 
+.file_found: 
+	mov si, file_found 
+	call print 
+	; Извлекаем данные из таблицы (DI указывает на начало записи) 
+	mov ax, [di+16] ; LBA (откуда) 
+	mov cx, [di+18] ; Сектора (сколько) 
+	mov dx, [di+20] ; Сегмент (куда) 
+	mov bx, [di+22] ; Смещение (куда) ; Заполняем DAP 
 
-	;jmp .file_not_found
+	mov [dap+2], cx ; Кол-во секторов 
+	mov [dap+4], bx ; Смещение 
+	mov [dap+6], dx ; Сегмент ; Заполняем LBA (чистим все 8 байт для надежности) 
+	mov [dap+8], ax ; Записываем младшие 2 байта LBA 
+	mov word [dap+10], 0 ; Обнуляем следующие байты LBA
+	mov dword [dap+12], 0 ; Обнуляем старшие 4 байта LBA 
+	popa
 
-.file_found:
-	mov si, file_found
-	call print	
+	mov si, dap
+	call disk_read 
+	jmp .done 
 
-	jmp .done
-
-.file_not_found:
-	mov si, file_not_found
-	call print
-
-.done:
+.file_not_found: 
+	mov si, file_not_found 
+	call print 
+.done: 
 	ret
-
 ; =========================== Переменные =============================
 
 kernel: db "Kernel.bin",0
