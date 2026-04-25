@@ -1,0 +1,17 @@
+#include "idt.h"
+
+struct InterruptDescriptor32 IDT[256]; // Таблица на 256 прерываний
+
+void idt_load() {
+   struct IDT_pointer idt_ptr;
+   idt_ptr.limit = (uint16_t)(sizeof(struct InterruptDescriptor32) * 256) - 1;
+   idt_ptr.base  = (uint32_t)&IDT;
+
+    asm volatile("lidt (%0)" : : "r"(&idt_ptr));
+}
+
+void idt_set(uint8_t index, struct InterruptDescriptor32 InterruptDescriptor) {
+    IDT[index] = InterruptDescriptor;
+ 
+}
+
