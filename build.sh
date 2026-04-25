@@ -1,5 +1,6 @@
 # Загрузчик
 nasm -f bin src/bootloader/boot.asm -o boot.bin
+nasm -f bin src/bootloader/table.asm -o table.bin
 nasm -f bin src/bootloader/stage2.asm -o stage2.bin
 
 # Драйвера

@@ -15,6 +15,3 @@ dw 8
 dw 1
 dw 0x0000
 dw 0x1000
-
-.init
-times 512 - ($ - .init) db 0

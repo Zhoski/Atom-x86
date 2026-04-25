@@ -1,13 +1,18 @@
 # Загрузчик
 nasm -f bin src/bootloader/boot.asm -o boot.bin
+nasm -f bin src/bootloader/table.asm -o table.bin
 nasm -f bin src/bootloader/stage2.asm -o stage2.bin
 
 # Драйвера
 gcc -m32 -ffreestanding -c src/drivers/vga.c -o vga.o
 
+
 # Ядро
 gcc -m32 -ffreestanding -c src/kernel/kernel.c -o kernel.o
+
+# Склеить все файлы в ядро
 ld -m elf_i386 -T linker.ld kernel.o vga.o -o kernel.elf
+
 objcopy -O binary kernel.elf kernel.bin
 
 dd if=/dev/zero of=cfg_disk.img bs=512 count=2048
