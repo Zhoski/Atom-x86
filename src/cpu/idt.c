@@ -10,7 +10,12 @@ void idt_load() {
     asm volatile("lidt (%0)" : : "r"(&idt_ptr));
 }
 
-void idt_set(uint8_t index, uint16_t sel, uint8_t access,void* handler) {
-    
+void idt_set(uint8_t index, uint16_t sel, uint8_t access, uint32_t handler) {
+    IDT[index].base_low = handler & 0xFFFF;
+    IDT[index].base_hight = (handler >> 16) & 0xFFFF;
+
+    IDT[index].segment = sel;   
+    IDT[index].reserved = 0;       
+    IDT[index].access = access;       
 }
 
