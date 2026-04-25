@@ -2,7 +2,7 @@ bits 16
 org 0x8000
 
 ; ========================= Инициализация ==========================
-;
+
 start:
 	; Установка сегментных регистров
 	mov ax, 0x0000
@@ -20,7 +20,8 @@ start:
 
 	mov si, ok_msg
 	call print
-
+	
+	call found_file
 	call kernel_load	; Загрузка ядра	
 	
 	call get_memmap
@@ -750,6 +751,7 @@ print_ax:
 	ret
 
 compare_strings:
+	pusha
 	xor cx, cx
 
 .next_char:
@@ -762,13 +764,61 @@ compare_strings:
     	jmp .next_char
 
 .not_equal:
+	popa
     	ret
 
 .equal:
+	popa
     	ret
+
+; ================= Драйвер для работы с файлами ==================
+
+files_table:
+	incbin "table.bin"
+
+found_file:
+	mov di, files_table
+	mov si, config
+
+.find_loop:
+	xor ax, ax
+	mov al, [di]
+
+	cmp al, 0
+	jz .file_not_found
+	
+	push si
+	mov si, di
+	call print
+	pop si
+
+	call compare_strings
+	jz .file_found
+	
+	add di, 24
+	jmp .find_loop
+
+	;jmp .file_not_found
+
+.file_found:
+	mov si, file_found
+	call print	
+
+	jmp .done
+
+.file_not_found:
+	mov si, file_not_found
+	call print
+
+.done:
+	ret
 
 ; =========================== Переменные =============================
 
+kernel: db "Kernel.bin",0
+config: db "Config.cfg",0
+file_found: db "File found",13,10,0
+file_not_found: db "File not found",13,10,0
 ; Адреса
 
 ; E820 карта памяти
@@ -874,6 +924,14 @@ lba_kernel:
 	dw 0x0000		; 0x1000:0x0000 64k
 	dw 0x1000		; 
 	dq 10			; Сектор начала
+
+dap:
+	db 0x10
+	db 0x00
+	dw 0
+	dw 0x0000
+	dw 0x0000
+	dq 0
 
 ; ====================== Таблица десрипторов =========================
 gdt_start:
