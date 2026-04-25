@@ -1,0 +1,27 @@
+# Загрузчик
+nasm -f bin src/bootloader/boot.asm -o boot.bin
+nasm -f bin src/bootloader/stage2.asm -o stage2.bin
+
+# Драйвера
+gcc -m32 -ffreestanding -c src/drivers/vga.c -o vga.o
+
+# Ядро
+gcc -m32 -ffreestanding -c src/kernel/kernel.c -o kernel.o
+ld -m elf_i386 -T linker.ld kernel.o vga.o -o kernel.elf
+objcopy -O binary kernel.elf kernel.bin
+
+dd if=/dev/zero of=cfg_disk.img bs=512 count=2048
+dd if=boot.bin of=cfg_disk.img bs=512 seek=0 count=1 conv=notrunc
+dd if=stage2.bin of=cfg_disk.img bs=512 seek=1 count=6 conv=notrunc
+dd if=config.bin of=cfg_disk.img bs=512 seek=8 count=1 conv=notrunc
+dd if=kernel.bin of=cfg_disk.img bs=512 seek=10 conv=notrunc
+
+#qemu-system-x86_64 -hda disk.img -m 16M
+#qemu-system-x86_64 -drive format=raw,file=disk.img -m 16M
+
+rm kernel.bin
+rm boot.bin
+rm stage2.bin
+rm vga.o
+rm kernel.o
+rm kernel.elf
