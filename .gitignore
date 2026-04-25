@@ -1,0 +1,15 @@
+# Бинарные образы и файлы сборки
+*.bin
+*.img
+*.iso
+*.sys
+*.obj
+*.o
+
+# Логи эмуляторов (Bochs/QEMU)
+*.log
+bochsout.txt
+
+# Системные файлы
+.DS_Store
+Thumbs.db
