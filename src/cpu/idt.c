@@ -10,8 +10,7 @@ void idt_load() {
     asm volatile("lidt (%0)" : : "r"(&idt_ptr));
 }
 
-void idt_set(uint8_t index, struct InterruptDescriptor32 InterruptDescriptor) {
-    IDT[index] = InterruptDescriptor;
- 
+void idt_set(uint8_t index, uint16_t sel, uint8_t access,void* handler) {
+    
 }
 
