@@ -1,5 +1,7 @@
 extern keyboard_handler
 
+global isr33
+
 isr33:
     cli
 
@@ -24,4 +26,4 @@ isr33:
     pop ds
     popad
 
-    iretd
+    iret
