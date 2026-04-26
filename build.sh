@@ -16,6 +16,7 @@ gcc -m32 -ffreestanding -c src/kernel/kernel.c -o kernel.o
 # Прерывания
 nasm -f elf32 src/interrupts/isr33.asm -o isr33.o
 
+
 # Склеить все файлы в ядро
 ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o idt.o pic.o isr33.o -o kernel.elf
 

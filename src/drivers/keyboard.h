@@ -10,3 +10,5 @@ const unsigned char ascii_table[128] = {
     '5', '6', '+', '1', '2', '3', '0', '.', 0, 0, 0,  /* 0x4E - 0x58 */
     0, 0 /* Остальные — нули */
 };
+
+uint8_t get_last_scancode();
