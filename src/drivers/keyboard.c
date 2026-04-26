@@ -1,7 +1,7 @@
 #include "vga.h"
 #include "keyboard.h"
 
-uint8_t last_key = 0;
+uint8_t last_scancode = 0;
 
 static inline void outb(uint16_t port, uint8_t data) {
     asm volatile("outb %0, %1" : : "a"(data), "Nd"(port));
@@ -13,8 +13,8 @@ static inline uint8_t inb(uint16_t port) {
     return data;
 }
 
-uint8_t get_key() {
-    return last_key;
+uint8_t get_last_scancode() {
+    return last_scancode;
 }
 
 void keyboard_handler() {
@@ -23,6 +23,7 @@ void keyboard_handler() {
         return;
     }
     uint8_t c = ascii_table[scancode];
+    last_scancode = c;
     if(c != '\n' && c != 0 && c != '\t' && c != '\b') {
         putchar(c);
     } 
