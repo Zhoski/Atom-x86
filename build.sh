@@ -5,6 +5,7 @@ nasm -f bin src/bootloader/stage2.asm -o stage2.bin
 
 # Драйвера
 gcc -m32 -ffreestanding -c src/drivers/vga.c -o vga.o
+gcc -m32 -ffreestanding -c src/drivers/keyboard.c -o keyboard.o
 
 # Процессор
 gcc -m32 -ffreestanding -c src/cpu/idt.c -o idt.o
@@ -12,8 +13,11 @@ gcc -m32 -ffreestanding -c src/cpu/PIC.c -o pic.o
 # Ядро
 gcc -m32 -ffreestanding -c src/kernel/kernel.c -o kernel.o
 
+# Прерывания
+nasm -f elf32 src/interrupts/isr33.asm -o isr33.o
+
 # Склеить все файлы в ядро
-ld -m elf_i386 -T linker.ld kernel.o vga.o idt.o pic.o -o kernel.elf
+ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o idt.o pic.o isr33.o -o kernel.elf
 
 objcopy -O binary kernel.elf kernel.bin
 
