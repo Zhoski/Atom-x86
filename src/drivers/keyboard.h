@@ -11,4 +11,4 @@ const unsigned char ascii_table[128] = {
     0, 0 /* Остальные — нули */
 };
 
-uint8_t get_last_scancode();
+uint8_t keyboard_buf_get_las_sym();

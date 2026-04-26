@@ -1,7 +1,11 @@
 #include "vga.h"
 #include "keyboard.h"
 
-uint8_t last_scancode = 0;
+#define KEYBOARD_BUF_SIZE   32
+
+uint8_t _keyboard_buf[KEYBOARD_BUF_SIZE] = {0};
+uint8_t _keyboard_buf_insert = 1;
+uint8_t _keyboard_buf_read   = 0;
 
 static inline void outb(uint16_t port, uint8_t data) {
     asm volatile("outb %0, %1" : : "a"(data), "Nd"(port));
@@ -13,8 +17,20 @@ static inline uint8_t inb(uint16_t port) {
     return data;
 }
 
-uint8_t get_last_scancode() {
-    return last_scancode;
+void keyboard_buf_insert(uint8_t c) {
+    if(_keyboard_buf_insert < KEYBOARD_BUF_SIZE) {
+        _keyboard_buf[_keyboard_buf_insert++] = c;
+        _keyboard_buf_read = _keyboard_buf_insert - 1;
+    }else {
+        _keyboard_buf_insert = 0;
+        _keyboard_buf_read = 0;
+        _keyboard_buf[_keyboard_buf_insert++] = c;
+    }
+} 
+
+uint8_t keyboard_buf_get_las_sym() {
+    uint8_t temp = _keyboard_buf[_keyboard_buf_read];
+    return temp;
 }
 
 void keyboard_handler() {
@@ -23,7 +39,7 @@ void keyboard_handler() {
         return;
     }
     uint8_t c = ascii_table[scancode];
-    last_scancode = c;
+    keyboard_buf_insert(c);
     if(c != '\n' && c != 0 && c != '\t' && c != '\b') {
         putchar(c);
     } 
