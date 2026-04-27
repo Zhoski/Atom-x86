@@ -12,13 +12,15 @@ gcc -m32 -ffreestanding -c src/cpu/idt.c -o idt.o
 gcc -m32 -ffreestanding -c src/cpu/PIC.c -o pic.o
 # Ядро
 gcc -m32 -ffreestanding -c src/kernel/kernel.c -o kernel.o
+# Сервисы ядра
+gcc -m32 -ffreestanding -c src/kernel/services/Memory/memory_managment.c -o memory_managment.o
 
 # Прерывания
 nasm -f elf32 src/interrupts/isr33.asm -o isr33.o
 
 
 # Склеить все файлы в ядро
-ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o idt.o pic.o isr33.o -o kernel.elf
+ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o idt.o pic.o isr33.o memory_managment.o -o kernel.elf
 
 objcopy -O binary kernel.elf kernel.bin
 
