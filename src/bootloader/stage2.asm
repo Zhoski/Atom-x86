@@ -27,7 +27,10 @@ start:
     ;call check_first_boot ; Проверка на первый запуск
 
     mov si, config
-    call found_file 
+    call found_file
+
+    mov si, shell
+    call found_file
 
     mov si, get_cfg_msg
     call print
@@ -831,6 +834,7 @@ found_file:
 
 kernel: db "Kernel.bin",0
 config: db "Config.cfg",0
+shell:  db "Shell.bin", 0
 file_found: db "File found",13,10,0
 file_not_found: db "File not found",13,10,0
 ; Адреса
