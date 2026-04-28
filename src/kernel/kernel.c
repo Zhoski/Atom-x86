@@ -4,13 +4,17 @@
 #include "../cpu/PIC.h"
 #include "services/Memory/memory_map.h"
 #include "services/Memory/memory.h"
+#include "services/syscall/syscall.h"
 #include <stdint.h>
 
 extern void isr33();
+extern void isr80();
 
 void kmain() {
     idt_load();                     // Загрузить IDT
-    idt_set(33, 0x08, 0x8E, (uint32_t)isr33);                                   
+    idt_set(0x21, 0x08, 0x8E, (uint32_t)isr33);  
+    idt_set(0x80, 0x08, 0x8E, (uint32_t)isr80);
+
     pic_remap();                    // Установка PIC
     pic_irq_mask(0x21, 0b11111101); // Включить только IRQ1
     asm("sti" :: );                 // Включить перывания
@@ -19,7 +23,7 @@ void kmain() {
     
     vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
     kwrite_string("Hello, World!"); 
-
+    
     //uint8_t* config = (uint8_t*)0x1000;
     //putchar(config[2]);
     uint32_t adres = malloc_page(); 
