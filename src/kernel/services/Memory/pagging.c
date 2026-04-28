@@ -5,19 +5,12 @@
 #define FREE    0
 
 // Страницы
-const uint32_t page_base_adres = 0x100000;   // Начиная отсюда 
+const uint32_t page_base_adres = 0x200000;   // Начиная отсюда 
 const uint32_t page_block_size = 0x1000;     // 4 Kib
 const uint32_t page_block_count = 0x1000;    // 4096 блоков 
 uint8_t page_mem_bit_mask[512];  
-uint8_t op_on(uint8_t byte, uint8_t index) {
-    return byte | (1 << index);
-}
 
-uint8_t op_off(uint8_t byte, uint8_t index) {
-    return byte & ~(1 << index);
-}
-
-uint8_t(*bit_op[2])(uint8_t, uint8_t) = { op_off, op_on };
+uint8_t (*bit_op[2])(uint8_t, uint8_t) = { op_off, op_on };
 
 void set_mem_bit_mask(uint32_t byte, uint8_t bit, uint8_t(operation)(uint8_t, uint8_t)) {
     // byte номер байта в маске битов
