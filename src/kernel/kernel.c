@@ -1,7 +1,9 @@
 #include "../drivers/vga.h"
+#include "../drivers/keyboard.h"
 #include "../cpu/idt.h"
 #include "../cpu/PIC.h"
 #include "services/Memory/memory_map.h"
+#include "services/Memory/memory.h"
 #include <stdint.h>
 
 extern void isr33();
@@ -20,6 +22,10 @@ void kmain() {
 
     //uint8_t* config = (uint8_t*)0x1000;
     //putchar(config[2]);
+   
+    // Скопировать терминал из 0x2000 в 0x100000
+    memcpy(0x2000, 0x100000, 512);
+    asm volatile ("ljmp $0x08, $0x100000");
 
 	for(;;) {
         asm("hlt"::);
