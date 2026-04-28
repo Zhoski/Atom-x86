@@ -22,10 +22,16 @@ void kmain() {
 
     //uint8_t* config = (uint8_t*)0x1000;
     //putchar(config[2]);
-   
+    uint32_t adres = malloc_page(); 
     // Скопировать терминал из 0x2000 в 0x100000
-    memcpy(0x2000, 0x100000, 512);
-    asm volatile ("ljmp $0x08, $0x100000");
+    memcpy(0x2000, adres, 512);
+    asm volatile (
+        "pushl $0x08 \n\t"   
+        "pushl %0   \n\t"    
+        "lretl"                    
+        : 
+        : "r" (adres)       
+    );
 
 	for(;;) {
         asm("hlt"::);
