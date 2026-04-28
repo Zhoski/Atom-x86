@@ -39,3 +39,16 @@ void kwrite_string(const char* data) {
 		putchar(data[i]);
 	}
 }
+
+void kwrite_int(int x) {
+    char buffer[12];
+    int i = 0;
+    while (x > 0) {
+        buffer[i++] = (x % 10) + '0';
+        x /= 10;
+    }
+
+    while (i > 0) {
+        putchar(buffer[--i]);
+    }
+}
