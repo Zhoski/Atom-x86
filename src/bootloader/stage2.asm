@@ -29,14 +29,14 @@ start:
     mov si, config
     call found_file 
 
+    mov si, get_cfg_msg
+    call print
+
     ;mov si, lba_config     ; Грузим конфиг
     ;call disk_read         ; 
     ;mov bx, [lba_config+4]     ; 0x1000
     ;mov es, [lba_config+6]     ; 0x0000
-    ;mov ah, [es:bx]            ; читаем байт по 0x0000:0x1000
-    
-    mov si, get_cfg_msg
-    call print
+    ;mov ah, [es:bx]            ; читаем байт по 0x0000:0x1000 
 
     xor ax, ax
     mov es, ax
@@ -47,7 +47,7 @@ start:
     jnz .config_error   ; Если сигнатура не найдена
     
     mov si, ok_msg
-    call print
+    call print 
 
     add bx, 1
     
@@ -62,7 +62,7 @@ start:
 .config_error:
 
     mov si, fail_msg
-    call print
+    call print 
 
     mov si, cfg_error
     call print
@@ -81,28 +81,28 @@ base_boot:
     call print  
 
     ; bx установить на 0x1001
-        mov bx, [lba_config+4]      ; 0x1000
+    mov bx, [lba_config+4]      ; 0x1000
     add bx, 2           ; 0x1002
-        mov si, user_name       ; Куда грузить данные 
+    mov si, user_name       ; Куда грузить данные 
 
     ; Сегменты в 0, cx обнулить
-        xor cx, cx          
-        mov es, [lba_config+6]  ; 0x0000
+    xor cx, cx          
+    mov es, [lba_config+6]  ; 0x0000
 
     ; Запись в si с 0x0000:0x1002   
 .loop:
     ; Копируем имя пользователя из кoнфига 32 символа
     cmp cx, 32          
-        je .exit
+    je .exit
     
-        mov al, [es:bx] ; в al текущий символ bx
-        mov [si], al    ; в буфер имени al
+    mov al, [es:bx] ; в al текущий символ bx
+    mov [si], al    ; в буфер имени al
     
-        ; Инкрименты
-        inc bx            
-        inc si             
-        inc cx              
-        jmp .loop
+    ; Инкрименты
+    inc bx            
+    inc si             
+    inc cx              
+    jmp .loop
 
 .exit: 
     mov si, user_name
@@ -167,18 +167,18 @@ set_user_name:
 .name_backspace:
     cmp di, 0
     je .loop
-        dec di
-        dec cx
+    dec di
+    dec cx
     mov al, 0
     mov [di], al
-        mov ah, 0x0E
-        mov al, 0x08
-        int 0x10
-        mov al, ' '
-        int 0x10
+    mov ah, 0x0E
     mov al, 0x08
     int 0x10
-        jmp .loop
+    mov al, ' '
+    int 0x10
+    mov al, 0x08
+    int 0x10
+    jmp .loop
 
 .done_read:
     mov si, new_string
@@ -249,18 +249,18 @@ set_password:
 .pass_backspace:
     cmp si, 0
     je .pass_loop
-        dec si
-        dec cx
+    dec si
+    dec cx
     mov al, 0
     mov [si], al
-        mov ah, 0x0E
-        mov al, 0x08
-        int 0x10
-        mov al, ' '
-        int 0x10
+    mov ah, 0x0E
     mov al, 0x08
     int 0x10
-        jmp .pass_loop
+    mov al, ' '
+    int 0x10
+    mov al, 0x08
+    int 0x10
+    jmp .pass_loop
     
 
 .pass_write_cfg:
@@ -340,18 +340,18 @@ terminal:
 .do_backspace:
     cmp di, 0
     je .loop
-        dec di
-        dec cx
+    dec di
+    dec cx
     mov al, 0
     mov [di], al
-        mov ah, 0x0E
-        mov al, 0x08
-        int 0x10
-        mov al, ' '
-        int 0x10
+    mov ah, 0x0E
     mov al, 0x08
     int 0x10
-        jmp .loop
+    mov al, ' '
+    int 0x10
+    mov al, 0x08
+    int 0x10
+    jmp .loop
 
 .done_read:
     jmp .execute
@@ -395,13 +395,13 @@ terminal:
 .reset_buffer:
     ; Буффер в нулину
     mov di, c_buffer ; Сюда буффер   
-        xor al, al       ; al в 0
-        mov cx, 64       ; Сколько байтов обнуляить 
-        cld              ; CF в 0
-        rep stosb           
-        mov di, c_buffer 
+    xor al, al       ; al в 0
+    mov cx, 64       ; Сколько байтов обнуляить 
+    cld              ; CF в 0
+    rep stosb           
+    mov di, c_buffer 
 
-        jmp terminal     ; Обратно в терминал
+    jmp terminal     ; Обратно в терминал
 
 
 ; Command
@@ -520,7 +520,7 @@ terminal:
     
     add bx, 24
     inc dx
-        jmp .mem_loop
+    jmp .mem_loop
 
 .do_start:
     jmp kernel_launch
@@ -540,21 +540,21 @@ get_memmap:
     xor ebx, ebx            ; ebx обнулить
 
 .next_entry:
-        mov eax, 0xE820
-        mov edx, 0x534D4150
-        mov ecx, 24        
-        int 0x15
+    mov eax, 0xE820
+    mov edx, 0x534D4150
+    mov ecx, 24        
+    int 0x15
     
-        jc .done       
-        add di, 24          
+    jc .done       
+    add di, 24          
         
     mov cx, [memmap_block_count]
     inc cx
     mov [memmap_block_count], cx
 
-        test ebx, ebx       
-        jz .done          
-        jmp .next_entry     
+    test ebx, ebx       
+    jz .done          
+    jmp .next_entry     
 
 .done:  
     ; Уменьшить на 1 потому что какой то баг выдает на 1 сектор больше
@@ -709,28 +709,29 @@ print:
     popa
     ret
 
+
 print_hex_32:
-        pushad
-        mov edx, eax        ; Копируем число в EDX, его портить не будем
-        mov cx, 8           ; 8 цифр
+    pushad
+    mov edx, eax        ; Копируем число в EDX, его портить не будем
+    mov cx, 8           ; 8 цифр
 .loop:
-        rol edx, 4          ; Вращаем EDX!
-        mov al, dl          ; Берем младшие 4 бита из EDX (после вращения они там)
-        and al, 0x0F        ; Маска
+    rol edx, 4          ; Вращаем EDX!
+    mov al, dl          ; Берем младшие 4 бита из EDX (после вращения они там)
+    and al, 0x0F        ; Маска
     
-        cmp al, 10
-        jl .is_digit
-        add al, 7
+    cmp al, 10
+    jl .is_digit
+    add al, 7
 .is_digit:
-        add al, '0'
+    add al, '0'
     
-        mov ah, 0x0E        ; Теперь AX можно портить
-        mov bx, 0x0007      ; Режим: страница 0, цвет (для графики)
-        int 0x10
+    mov ah, 0x0E        ; Теперь AX можно портить
+    mov bx, 0x0007      ; Режим: страница 0, цвет (для графики)
+    int 0x10
     
-        loop .loop
-        popad
-        ret
+    loop .loop
+    popad
+    ret
 
 print_ax:
     pusha
@@ -762,21 +763,21 @@ compare_strings:
     xor cx, cx
 
 .next_char:
-        lodsb
-        cmp al, [di]
-        jne .not_equal
-        cmp al, 0
-        je .equal
-        inc di
-        jmp .next_char
+    lodsb
+    cmp al, [di]
+    jne .not_equal
+    cmp al, 0
+    je .equal
+    inc di
+    jmp .next_char
 
 .not_equal:
     popa
-        ret
+    ret
 
 .equal:
     popa
-        ret
+    ret
 
 ; ================= Драйвер для работы с файлами ==================
 
@@ -875,7 +876,7 @@ sys_boot_user: db "> Enter your username (max 32 symbol)",13,10,0
 sys_boot_pass: db "> Enter your password (max 32 symbol)",13,10,0
 
 ; Статусы
-ok_msg:   db "[ OK ]",13,10,0
+ok_msg:   db "[  OK  ]",13,10,0
 fail_msg: db "[ FAIL ]",13,10,0
 
 kernel_load_msg: db "Load kernel from hard disk...",13,10,0
