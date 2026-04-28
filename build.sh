@@ -15,13 +15,16 @@ gcc -m32 -ffreestanding -c src/kernel/kernel.c -o kernel.o
 # Сервисы ядра
 gcc -m32 -ffreestanding -c src/kernel/services/Memory/pagging.c -o pagging.o
 gcc -m32 -ffreestanding -c src/kernel/services/Memory/stack.c -o stack.o
-
+gcc -m32 -ffreestanding -c src/kernel/services/Memory/memory.c -o memory.o
 # Прерывания
 nasm -f elf32 src/interrupts/isr33.asm -o isr33.o
 
+# Программы
+nasm -f bin program/shell.asm -o shell.bin
+
 
 # Склеить все файлы в ядро
-ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o idt.o pic.o isr33.o pagging.o stack.o -o kernel.elf
+ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o idt.o pic.o isr33.o pagging.o stack.o memory.o -o kernel.elf
 
 objcopy -O binary kernel.elf kernel.bin
 
@@ -30,6 +33,7 @@ dd if=boot.bin of=disk.img bs=512 seek=0 count=1 conv=notrunc
 dd if=stage2.bin of=disk.img bs=512 seek=1 count=6 conv=notrunc
 dd if=config.bin of=disk.img bs=512 seek=8 count=1 conv=notrunc
 dd if=kernel.bin of=disk.img bs=512 seek=10 conv=notrunc
+dd if=shell.bin of=disk.img bs=512 seek=40 conv=notrunc
 
 #qemu-system-x86_64 -hda disk.img -m 16M
 qemu-system-x86_64 -drive format=raw,file=disk.img -m 16M
