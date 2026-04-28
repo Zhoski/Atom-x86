@@ -1,6 +1,7 @@
 #include "../drivers/vga.h"
 #include "../cpu/idt.h"
 #include "../cpu/PIC.h"
+#include "services/Memory/memory_map.h"
 #include <stdint.h>
 
 extern void isr33();
