@@ -4,6 +4,7 @@
 #include "../cpu/PIC.h"
 #include "services/Memory/memory_map.h"
 #include "services/Memory/memory.h"
+#include "services/Memory/program.h"
 #include "services/syscall/syscall.h"
 #include <stdint.h>
 
@@ -26,16 +27,19 @@ void kmain() {
     
     //uint8_t* config = (uint8_t*)0x1000;
     //putchar(config[2]);
-    uint32_t adres = malloc_page(); 
+    uint32_t adres = malloc_page();     // Память для терминада
+    uint32_t stack = malloc_stack();    // Стек
     // Скопировать терминал из 0x2000 в 0x100000
-    memcpy(0x2000, adres, 512);
-    asm volatile (
-        "pushl $0x08 \n\t"   
-        "pushl %0   \n\t"    
-        "lretl"                    
-        : 
-        : "r" (adres)       
-    );
+    memcpy(0x2000, adres, 512); 
+    process_spawn(adres, stack);
+    program_execute(adres);
+    //asm volatile (
+    //    "pushl $0x08 \n\t"   
+    //    "pushl %0   \n\t"    
+    //    "lretl"                    
+    //    : 
+    //    : "r" (adres)       
+    //);
 
 	for(;;) {
         asm("hlt"::);

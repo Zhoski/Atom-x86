@@ -42,7 +42,7 @@ uint32_t find_free_stack_block() {
     return out;
 }
 
-uint32_t mallock_stack() {
+uint32_t malloc_stack() {
     uint32_t adres = find_free_stack_block() * stack_block_size + stack_base_adres;
     return adres;
 }
