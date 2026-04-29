@@ -8,6 +8,7 @@
 #include <stdint.h>
 
 typedef struct {
+    uint8_t PID;
     uint32_t entry;
     uint32_t stack_entry;
     uint32_t stack_ptr;

@@ -25,10 +25,15 @@ void clear_screen() {
 }
 
 void putchar(const char data) {
-	const uint16_t index = (terminal_row * VGA_WIDTH + terminal_column);
-	uint16_t blank = terminal_color << 8 | data;
-	vga_video[index] = blank;
-	terminal_column++;
+    if(data == '\n') {
+        terminal_row++;
+        terminal_column = 0;
+    }else {
+        const uint16_t index = (terminal_row * VGA_WIDTH + terminal_column);
+	    uint16_t blank = terminal_color << 8 | data;
+	    vga_video[index] = blank;
+	    terminal_column++; 
+    }
 }
 
 void kwrite_string(const char* data) {
@@ -36,7 +41,7 @@ void kwrite_string(const char* data) {
 	while(data[size++] != '\0');
 
 	for(uint16_t i = 0;i < size - 1;i++) {
-		putchar(data[i]);
+	   putchar(data[i]); 
 	}
 }
 
@@ -51,4 +56,15 @@ void kwrite_int(int x) {
     while (i > 0) {
         putchar(buffer[--i]);
     }
+}
+
+void sys_write(uint8_t* str, uint32_t len) { 
+    kwrite_string("[DEBUG-START]\n");
+    kwrite_string("len: "); kwrite_int(len);
+    kwrite_string("\n");
+    for (uint32_t i = 0; i < len; i++) {
+        if (str[i] == 0) putchar('?');
+        else putchar(str[i]);
+    }
+    kwrite_string("\n[DEBUG-END]\n");
 }

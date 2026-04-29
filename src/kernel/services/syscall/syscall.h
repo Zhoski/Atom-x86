@@ -6,6 +6,5 @@
 #define SYSCALL_WRITE       1
 #define SYSCALL_KEYBOARD    2
 
-extern void syscall_handler(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx);
-
+extern void syscall_handler(int eax, int ebx,int ecx, int edx);
 #endif

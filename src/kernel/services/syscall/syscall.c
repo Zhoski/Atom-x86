@@ -1,15 +1,22 @@
 #include "syscall.h"
 
-void syscall_handler(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx) {
-
+void syscall_handler(int eax, int ebx,int ecx, int edx) {
+    kwrite_string("---SYSCALL---");
+    kwrite_string("\nEAX  (num): ");
     kwrite_int(eax);
+    kwrite_string("\nEBX (arg1): ");
+    kwrite_int(ebx);
+    kwrite_string("\nECX (arg2): ");
+    kwrite_int(ecx);
+    kwrite_string("\nEDX (arg3): ");
+    kwrite_int(edx);
+    kwrite_string("\n"); 
+
     switch(eax) {
-        case SYSCALL_WRITE:
-            kwrite_string("SYSCALL_WRITE ");
+        case SYSCALL_WRITE:  
+            putchar((uint8_t)ebx); 
             break;
         default:
             break;
-   }
-
-   kwrite_string("int 0x80");
+    } 
 }

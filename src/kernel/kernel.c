@@ -22,7 +22,7 @@ void kmain() {
 	clear_screen();			// Очистка
     
     vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
-    kwrite_string("Hello, World!"); 
+    kwrite_string("Hello, World!\n"); 
     
     //uint8_t* config = (uint8_t*)0x1000;
     //putchar(config[2]);
