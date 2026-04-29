@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 
-// Эти функции живут ТОЛЬКО ТУТ и нигде больше
 static inline uint8_t op_on(uint8_t byte, uint8_t index) { return byte | (1 << index); }
 static inline uint8_t op_off(uint8_t byte, uint8_t index) { return byte & ~(1 << index); }
 extern uint8_t (*bit_op[2])(uint8_t, uint8_t);

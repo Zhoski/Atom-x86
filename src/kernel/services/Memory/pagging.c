@@ -1,4 +1,5 @@
 #include "memory_map.h"
+#include "process.h"
 #include <stdint.h>
 
 #define USED    1
@@ -7,7 +8,8 @@
 // Страницы
 const uint32_t page_base_adres = 0x200000;   // Начиная отсюда 
 const uint32_t page_block_size = 0x1000;     // 4 Kib
-const uint32_t page_block_count = 0x1000;    // 4096 блоков 
+const uint32_t page_block_count = 0x1000;    // 4096 блоков
+uint8_t page_owner[4096];
 uint8_t page_mem_bit_mask[512];  
 
 uint8_t (*bit_op[2])(uint8_t, uint8_t) = { op_off, op_on };
@@ -45,4 +47,8 @@ uint32_t find_free_page() {
 uint32_t malloc_page() {
     uint32_t adress = find_free_page() * page_block_size + page_base_adres;
     return adress;
+}
+
+void free_page(uint8_t pid) {
+    
 }

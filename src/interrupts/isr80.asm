@@ -9,15 +9,15 @@ isr80:
     push es
     push fs
     push gs
-
-    mov ax, 0x10
-    mov es, ax
-    mov ds, ax
-    
+ 
     push edx
     push ecx
     push ebx
     push eax
+
+    mov ax, 0x10
+    mov es, ax
+    mov ds, ax 
 
     call syscall_handler
 
