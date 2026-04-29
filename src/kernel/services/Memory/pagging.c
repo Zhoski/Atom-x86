@@ -49,6 +49,9 @@ uint32_t malloc_page() {
     return adress;
 }
 
-void free_page(uint8_t pid) {
-    
+void free_page(uint32_t page_adres) {
+    uint32_t page_bit = (page_adres - page_base_adres) / page_block_size;
+    uint32_t page_byte = page_bit / 8;
+    page_bit %= 8;
+    set_mem_bit_mask(page_byte, page_bit, bit_op[FREE]);
 }

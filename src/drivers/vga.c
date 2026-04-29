@@ -46,6 +46,13 @@ void kwrite_string(const char* data) {
 }
 
 void kwrite_int(int x) {
+    if(x == 0) {
+        putchar('0');
+        return;
+    }
+    if(x < 0) {
+        putchar('-');
+    }
     char buffer[12];
     int i = 0;
     while (x > 0) {
