@@ -6,3 +6,7 @@ void memcpy(int* from,int* in, int size) {
         *in++ = *from++; 
     }   
 }
+
+uint8_t memread(unsigned int* from) {
+    return (uint8_t)from;
+}

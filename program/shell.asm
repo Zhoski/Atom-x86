@@ -1,10 +1,13 @@
 bits 32
-
+org 0x200000
 global shell
 shell: 
-    mov eax, 1    ; Номер системного вызова
-    mov ebx, 'H'  ; Аргумент 1
-    mov ecx, 0    ; Аргумент 2
+    ; ebx 1 = Вывести текст
+    ; ebx 2 = Вывести переменную
+
+    mov eax, 1    ; Вывод текста
+    mov ebx, 1    ; Формат вывода (текс)
+    mov ecx, msg  ; Что выводить
     mov edx, 0    ; Аргумент 3
     
     int 0x80 
@@ -12,4 +15,4 @@ shell:
 
     ret
 
-
+msg: db "Hello World!",0
