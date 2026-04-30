@@ -3,11 +3,11 @@
 #include <stdint.h>
 
 void program_execute(uint32_t entry) {  
-    asm volatile (
+    asm volatile (     
         "pushl $0x08 \n\t"   
-        "pushl %0   \n\t"    
+        "pushl %0   \n\t"     
         "lretl"                    
         : 
-        : "r" (entry)       
+        : "a" (entry)      
     ); 
 }

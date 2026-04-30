@@ -18,12 +18,14 @@ void kmain() {
 
     pic_remap();                    // Установка PIC
     pic_irq_mask(0x21, 0b11111101); // Включить только IRQ1
-    asm("sti" :: );                 // Включить перывания
+    asm("sti");                     // Включить перывания
 	
-	clear_screen();			// Очистка
+	clear_screen();			        // Очистка
     
     vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
-    kwrite_string("Hello, World!\n"); 
+    //kwrite_string("Hello, World!\n");
+    //uint8_t firs_s = memread(0x1000);
+    //putchar(firs_s);
     
     //uint8_t* config = (uint8_t*)0x1000;
     //putchar(config[2]);
@@ -42,6 +44,6 @@ void kmain() {
     //);
 
 	for(;;) {
-        asm("hlt"::);
+        asm("hlt");
     }
 }
