@@ -23,18 +23,18 @@ void kmain() {
 	clear_screen();			        // Очистка
     
     vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
-    //kwrite_string("Hello, World!\n");
-    //uint8_t firs_s = memread(0x1000);
-    //putchar(firs_s);
+    //kwrite_string("Hello, World!\n"); 
     
+    program_spawn(0x2000);  // Адрес терминала в оперативке
+
     //uint8_t* config = (uint8_t*)0x1000;
     //putchar(config[2]);
-    uint32_t adres = malloc_page();     // Память для терминада
-    uint32_t stack = malloc_stack();    // Стек
+    //uint32_t adres = malloc_page();     // Память для терминада
+    //uint32_t stack = malloc_stack();    // Стек
     // Скопировать терминал из 0x2000 в 0x100000
-    memcpy(0x2000, adres, 512); 
-    process_spawn(adres, stack);
-    program_execute(adres);
+    //memcpy((int*)0x2000, adres, 512); 
+    //process_spawn(adres, stack);
+    //program_execute(adres, stack+0x2000);
     //asm volatile (
     //    "pushl $0x08 \n\t"   
     //    "pushl %0   \n\t"    

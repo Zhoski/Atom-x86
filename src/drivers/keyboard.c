@@ -16,7 +16,7 @@ const unsigned char ascii_table[128] = {
     0, 0 /* Остальные — нули */
 };
 
-uint8_t _keyboard_buf[KEYBOARD_BUF_SIZE] = {0};
+uint8_t _keyboard_buf[KEYBOARD_BUF_SIZE];
 uint8_t _keyboard_buf_insert = 1;
 uint8_t _keyboard_buf_read   = 0;
 
@@ -42,8 +42,12 @@ void keyboard_buf_insert(uint8_t c) {
 } 
 
 uint8_t keyboard_buf_get_las_sym() {
-    uint8_t temp = _keyboard_buf[_keyboard_buf_read];
-    return temp;
+    if(_keyboard_buf[_keyboard_buf_read]!=0) {
+        uint8_t temp = _keyboard_buf[_keyboard_buf_read];
+        _keyboard_buf[_keyboard_buf_read] = 0;
+        return temp;
+    } 
+    return 0; 
 }
 
 void keyboard_handler() {
@@ -53,8 +57,8 @@ void keyboard_handler() {
     }
     uint8_t c = ascii_table[scancode];
     keyboard_buf_insert(c);
-    if(c != '\n' && c != 0 && c != '\t' && c != '\b') {
-        putchar(c);
-    } 
+    //if(c != '\n' && c != 0 && c != '\t' && c != '\b') {
+    //    putchar(c);
+    //} 
     
 }

@@ -11,8 +11,24 @@ shell:
     mov edx, 0    ; Аргумент 3
     
     int 0x80 
+
+    jmp loop
+
     jmp $
 
     ret
 
-msg: db "Hello World!",0
+loop:
+    mov eax, 2
+    mov ebx, 1
+    int 0x80
+    mov ecx, eax
+    mov eax, 1
+    mov ebx, 3
+    int 0x80
+    jmp loop
+
+print_string:
+    
+
+msg: db "--- Shell version 0.1 ---",0

@@ -25,6 +25,9 @@ void clear_screen() {
 }
 
 void putchar(const char data) {
+    if(data == 0) {
+        return;
+    }
     if(data == '\n') {
         terminal_row++;
         terminal_column = 0;

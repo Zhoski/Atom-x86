@@ -23,6 +23,8 @@ gcc -m32 -ffreestanding -c src/kernel/services/syscall/syscall.c -o syscall.o
 nasm -f elf32 src/interrupts/isr33.asm -o isr33.o
 nasm -f elf32 src/interrupts/isr80.asm -o isr80.o
 # Программы
+#gcc -m32 -fno-pic -fno-stack-protector -c program/shell.c -o shell.o
+#ld -m elf_i386 -Ttext 0x200000 --oformat binary shell.o -o shell.bin
 nasm -f bin program/shell.asm -o shell.bin
 
 
