@@ -5,6 +5,8 @@
 *.sys
 *.obj
 *.o
+*.elf
+*.#o
 
 # Логи эмуляторов (Bochs/QEMU)
 *.log
