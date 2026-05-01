@@ -19,7 +19,12 @@ void kmain() {
     pic_remap();                    // Установка PIC
     pic_irq_mask(0x21, 0b11111101); // Включить только IRQ1
     asm("sti");                     // Включить перывания
-	
+    asm("movl $0x80000, %%eax\n"
+        "movl %%eax, %%esp"
+        :
+        :
+        : "eax", "esp"
+       );	
 	clear_screen();			        // Очистка
     
     vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);

@@ -43,9 +43,11 @@ dd if=shell.bin of=disk.img bs=512 seek=40 conv=notrunc
 #qemu-system-x86_64 -hda disk.img -m 16M
 qemu-system-x86_64 -drive format=raw,file=disk.img -m 16M
 
-rm kernel.bin
+kernel.bin
 rm boot.bin
 rm stage2.bin
 rm vga.o
 rm kernel.o
-rm kernel.elf
+kernel.elf
+rm memory.o
+rm stack.o

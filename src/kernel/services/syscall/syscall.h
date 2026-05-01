@@ -2,6 +2,7 @@
 #define __SYSCALL__
 #include "../../../drivers/vga.h"
 #include "../../../drivers/keyboard.h"
+#include "../Memory/memory_map.h"
 
 /*-------- Вывод --------*/
 #define SYSCALL_WRITE       1

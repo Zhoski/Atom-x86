@@ -8,4 +8,8 @@ extern uint8_t (*bit_op[2])(uint8_t, uint8_t);
 extern uint8_t (*stack_bit_op[2])(uint8_t, uint8_t);
 extern void free_page(uint32_t page_adres);
 extern uint32_t malloc_stack();
+
+extern uint32_t kernel_stack_ptr;
+extern uint32_t kernel_return_ptr;
+
 #endif

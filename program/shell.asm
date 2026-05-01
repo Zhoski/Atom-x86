@@ -1,7 +1,7 @@
 bits 32
 org 0x200000
 global shell
-shell: 
+shell:
     ; ebx 1 = Вывести текст
     ; ebx 2 = Вывести переменную
 
@@ -10,7 +10,12 @@ shell:
     mov ecx, msg  ; Что выводить
     mov edx, 0    ; Аргумент 3
     
-    int 0x80 
+    int 0x80
+
+    ;jmp $
+
+    mov eax, 60
+    int 0x80
 
     jmp loop
 
@@ -31,4 +36,4 @@ loop:
 print_string:
     
 
-msg: db "--- Shell version 0.1 ---",0
+msg: db "Hello World",0

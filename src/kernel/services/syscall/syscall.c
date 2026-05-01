@@ -42,7 +42,22 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                 default:
                     break;
             }
+            break;
         case SYSCALL_DIED:
+            kwrite_string("\nKernel stack before process died: ");
+
+            uint32_t cur_esp;
+            asm volatile("movl %%esp, %0":"=r" (cur_esp));
+            kwrite_int(cur_esp);
+            kwrite_string("\n");
+            asm volatile (
+                "movl %1, %%esp\n"
+                "jmp *%0"
+                :
+                : "r"(kernel_return_ptr), "r"(kernel_stack_ptr)
+                : "esp"
+            );    
+
             break;
         default:
             break;
