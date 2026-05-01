@@ -1051,6 +1051,10 @@ switch_to_PM:
 
 bits 32
 PMentry:
+    mov esi, 0x10000   
+    mov edi, 0x100000  
+    mov ecx, 16384    
+    rep movsd   
     mov ax, 0x10
     mov ds, ax
     mov ss, ax

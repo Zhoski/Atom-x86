@@ -1,5 +1,5 @@
 bits 32
-org 0x200000
+org 0x300000
 global shell
 shell:
     ; ebx 1 = Вывести текст

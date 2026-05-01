@@ -5,7 +5,7 @@
 #define FREE    0
 
 // Стек
-const uint32_t stack_base_adres = 0x100000;     // Начиная отсюда 
+const uint32_t stack_base_adres = 0x200000;     // Начиная отсюда 
 const uint32_t stack_block_size = 0x2000;       // 8 Kib
 const uint32_t stack_block_count = 128;         // 128 блоков
 uint8_t stack_mem_bit_mask[16];                 // Массив из 128 бит 
