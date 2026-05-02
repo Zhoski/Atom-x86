@@ -2,5 +2,5 @@
 #define __MEMORY__
 #include <stdint.h>
 void memcpy(int* from, int* in, int size);
-uint8_t memread(unsigned char* from);
+uint8_t memread(uint8_t* from);
 #endif

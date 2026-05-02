@@ -3,6 +3,7 @@
 #include "../../../drivers/VGA/vga.h"
 #include "../../../drivers/Keyboard/keyboard.h"
 #include "../Memory/memory_map.h"
+#include "../Memory/memory.h"
 
 /*-------- Вывод --------*/
 #define SYSCALL_WRITE           1
@@ -20,6 +21,11 @@
 #define SYSCALL_VGA             3
 #define SET_ATTRIBUTE           1
 #define SET_CURSOR_POSITION     2
+
+/*-------- MEMORY -------*/
+#define SYSCALL_MEMORY          4
+#define READ_MEMORY             1
+#define WRITE_MEMORY            2
 
 /*----- Завершение ------*/
 #define SYSCALL_DIED            60

@@ -53,21 +53,21 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
             }
             break;
         case SYSCALL_DIED:
-            kwrite_string("\nKernel stack before process died: ");
+            //kwrite_string("\nKernel stack before process died: ");
 
-            uint32_t cur_esp;
-            asm volatile("movl %%esp, %0":"=r" (cur_esp));
+            //uint32_t cur_esp;
+            //asm volatile("movl %%esp, %0":"=r" (cur_esp));
             vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_BLUE);
-            kwrite_int(cur_esp);
-            vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
-            kwrite_string("\n");     
+            //kwrite_int(cur_esp);
+            //vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
+            //kwrite_string("\n");     
             
-            kwrite_string("\nKernel return ptr: ");
+            //kwrite_string("\nKernel return ptr: ");
 
             vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_BLUE);
-            kwrite_int(kernel_return_ptr);
-            vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
-            kwrite_string("\n");     
+            //kwrite_int(kernel_return_ptr);
+            //vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
+            //kwrite_string("\n");     
 
             asm volatile (
                 "movl %1, %%esp\n"
@@ -80,5 +80,18 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
             break;
         default:
             break;
+        case SYSCALL_MEMORY:
+            switch(ebx) {
+                case READ_MEMORY:
+                    uint8_t data = memread((uint8_t*)ecx);
+                    //putchar(data); 
+                    asm volatile(
+                        "movl %0, %%eax"
+                        :
+                        : "r" ((int)data)
+                        : "eax"
+                    );
+                    break;
+            }
     } 
 }
