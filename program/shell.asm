@@ -5,11 +5,21 @@ shell:
     ; ebx 1 = Вывести текст
     ; ebx 2 = Вывести переменную 
 
+    mov eax, 3
+    mov ebx, 1
+    mov ecx, 0xA
+    int 0x80
+
     mov ecx, logo
     call print_string
 
     mov ecx, logo2
     call print_string
+    
+    mov eax, 3
+    mov ebx, 1
+    mov ecx, 0xF
+    int 0x80
 
     mov ecx, help_msg
     call print_string
@@ -24,8 +34,8 @@ shell:
 
     ;jmp $
 
-    mov eax, 60
-    int 0x80 
+    ;mov eax, 60
+    ;int 0x80 
 
     jmp loop
 
