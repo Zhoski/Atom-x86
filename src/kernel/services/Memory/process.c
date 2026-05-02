@@ -1,5 +1,5 @@
 #include "process.h"
-#include "../../../drivers/vga.h"
+#include "../../../drivers/VGA/vga.h"
 #include "memory_map.h"
 
 process process_table[MAX_PROCESS];

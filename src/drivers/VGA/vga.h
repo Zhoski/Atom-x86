@@ -31,6 +31,5 @@ uint8_t vga_entry_color(uint8_t bg, uint8_t fg);
 void vga_set_attribute(uint8_t bg, uint8_t fg);
 void kwrite_string(const char* data);
 void kwrite_int(int x);
-void sys_write(uint8_t* str_ptr, uint32_t len);
 
 #endif

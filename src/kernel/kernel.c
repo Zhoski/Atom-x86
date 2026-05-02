@@ -1,5 +1,5 @@
-#include "../drivers/vga.h"
-#include "../drivers/keyboard.h"
+#include "../drivers/VGA/vga.h"
+#include "../drivers/Keyboard/keyboard.h"
 #include "../cpu/idt.h"
 #include "../cpu/PIC.h"
 #include "services/Memory/memory_map.h"
@@ -18,20 +18,14 @@ void kmain() {
 
     pic_remap();                    // Установка PIC
     pic_irq_mask(0x21, 0b11111101); // Включить только IRQ1
-    asm("sti");                     // Включить перывания
-    asm("movl $0x80000, %%eax\n"
-        "movl %%eax, %%esp"
-        :
-        :
-        : "eax", "esp"
-       );	
+    asm("sti");                     // Включить перывания 
 	clear_screen();			        // Очистка
     
     vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
     //kwrite_string("Hello, World!\n"); 
     
     program_spawn(0x2000);  // Адрес терминала в оперативке
-
+    kwrite_string("Program end!\n");
     //uint8_t* config = (uint8_t*)0x1000;
     //putchar(config[2]);
     //uint32_t adres = malloc_page();     // Память для терминада

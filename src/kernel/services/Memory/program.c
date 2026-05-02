@@ -26,13 +26,15 @@ void program_execute(uint32_t entry, uint32_t stack) {
 
 exit_ptr:
     kwrite_string("Process died\n");
-    kwrite_string("Current kernel stack: ");
+    kwrite_string("Current kernel stack (in kernel): ");
     asm volatile("movl %%esp, %0":"=r" (kernel_stack_ptr));
     kwrite_int(kernel_stack_ptr);
-    //for(;;) {
-    //    asm("hlt");
-    //}
-    return;
+    kwrite_string("\n"); 
+
+    for(;;) {
+        asm("hlt");
+    } 
+
 }
 
 // Спавн программы
@@ -48,4 +50,5 @@ void program_spawn(uint32_t entry_in_ram) {
     memcpy((int*)entry_in_ram, (int*)entry, 4096);
     process_spawn(entry, stack_top);
     program_execute(entry, stack_top);
+    kwrite_string("end"); 
 }
