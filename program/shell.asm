@@ -3,44 +3,29 @@ org 0x300000
 global shell
 shell:
     ; ebx 1 = Вывести текст
-    ; ebx 2 = Вывести переменную
+    ; ebx 2 = Вывести переменную 
 
-    mov eax, 3          ; VGA
-    mov ebx, 1          ; Установить атрибут
-    mov ecx, 0x0004     ; Красный на черном фоне
-    int 0x80   
+    mov ecx, logo
+    call print_string
 
-    mov eax, 1    ; Вывод текста
-    mov ebx, 1    ; Формат вывода (текс)
-    mov ecx, msg  ; Что выводить
-    mov edx, 0     
-    
-    int 0x80
+    mov ecx, logo2
+    call print_string
 
-    mov eax, 3          ; VGA
-    mov ebx, 1          ; Установить атрибут
-    mov ecx, 0x000F     ; Белый на черном фоне
-    int 0x80 
+    mov ecx, help_msg
+    call print_string
+
+    call get_user_name
+
+    mov ecx, user_name
+    call print_string
+
+    mov ecx, prompt
+    call print_string
 
     ;jmp $
 
     mov eax, 60
-    int 0x80
-    
-    mov eax, 1
-    mov ecx, msg_
-    int 0x80
-
-
-    mov eax, 1
-    mov ebx, 2
-    mov ecx, esp
-    int 0x80
-
-    mov eax, 1    ; Вывод текста
-    mov ebx, 1    ; Формат вывода (текс)
-    mov ecx, new_string  ; Что выводить
-    mov edx, 0    
+    int 0x80 
 
     jmp loop
 
@@ -58,9 +43,48 @@ loop:
     int 0x80
     jmp loop
 
-print_string:
-    
+get_user_name:
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, 0x1002 
+    mov esi, user_name
+    xor edx, edx
 
-msg: db "Hello World",10,0
-msg_: db "(In program) stack: ",0
+.get_loop:
+    cmp edx, 32
+    jz .done
+
+    mov eax, 4
+    int 0x80
+    
+    mov [esi], eax 
+     
+    inc edx
+    inc ecx
+    inc esi
+
+    jmp .get_loop
+
+.done:  
+    ret
+
+print_string: 
+    pushad
+    mov eax, 1
+    mov ebx, 1
+    int 0x80
+    popad
+    ret
+
 new_string: db " ",10,0
+
+logo:   db "    ___   __                      _  ______  _____",10
+        db "   /   | / /_____  ____ ___      | |/ / __ \/ ___/",10
+        db "  / /| |/ __/ __ \/ __ `__ \_____|   / /_/ / __ \ ",10
+        db " / ___ / /_/ /_/ / / / / / /_____/   \__, / /_/ / ",10,0
+logo2:  db "/_/  |_\__/\____/_/ /_/ /_/     /_/|_/____/\____/ ",10,10,10,0  
+help_msg: db "Type 'help' to get a list of commands.",10,0
+prompt: db "$> ",0
+
+; Буфферы
+user_name: times 32 db 0

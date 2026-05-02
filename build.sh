@@ -19,6 +19,8 @@ gcc -m32 -ffreestanding -c src/kernel/services/Memory/memory.c -o memory.o
 gcc -m32 -ffreestanding -c src/kernel/services/Memory/process.c -o process.o
 gcc -m32 -ffreestanding -c src/kernel/services/Memory/program.c -o program.o
 gcc -m32 -ffreestanding -c src/kernel/services/syscall/syscall.c -o syscall.o
+# Конфиги
+gcc -m32 -ffreestanding -c src/kernel/config/config.c -o config.o
 # Прерывания
 nasm -f elf32 src/interrupts/isr33.asm -o isr33.o
 nasm -f elf32 src/interrupts/isr80.asm -o isr80.o
@@ -29,7 +31,7 @@ nasm -f bin program/shell.asm -o shell.bin
 
 
 # Склеить все файлы в ядро
-ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o idt.o pic.o isr33.o isr80.o pagging.o stack.o memory.o process.o syscall.o program.o -o kernel.elf
+ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o idt.o pic.o isr33.o isr80.o pagging.o stack.o memory.o process.o syscall.o program.o config.o -o kernel.elf
 
 objcopy -O binary kernel.elf kernel.bin
 

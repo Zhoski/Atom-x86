@@ -6,10 +6,14 @@
 #include "services/Memory/memory.h"
 #include "services/Memory/program.h"
 #include "services/syscall/syscall.h"
+#include "config/config.h"
 #include <stdint.h>
 
 extern void isr33();
 extern void isr80();
+
+uint8_t user_name[32];
+uint8_t user_pass[32];
 
 void kmain() {
     idt_load();                     // Загрузить IDT
@@ -21,11 +25,11 @@ void kmain() {
     asm("sti");                     // Включить перывания 
 	clear_screen();			        // Очистка
     
+    init_config();                  // Чтение конфигов
     vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
-    //kwrite_string("Hello, World!\n"); 
-    
+    //kwrite_string("Hello, World!\n");  
     program_spawn(0x2000);  // Адрес терминала в оперативке
-    kwrite_string("Program end!\n");
+    
     //uint8_t* config = (uint8_t*)0x1000;
     //putchar(config[2]);
     //uint32_t adres = malloc_page();     // Память для терминада

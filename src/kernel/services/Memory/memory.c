@@ -7,6 +7,6 @@ void memcpy(int* from,int* in, int size) {
     }   
 }
 
-uint8_t memread(unsigned char* from) {
-    return (uint8_t)from;
+uint8_t memread(uint8_t* from) { 
+    return from[0];
 }
