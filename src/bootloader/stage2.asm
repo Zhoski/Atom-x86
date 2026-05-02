@@ -1050,11 +1050,7 @@ switch_to_PM:
     jmp 0x8:PMentry ; Прыжок в защищенный режим
 
 bits 32
-PMentry:
-    mov esi, 0x10000   
-    mov edi, 0x100000  
-    mov ecx, 16384    
-    rep movsd   
+PMentry: 
     mov ax, 0x10
     mov ds, ax
     mov ss, ax
@@ -1063,5 +1059,10 @@ PMentry:
     mov gs, ax
     mov esp, 0x90000
 
-    jmp 0x8:0x10002     ; Сюда потомучто первые два байта это сигнатура!!!!!!!!!!!!!!!!!!
+    mov esi, 0x10000   
+    mov edi, 0x100000   
+    mov ecx, 16384     
+    rep movsd  
+
+    jmp 0x8:0x100000
 

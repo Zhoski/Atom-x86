@@ -43,13 +43,32 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                     break;
             }
             break;
+        case SYSCALL_VGA:
+            switch(ebx) {
+                case SET_ATTRIBUTE:
+                    uint8_t bg = ecx >> 8;
+                    uint8_t fg = ecx;
+                    vga_set_attribute(bg, fg);
+                    break;
+            }
+            break;
         case SYSCALL_DIED:
             kwrite_string("\nKernel stack before process died: ");
 
             uint32_t cur_esp;
             asm volatile("movl %%esp, %0":"=r" (cur_esp));
+            vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_BLUE);
             kwrite_int(cur_esp);
-            kwrite_string("\n");
+            vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
+            kwrite_string("\n");     
+            
+            kwrite_string("\nKernel return ptr: ");
+
+            vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_BLUE);
+            kwrite_int(kernel_return_ptr);
+            vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
+            kwrite_string("\n");     
+
             asm volatile (
                 "movl %1, %%esp\n"
                 "jmp *%0"

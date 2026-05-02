@@ -41,7 +41,7 @@ void putchar(const char data) {
     if(data == 0) {
         return;
     }
-    if(data == '\n') {
+    if(data == 10) {
         terminal_row++;
         terminal_column = 0;
     }else {

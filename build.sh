@@ -4,8 +4,8 @@ nasm -f bin src/bootloader/table.asm -o table.bin
 nasm -f bin src/bootloader/stage2.asm -o stage2.bin
 
 # Драйвера
-gcc -m32 -ffreestanding -c src/drivers/vga.c -o vga.o
-gcc -m32 -ffreestanding -c src/drivers/keyboard.c -o keyboard.o
+gcc -m32 -ffreestanding -c src/drivers/VGA/vga.c -o vga.o
+gcc -m32 -ffreestanding -c src/drivers/Keyboard/keyboard.c -o keyboard.o
 
 # Процессор
 gcc -m32 -ffreestanding -c src/cpu/idt.c -o idt.o
@@ -43,11 +43,11 @@ dd if=shell.bin of=disk.img bs=512 seek=40 conv=notrunc
 #qemu-system-x86_64 -hda disk.img -m 16M
 qemu-system-x86_64 -drive format=raw,file=disk.img -m 16M
 
-kernel.bin
+
 rm boot.bin
 rm stage2.bin
 rm vga.o
 rm kernel.o
-kernel.elf
+
 rm memory.o
 rm stack.o
