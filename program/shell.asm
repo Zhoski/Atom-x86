@@ -26,6 +26,15 @@ shell:
 
     call get_user_name
 
+    ;mov eax, [to_new_line]
+    ;dec eax
+    ;mov [to_new_line], eax
+
+    ;mov eax, 1
+    ;mov ebx, 2
+    ;mov ecx, [to_new_line]
+    ;int 0x80
+
     ;mov ecx, user_name
     ;call print_string
 
@@ -43,6 +52,7 @@ shell:
 
 _shell:
     call reset_buffer
+    call get_user_name
 
     mov ecx, user_name
     call print_string
@@ -149,28 +159,106 @@ execute:
     inc esi
 
     push esi
-    call hex_string_to_int 
+    call hex_string_to_int  ; Следущий аргумент 
     pop esi
 
     mov ecx, eax
+    
+    push ecx
 
-;.while:
-    ;mov eax, 1
-    ;mov ebx, 2
-    ;int 0x80
+    call find_next_arg
+    inc esi
+    call string_to_int
+    mov [count], eax
 
+    pop ecx
+    
+    xor edx, edx
+
+    push ecx
+    push edx 
+    mov eax, 1
+    mov ebx, 4
+    mov edx, 7
+    int 0x80
+
+    mov ecx, adres
+    call print_string
+
+    pop edx
+    pop ecx
+
+.while:
+    cmp edx, [count]
+    jz .end
+
+    push edx
+    mov edx, [to_new_line]
+    cmp edx, 0
+    pop edx
+
+    jz .new_line
+    jmp .skip
+
+.new_line:
+    push ecx
+    mov ecx, new_string
+    call print_string
+    pop ecx
+
+    mov eax, 16
+    mov [to_new_line], eax
+
+    push ecx
+    push edx 
+    mov eax, 1
+    mov ebx, 4
+    mov edx, 7
+    int 0x80
+
+    mov ecx, adres
+    call print_string
+
+    pop edx
+    pop ecx
+
+.skip:
+    push ecx
     mov eax, 4
     mov ebx, 1
     int 0x80
+    pop ecx
+
+    push ecx
+    push edx
 
     mov ecx, eax
     mov eax, 1
     mov ebx, 4
+    mov edx, 1
+    int 0x80
+    
+    mov eax, 1
+    mov ebx, 3
+    mov ecx, ' '
     int 0x80
 
-    ;jmp .while
+    pop edx
+    pop ecx
 
-;.end:
+    inc ecx
+    inc edx 
+    
+    mov eax, [to_new_line]
+    dec eax
+    mov [to_new_line], eax
+
+    jmp .while
+
+.end:
+    mov ecx, new_string
+    call print_string
+
     jmp _shell
 
 ; Вход: EAX = 1002 (десятичное)
@@ -320,9 +408,11 @@ list:   db 10, "+-----------------------------------------------+",10
 ; Команды
 help: db "help",0
 memread: db "memread",0
+adres: db "|    ",0
 
 ; Переменные
-count: db 0
+count: dd 0
+to_new_line: dd 16
 
 ; Буфферы
 user_name: times 32 db 0
