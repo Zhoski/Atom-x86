@@ -40,7 +40,7 @@ dd if=boot.bin of=disk.img bs=512 seek=0 count=1 conv=notrunc
 dd if=stage2.bin of=disk.img bs=512 seek=1 count=6 conv=notrunc
 dd if=config.bin of=disk.img bs=512 seek=8 count=1 conv=notrunc
 dd if=kernel.bin of=disk.img bs=512 seek=10 conv=notrunc
-dd if=shell.bin of=disk.img bs=512 seek=40 conv=notrunc
+dd if=shell.bin of=disk.img bs=512 seek=40 count=20 conv=notrunc
 
 #qemu-system-x86_64 -hda disk.img -m 16M
 qemu-system-x86_64 -drive format=raw,file=disk.img -m 16M
