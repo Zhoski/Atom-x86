@@ -11,6 +11,7 @@
 #define WRITE_TEXT              1
 #define WRITE_INT               2
 #define WRITE_CHAR              3
+#define WRITE_HEX               4
 
 /*----- Клавиатура ------*/
 #define SYSCALL_KEYBOARD        2
@@ -21,6 +22,7 @@
 #define SYSCALL_VGA             3
 #define SET_ATTRIBUTE           1
 #define SET_CURSOR_POSITION     2
+#define CLEAR_SCREEN            3
 
 /*-------- MEMORY -------*/
 #define SYSCALL_MEMORY          4

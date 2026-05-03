@@ -24,6 +24,9 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                     break;
                 case WRITE_CHAR:
                     putchar((uint8_t)ecx);
+                    break;
+                case WRITE_HEX:
+                    kwrite_hex(ecx, edx);
                 defualt:
                     break;
             } 
@@ -49,6 +52,9 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                     uint8_t bg = ecx >> 8;
                     uint8_t fg = ecx;
                     vga_set_attribute(bg, fg);
+                    break;
+                case CLEAR_SCREEN:
+                    clear_screen()
                     break;
             }
             break;
