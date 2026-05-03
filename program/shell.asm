@@ -213,6 +213,66 @@ execute:
 
 .new_line:
     push ecx
+    mov ecx, left_parren
+    call print_string
+    pop ecx
+
+    push edx
+    push ecx
+
+    xor edx, edx
+    sub ecx, 16
+
+.write_ascii:
+    cmp edx, 16
+    jz .exit
+
+    ;push ecx
+    mov eax, 4
+    mov ebx, 1
+    int 0x80
+
+    mov esi, eax
+    
+    cmp esi, 33
+    jl .not
+
+    cmp esi, 127
+    jg .not
+
+    jmp .yes
+
+.not:
+    push ecx
+    mov eax, 1
+    mov ebx, 3
+    mov ecx, '.'
+    int 0x80
+    pop ecx
+
+    jmp .next_char
+
+.yes:
+    push ecx
+    mov eax, 1
+    mov ebx, 3
+    mov ecx, esi
+    int 0x80
+    pop ecx
+
+.next_char:
+    inc ecx
+    inc edx
+    jmp .write_ascii
+
+.exit:
+    pop ecx
+    pop edx
+
+    push ecx
+    mov ecx, right_parren
+    call print_string 
+
     mov ecx, new_string
     call print_string
     pop ecx
@@ -222,9 +282,9 @@ execute:
 
     push ecx
     push edx 
-    mov eax, 1
-    mov ebx, 4
-    mov edx, 7
+    mov eax, 1              ; Вывод
+    mov ebx, 4              ; Hex
+    mov edx, 7              ; Сколько знаков от нуля
     int 0x80
 
     mov ecx, adres
@@ -401,6 +461,9 @@ print_string:
     ret
 
 new_string: db " ",10,0
+tab: db "    ",0
+left_parren: db "[ ",0
+right_parren: db " ]",0
 
 logo:   db "    ___   __                      _  ______  _____",10
         db "   /   | / /_____  ____ ___      | |/ / __ \/ ___/",10
@@ -421,7 +484,7 @@ help: db "help",0
 memread: db "memread",0
 clear: db "clear",0
 
-adres: db "|    ",0
+adres: db "|  ",0
 
 ; Переменные
 count: dd 0
