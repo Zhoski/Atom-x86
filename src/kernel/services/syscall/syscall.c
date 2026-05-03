@@ -54,7 +54,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                     vga_set_attribute(bg, fg);
                     break;
                 case CLEAR_SCREEN:
-                    clear_screen()
+                    clear_screen();
                     break;
             }
             break;
