@@ -20,6 +20,6 @@ dw 0x1000
 db "Shell.bin"
 times 16 - ($ - .f3) db 0
 dw 40
-dw 1
+dw 20
 dw 0x0000
 dw 0x2000
