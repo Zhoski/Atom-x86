@@ -83,3 +83,13 @@ void kwrite_int(int x) {
     }
 }
 
+void kwrite_hex(int x, int t) {
+    // t это сколько знаков
+    char *hex_chars = "0123456789ABCDEF";
+    
+    for (int i = t; i >= 0; i--) {
+        char c = hex_chars[(x >> (i * 4)) & 0xF];
+        putchar(c); 
+    }
+}
+
