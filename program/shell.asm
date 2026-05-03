@@ -134,6 +134,11 @@ execute:
     je .do_help
 
     mov esi, command_buffer
+    mov edi, clear
+    call compare_strings
+    je .do_clear
+
+    mov esi, command_buffer
     mov edi, memread
     call compare_strings
     je .do_memread
@@ -147,6 +152,12 @@ execute:
 .do_help:
     mov ecx, list
     call print_string
+    jmp _shell
+
+.do_clear:
+    mov eax, 3
+    mov ebx, 3
+    int 0x80
     jmp _shell
 
 .do_memread:
@@ -408,6 +419,8 @@ list:   db 10, "+-----------------------------------------------+",10
 ; Команды
 help: db "help",0
 memread: db "memread",0
+clear: db "clear",0
+
 adres: db "|    ",0
 
 ; Переменные
