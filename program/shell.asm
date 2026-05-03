@@ -217,20 +217,24 @@ execute:
     call print_string
     pop ecx
 
+    call .write_ascii
+    jmp .next 
+
+.write_ascii:
     push edx
     push ecx
-
     xor edx, edx
     sub ecx, 16
 
-.write_ascii:
+.write_ascii_loop:
     cmp edx, 16
     jz .exit
 
-    ;push ecx
+    push ecx
     mov eax, 4
     mov ebx, 1
     int 0x80
+    pop ecx
 
     mov esi, eax
     
@@ -263,12 +267,14 @@ execute:
 .next_char:
     inc ecx
     inc edx
-    jmp .write_ascii
+    jmp .write_ascii_loop
 
 .exit:
     pop ecx
     pop edx
+    ret
 
+.next:
     push ecx
     mov ecx, right_parren
     call print_string 
@@ -327,8 +333,15 @@ execute:
     jmp .while
 
 .end:
-    mov ecx, new_string
+    mov ecx, left_parren
     call print_string
+
+    call .write_ascii
+    mov ecx, right_parren
+    call print_string
+
+    mov ecx, new_string
+    call print_string 
 
     jmp _shell
 
