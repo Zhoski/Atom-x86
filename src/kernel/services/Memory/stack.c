@@ -10,6 +10,10 @@ const uint32_t stack_block_size = 0x2000;       // 8 Kib
 const uint32_t stack_block_count = 128;         // 128 блоков
 uint8_t stack_mem_bit_mask[16];                 // Массив из 128 бит 
 
+void init_stack_allocate() {
+    
+}
+
 uint8_t (*stack_bit_op[2])(uint8_t, uint8_t) = { op_off, op_on };
 
 void stack_set_mem_bit_mask(uint32_t byte, uint8_t bit, uint8_t(operation)(uint8_t, uint8_t)) {

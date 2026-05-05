@@ -490,6 +490,7 @@ prompt: db "$> ",0
 list:   db 10, "+-----------------------------------------------+",10
         db     "| help - out list of commands                   |",10
         db     "| clear - clear screen                          |",10
+        db     "| memread <adres> <bytes> - reads RAM           |",10
         db     "+-----------------------------------------------+",10,0
 
 ; Команды

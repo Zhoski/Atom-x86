@@ -1,9 +1,9 @@
 #ifndef __SYSCALL__
 #define __SYSCALL__
-#include "../../../drivers/VGA/vga.h"
-#include "../../../drivers/Keyboard/keyboard.h"
 #include "../Memory/memory_map.h"
 #include "../Memory/memory.h"
+#include "../../device/device.h"
+#include "../../services/services.h"
 
 /*-------- Вывод --------*/
 #define SYSCALL_WRITE           1
@@ -31,6 +31,10 @@
 
 /*----- Завершение ------*/
 #define SYSCALL_DIED            60
+
+#define KERNEL_READ_ERROR       -1
+#define SUCCES_READ             0
+#define KERNEL_BASE             0x110000
 
 extern void syscall_handler(int eax, int ebx,int ecx, int edx);
 #endif

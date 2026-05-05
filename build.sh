@@ -2,7 +2,7 @@
 nasm -f bin src/bootloader/boot.asm -o boot.bin
 nasm -f bin src/bootloader/table.asm -o table.bin
 nasm -f bin src/bootloader/stage2.asm -o stage2.bin
-
+nasm -f bin src/bootloader/ram_fs.asm -o ram_fs.bin
 # Драйвера
 gcc -m32 -ffreestanding -c src/drivers/VGA/vga.c -o vga.o
 gcc -m32 -ffreestanding -c src/drivers/Keyboard/keyboard.c -o keyboard.o
@@ -19,6 +19,7 @@ gcc -m32 -ffreestanding -c src/kernel/services/Memory/memory.c -o memory.o
 gcc -m32 -ffreestanding -c src/kernel/services/Memory/process.c -o process.o
 gcc -m32 -ffreestanding -c src/kernel/services/Memory/program.c -o program.o
 gcc -m32 -ffreestanding -c src/kernel/services/syscall/syscall.c -o syscall.o
+#gcc -m32 -ffreestanding -c src/kernel/services/FS/file_system.c -o file_system.o
 # Конфиги
 gcc -m32 -ffreestanding -c src/kernel/config/config.c -o config.o
 # Прерывания
@@ -41,7 +42,8 @@ dd if=stage2.bin of=disk.img bs=512 seek=1 count=6 conv=notrunc
 dd if=config.bin of=disk.img bs=512 seek=8 count=1 conv=notrunc
 dd if=kernel.bin of=disk.img bs=512 seek=10 conv=notrunc
 dd if=shell.bin of=disk.img bs=512 seek=40 count=20 conv=notrunc
-
+dd if=table.bin of=disk.img bs=512 seek=60 count=1 conv=notrunc
+dd if=ram_fs.bin of=disk.img bs=512 seek=62 count=1 conv=notrunc
 #qemu-system-x86_64 -hda disk.img -m 16M
 qemu-system-x86_64 -drive format=raw,file=disk.img -m 16M
 
