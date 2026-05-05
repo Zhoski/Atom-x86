@@ -1,32 +1,20 @@
 #include "syscall.h"
 
-void syscall_handler(int eax, int ebx,int ecx, int edx) {
-    /*
-     * kwrite_string("---SYSCALL---");
-     * kwrite_string("\nEAX  (num): ");
-     * kwrite_int(eax);
-     * kwrite_string("\nEBX (arg1): ");
-     * kwrite_int(ebx);
-     * kwrite_string("\nECX (arg2): ");
-     * kwrite_int(ecx);
-     * kwrite_string("\nEDX (arg3): ");
-     * kwrite_int(edx);
-     * kwrite_string("\n"); 
-    */
+void syscall_handler(int eax, int ebx,int ecx, int edx) { 
     switch(eax) {
         case SYSCALL_WRITE:  
             switch(ebx) {
                 case WRITE_TEXT:
-                    kwrite_string((uint8_t*)ecx);
+                    service.vga->write_string((uint8_t*)ecx);
                     break;
                 case WRITE_INT:
-                    kwrite_int(ecx);
+                    service.vga->write_int(ecx);
                     break;
                 case WRITE_CHAR:
-                    putchar((uint8_t)ecx);
+                    service.vga->write_char((uint8_t)ecx);
                     break;
                 case WRITE_HEX:
-                    kwrite_hex(ecx, edx);
+                    service.vga->write_hex(ecx, edx);
                 defualt:
                     break;
             } 
@@ -35,11 +23,13 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
         case SYSCALL_KEYBOARD:
             switch(ebx) {
                 case RETURN_LAST_SYM:
-                    char c = keyboard_buf_get_las_sym();
+                    //char c = keyboard_buf_get_las_sym();
+                    char c = kb_device.key->get_last_key();
                     asm("movl %0, %%eax\n"
                         :
                         : "r" ((int)c)
-                        : "%eax");
+                        : "%eax"
+                    );
 
                     break;
                 default:
@@ -51,30 +41,14 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                 case SET_ATTRIBUTE:
                     uint8_t bg = ecx >> 8;
                     uint8_t fg = ecx;
-                    vga_set_attribute(bg, fg);
+                    service.vga->set_attribute(bg, fg);
                     break;
                 case CLEAR_SCREEN:
-                    clear_screen();
+                    service.vga->clear();
                     break;
             }
             break;
         case SYSCALL_DIED:
-            //kwrite_string("\nKernel stack before process died: ");
-
-            //uint32_t cur_esp;
-            //asm volatile("movl %%esp, %0":"=r" (cur_esp));
-            vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_BLUE);
-            //kwrite_int(cur_esp);
-            //vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
-            //kwrite_string("\n");     
-            
-            //kwrite_string("\nKernel return ptr: ");
-
-            vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_LIGHT_BLUE);
-            //kwrite_int(kernel_return_ptr);
-            //vga_set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
-            //kwrite_string("\n");     
-
             asm volatile (
                 "movl %1, %%esp\n"
                 "jmp *%0"
@@ -89,14 +63,14 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
         case SYSCALL_MEMORY:
             switch(ebx) {
                 case READ_MEMORY:
-                    uint8_t data = memread((uint8_t*)ecx);
-                    //putchar(data); 
+                    uint8_t data = service.memory->memread((uint8_t*)ecx);
                     asm volatile(
                         "movl %0, %%eax"
                         :
                         : "r" ((int)data)
                         : "eax"
                     );
+                    
                     break;
             }
     } 

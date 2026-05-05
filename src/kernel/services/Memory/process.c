@@ -1,5 +1,4 @@
 #include "process.h"
-#include "../../../drivers/VGA/vga.h"
 #include "memory_map.h"
 
 process process_table[MAX_PROCESS];
@@ -13,11 +12,6 @@ uint8_t process_spawn(uint32_t entry, uint32_t entry_stack) {
             process_table[i].stack_ptr = entry_stack + 0x2000;
             process_table[i].flag = USED;
 
-            //kwrite_string("Create new process PID: ");
-            //kwrite_int(process_table[i].PID);
-            //kwrite_string("\nEntry: ");kwrite_int(process_table[i].entry);
-            //kwrite_string("\nStack: ");kwrite_int(process_table[i].stack_entry);
-            //kwrite_string("\n");
             return SUCCESS;
         }
     }

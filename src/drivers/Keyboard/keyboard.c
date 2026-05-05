@@ -1,7 +1,14 @@
-#include "../VGA/vga.h"
+#include "../../kernel/port/io.h"
+#include "../../kernel/device/device.h"
 #include "keyboard.h"
 
-#define KEYBOARD_BUF_SIZE   32
+#define KEYBOARD_BUF_SIZE       32
+
+// Порты
+#define KEYBOARD_DATA_PORT      0x60
+#define KEYBOARD_COMMAND_PORT   0x64
+
+#define KEY_RELEASE_BIT         0x80
 
 #define SHIFT 0x01
 #define CAPS  0x02
@@ -27,14 +34,15 @@ uint8_t _keyboard_buf_read   = 0;
 uint8_t isShift = 0;
 uint8_t isCaps = 0;
 
-static inline void outb(uint16_t port, uint8_t data) {
-    asm volatile("outb %0, %1" : : "a"(data), "Nd"(port));
-}
+static keyboard_interface kb_ops = {
+    .get_last_key = keyboard_buf_get_las_sym
+};
 
-static inline uint8_t inb(uint16_t port) {
-    uint8_t data;
-    asm volatile("inb %1, %0" : "=a"(data) : "Nd"(port));
-    return data;
+device kb_device; 
+
+void init_keyboard() {
+    kb_device.name = "kb";
+    kb_device.key  = &kb_ops; 
 }
 
 void keyboard_buf_insert(uint8_t c) {
@@ -58,22 +66,10 @@ uint8_t keyboard_buf_get_las_sym() {
 }
 
 void keyboard_handler() {
-    uint8_t scancode = inb(0x60);
-    if(scancode & 0x80) {   
+    uint8_t scancode = inb(KEYBOARD_DATA_PORT);
+    if(scancode & KEY_RELEASE_BIT ) {   
         return;
     } 
     uint8_t c = ascii_table[scancode];
-    if(c  == SHIFT) { 
-        isShift = 1;
-        return;
-    }else if (c == CAPS) {
-        isCaps = !isCaps;
-    }else {
-        if(isCaps) {            
-            keyboard_buf_insert(c-32); 
-        } 
-        else {
-            keyboard_buf_insert(c); 
-        }
-    }  
+    keyboard_buf_insert(c); 
 }

@@ -1,13 +1,39 @@
 #include "vga.h"
+#include "../../kernel/port/io.h"
+#include "../../kernel/device/device.h"
+#include "../../kernel/services/services.h"
 
 uint16_t* vga_video = (uint16_t*)VGA_MEMORY;
 uint8_t terminal_row = 0;
 uint8_t terminal_column = 0;
 uint8_t terminal_color = 0x07;
 
-static inline void outb(uint16_t port, uint8_t data) {
-    asm volatile("outb %0, %1" : : "a"(data), "Nd"(port));
-}
+//static vga_interface vga_ops = {
+//    .update_cursor_position = updateCursorPosition,
+//    .kwrite_string = kwrite_string,
+//    .clear_screen = clear_screen,
+//    .vga_entry_color = vga_entry_color,
+//    .vga_set_attribute = vga_set_attribute,
+//    .putchar = putchar,
+//   .kwrite_int = kwrite_int,
+//   .kwrite_hex = kwrite_hex,
+//};
+
+//device vga_device;
+
+static vga _vga = {
+    .clear = &clear_screen,
+    .write_string = &kwrite_string,
+    .write_char = &putchar,
+    .write_int = &kwrite_int,
+    .write_hex = &kwrite_hex,
+    .set_cursor_position = &updateCursorPosition,
+    .set_attribute = &vga_set_attribute,
+};
+
+void init_vga() {
+   service.vga = &_vga; 
+};
 
 void updateCursorPosition(uint8_t x, uint8_t y) {
     uint16_t position = (terminal_row * 80) + terminal_column;

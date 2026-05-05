@@ -10,7 +10,11 @@ const uint32_t page_base_adres = 0x300000;   // Начиная отсюда
 const uint32_t page_block_size = 0x1000;     // 4 Kib
 const uint32_t page_block_count = 0x800;    // 4096 блоков
 uint8_t page_owner[4096];
-uint8_t page_mem_bit_mask[512];  
+uint8_t page_mem_bit_mask[512]; 
+
+void init_pagging_allocate() {
+    
+}
 
 uint8_t (*bit_op[2])(uint8_t, uint8_t) = { op_off, op_on };
 
