@@ -2,8 +2,8 @@
 #include "../drivers/Keyboard/keyboard.h"
 #include "../cpu/idt.h"
 #include "../cpu/PIC.h"
-#include "services/Memory/allocate.h"
-#include "services/Memory/program.h"
+#include "services/memory/allocate.h"
+#include "services/memory/program.h"
 #include "services/syscall/syscall.h"
 #include "services/services.h"
 #include "port/io.h"
@@ -30,7 +30,8 @@ void kmain() {
    
     init_keyboard();                // Инициализация клавиатуры
     init_vga();                     // Инициализация vga
-    init_memory();
+    init_memory();                  // Инициализация памяти
+    init_allocate();                // Инициализация алокатора
     init_config();                  // Инициализация конфигов
     
     service.vga->clear();			// Очистка

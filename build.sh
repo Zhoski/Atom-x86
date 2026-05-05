@@ -15,10 +15,10 @@ gcc -m32 -ffreestanding -c src/kernel/kernel.c -o kernel.o
 # Сервисы ядра
 #gcc -m32 -ffreestanding -c src/kernel/services/Memory/pagging.c -o pagging.o
 #gcc -m32 -ffreestanding -c src/kernel/services/Memory/stack.c -o stack.o
-gcc -m32 -ffreestanding -c src/kernel/services/Memory/memory.c -o memory.o
-gcc -m32 -ffreestanding -c src/kernel/services/Memory/process.c -o process.o
-gcc -m32 -ffreestanding -c src/kernel/services/Memory/program.c -o program.o
-gcc -m32 -ffreestanding -c src/kernel/services/Memory/allocate.c -o allocate.o
+gcc -m32 -ffreestanding -c src/kernel/services/memory/memory.c -o memory.o
+gcc -m32 -ffreestanding -c src/kernel/services/memory/process.c -o process.o
+gcc -m32 -ffreestanding -c src/kernel/services/memory/program.c -o program.o
+gcc -m32 -ffreestanding -c src/kernel/services/memory/allocate.c -o allocate.o
 gcc -m32 -ffreestanding -c src/kernel/services/syscall/syscall.c -o syscall.o
 #gcc -m32 -ffreestanding -c src/kernel/services/FS/file_system.c -o file_system.o
 # Конфиги
