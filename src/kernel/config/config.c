@@ -6,9 +6,9 @@ void init_config() {
         if(memread(CONFIG_USER_OFFSET + i) == 0) {
             break;
         }
-        user_name[i] = memread(CONFIG_USER_OFFSET + i);  
+        user_name[i] = service.memory->memread(CONFIG_USER_OFFSET + i);  
     }
     for(uint8_t i = 0;i < USER_NAME_MAX;i++) { 
-        user_pass[i] = memread(CONFIG_PASS_OFFSET + i);  
+        user_pass[i] = service.memory->memread(CONFIG_PASS_OFFSET + i);  
     }
 }

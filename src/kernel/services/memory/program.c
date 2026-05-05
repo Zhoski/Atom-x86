@@ -1,7 +1,5 @@
-#include "allocate.h"
-#include "memory.h"
+#include "../services.h"
 #include "process.h"
-#include <stdint.h>
 
 uint32_t kernel_stack_ptr;
 uint32_t kernel_return_ptr;
@@ -30,11 +28,11 @@ exit_ptr:
 
 // Спавн программы
 void program_spawn(uint32_t entry_in_ram) {
-    uint32_t entry = malloc_page();             // Точка входа      
-    uint32_t stack_top = malloc_stack()+0x2000; // Вершина стека
+    uint32_t entry = service.allocate->malloc_page();             // Точка входа      
+    uint32_t stack_top = service.allocate->malloc_stack()+0x2000; // Вершина стека
 
     // Копируем программу из entry_in_ram в entry
-    memcpy((uint8_t*)entry_in_ram, (uint8_t*)entry, 4096);
+    service.memory->memcpy((uint8_t*)entry_in_ram, (uint8_t*)entry, 4096);
 
     // Создаем процесс
     process_spawn(entry, stack_top);

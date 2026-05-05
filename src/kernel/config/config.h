@@ -6,7 +6,7 @@
 #define CONFIG_PASS_OFFSET  0x1022
 
 #include <stdint.h>
-#include "../services/Memory/memory.h"
+#include "../services/services.h"
 
 extern uint8_t user_name[32];
 extern uint8_t user_pass[32];

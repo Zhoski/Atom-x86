@@ -812,8 +812,6 @@ found_file:
     jmp .find_loop 
     ;jmp .file_not_found 
 .file_found: 
-    mov si, file_found 
-    call print 
     ; Извлекаем данные из таблицы (DI указывает на начало записи) 
     mov ax, [di+16] ; LBA (откуда) 
     mov cx, [di+18] ; Сектора (сколько) 

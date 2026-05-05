@@ -5,4 +5,6 @@
 extern uint32_t malloc_stack();
 extern uint32_t malloc_page();
 
+extern void init_allocate();
+
 #endif

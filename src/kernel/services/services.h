@@ -19,23 +19,15 @@ typedef struct {
 } memory;
 
 typedef struct {
-   uint32_t (*malloc)(); 
-} pagging;
-
-typedef struct {
-    uint32_t (*malloc)();
-} stack;
-
-typedef struct {
-   pagging* pagging;
-   stack*   stack;
+    uint32_t (*malloc_page)();
+    uint32_t (*malloc_stack)();
 } allocate;
 
 typedef struct {
     const char name[16];
     vga* vga;
     memory* memory;
-    allocate* alocator;
+    allocate* allocate;
 } services;
 
 extern services service;

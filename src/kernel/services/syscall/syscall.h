@@ -1,7 +1,7 @@
 #ifndef __SYSCALL__
 #define __SYSCALL__
-#include "../Memory/memory_map.h"
-#include "../Memory/memory.h"
+#include "../memory/memory_map.h"
+#include "../memory/memory.h"
 #include "../../device/device.h"
 #include "../../services/services.h"
 
