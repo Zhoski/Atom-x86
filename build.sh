@@ -13,11 +13,12 @@ gcc -m32 -ffreestanding -c src/cpu/PIC.c -o pic.o
 # Ядро
 gcc -m32 -ffreestanding -c src/kernel/kernel.c -o kernel.o
 # Сервисы ядра
-gcc -m32 -ffreestanding -c src/kernel/services/Memory/pagging.c -o pagging.o
-gcc -m32 -ffreestanding -c src/kernel/services/Memory/stack.c -o stack.o
+#gcc -m32 -ffreestanding -c src/kernel/services/Memory/pagging.c -o pagging.o
+#gcc -m32 -ffreestanding -c src/kernel/services/Memory/stack.c -o stack.o
 gcc -m32 -ffreestanding -c src/kernel/services/Memory/memory.c -o memory.o
 gcc -m32 -ffreestanding -c src/kernel/services/Memory/process.c -o process.o
 gcc -m32 -ffreestanding -c src/kernel/services/Memory/program.c -o program.o
+gcc -m32 -ffreestanding -c src/kernel/services/Memory/allocate.c -o allocate.o
 gcc -m32 -ffreestanding -c src/kernel/services/syscall/syscall.c -o syscall.o
 #gcc -m32 -ffreestanding -c src/kernel/services/FS/file_system.c -o file_system.o
 # Конфиги
@@ -32,7 +33,7 @@ nasm -f bin program/shell.asm -o shell.bin
 
 
 # Склеить все файлы в ядро
-ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o idt.o pic.o isr33.o isr80.o pagging.o stack.o memory.o process.o syscall.o program.o config.o -o kernel.elf
+ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o idt.o pic.o isr33.o isr80.o allocate.o memory.o process.o syscall.o program.o config.o -o kernel.elf
 
 objcopy -O binary kernel.elf kernel.bin
 

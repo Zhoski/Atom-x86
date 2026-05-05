@@ -1,7 +1,8 @@
-#include "memory_map.h"
+#include "allocate.h"
 #include "memory.h"
 #include "process.h"
 #include <stdint.h>
+
 uint32_t kernel_stack_ptr;
 uint32_t kernel_return_ptr;
 void program_execute(uint32_t entry, uint32_t stack) { 
