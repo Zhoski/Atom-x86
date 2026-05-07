@@ -18,8 +18,8 @@
 #define ICW2_SALVE_OFFSET  0x28
 
 void pic_remap() {
-    uint8_t a1 = inb(0x21); // Сохраняем маски прерываний
-    uint8_t a2 = inb(0xA1);
+    uint8_t a1 = inb(PIC1_DATA); // Сохраняем маски прерываний
+    uint8_t a2 = inb(PIC2_DATA);
 
     outb(PIC1_COMMAND, ICW1_INIT); // ICW1: инициализация
     outb(PIC2_COMMAND, ICW1_INIT);

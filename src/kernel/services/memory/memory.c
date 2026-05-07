@@ -12,9 +12,11 @@ void init_memory() {
     service.memory = &mem;
 }
 
-void memcpy(uint8_t* from,uint8_t* in, uint32_t size) {
+void memcpy(void* from,void* in, uint32_t size) {
+    uint8_t *from_byte = (uint8_t*)from;
+    uint8_t *in_byte = (uint8_t*)in;
     for(int i = 0;i < size;i++)  {
-        *in++ = *from++; 
+        *in_byte++ = *from_byte++; 
     }   
 }
 

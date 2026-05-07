@@ -36,9 +36,6 @@ start:
     mov si, table
     call found_file
 
-    mov si, ram_fs
-    call found_file
-
     mov si, get_cfg_msg
     call print
 
@@ -86,7 +83,7 @@ start:
     jmp $
 
 ; Базовая загрузка если 1-й байт в конфиге 1
-base_boot:
+base_boot: 
     mov si, hi_user
     call print  
 
@@ -841,7 +838,6 @@ kernel: db "Kernel.bin",0
 config: db "Config.cfg",0
 shell:  db "Shell.bin", 0
 table: db "table.bin",0
-ram_fs: db "ram_fs.bin",0
 file_found: db "File found",13,10,0
 file_not_found: db "File not found",13,10,0
 ; Адреса
