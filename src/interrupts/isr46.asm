@@ -1,8 +1,8 @@
-extern keyboard_handler
+extern disk_handler
 
-global isr33
+global isr46
 
-isr33:
+isr46:
     cli
 
     pushad
@@ -15,7 +15,7 @@ isr33:
     mov es, ax
     mov ds, ax
 
-    call keyboard_handler
+    call disk_handler
 
     mov al, 0x20
     out 0x20, al

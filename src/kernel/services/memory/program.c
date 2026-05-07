@@ -26,9 +26,11 @@ exit_ptr:
 
 }
 
+typedef void (*entry_point)(void);
+
 // Спавн программы
 void program_spawn(uint32_t entry_in_ram) {
-    uint32_t entry = service.allocate->malloc_page();             // Точка входа      
+    entry_point entry = service.allocate->malloc_page();          // Точка входа      
     uint32_t stack_top = service.allocate->malloc_stack()+0x2000; // Вершина стека
 
     // Копируем программу из entry_in_ram в entry

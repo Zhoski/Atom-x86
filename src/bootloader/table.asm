@@ -31,11 +31,3 @@ dw 60
 dw 1
 dw 0x0000
 dw 0x4000
-
-.f5
-db "ram_fs.bin"
-times 16 - ($ - .f5) db 0
-dw 62
-dw 1
-dw 0x0000
-dw 0x4000
