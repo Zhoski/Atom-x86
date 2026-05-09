@@ -83,22 +83,35 @@ uint8_t init_pata(uint16_t info[256]) {
 exit:
     return exit_status;
 }
+uint8_t read_sector(uint32_t lba, uint16_t word[256]) {
+    // Установить устройство
+    uint8_t master_slave = 0b1110;
+    uint8_t drive_head = 0xE0 | (master_slave << 4) | ((lba >> 24) & 0x0F);
 
-void read_sector(uint32_t lba, uint16_t word[256]) {
+    outb(0x1F6, drive_head);
+
     outb(0x1F2, 1);                  // Читать 1 сектор
     outb(0x1F3, (uint8_t)lba);       // Младшая часть lba
     outb(0x1F4, (uint8_t)lba >> 8);  // Средняя часть lba
     outb(0x1F5, (uint8_t)lba >> 16); // Старшая часть lba 
-    outb(0x1F7, 0x20);               // Читать
-
-    while((inb(0x1F7) & BSY));
-    while(!(inb(0x1F7) & 0x8));
+    outb(ATA_PRIMARY_STATUS, 0x20);  // Читать
+    
+    while((inb(ATA_PRIMARY_STATUS) & BSY));
+    uint8_t status;
+    uint8_t exit_status;
+    while(1) {
+        status = inb(ATA_PRIMARY_STATUS);
+        if(status & DRQ) break;
+        if(status & ERR) {
+            exit_status = DISK_ERROR;
+            return exit_status;
+        }
+    }
 
     for(uint32_t i = 0;i < 256;i++) {
         word[i] = inw(0x1F0);
     }
 }
-
 void write_sector(uint32_t lba, uint16_t word[256]) {
     outb(0x1F2, 1);                  // Читать 1 сектор
     outb(0x1F3, (uint8_t)lba);       // Младшая часть lba
@@ -106,7 +119,7 @@ void write_sector(uint32_t lba, uint16_t word[256]) {
     outb(0x1F5, (uint8_t)lba >> 16); // Старшая часть lba 
     outb(0x1F7, 0x30);               // Читать
 
-    while((inb(0x1F7) & BSY));
+    //while((inb(0x1F7) & BSY));
     while(!(inb(0x1F7) & 0x8));
 
     for(uint32_t i = 0;i < 256;i++) {
