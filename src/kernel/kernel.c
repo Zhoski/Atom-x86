@@ -6,6 +6,7 @@
 #include "services/memory/allocate.h"
 #include "services/memory/program.h"
 #include "services/syscall/syscall.h"
+#include "services/fs/fs.h"
 #include "services/services.h"
 #include "port/io.h"
 #include "config/config.h"
@@ -31,17 +32,31 @@ void kmain() {
     pic_irq_mask(0x21, 0b11111001);    // Включить IRQ
     pic_irq_mask(0xA1, 0b10111111);    // PATA включить
     asm("sti");                     // Включить перывания	
-                                
-    init_pata();
+    
+    uint16_t info[256];
+    init_pata(info); 
    
     init_keyboard();                // Инициализация клавиатуры
     init_vga();                     // Инициализация vga
     init_memory();                  // Инициализация памяти
     init_allocate();                // Инициализация алокатора
-    init_config();                  // Инициализация конфигов  
+    init_config();                  // Инициализация конфигов 
 
-    service.vga->clear();			// Очистка  
+    service.vga->clear();			// Очистка   
+                                
+    init_table();
+    open("Shell.bin"); 
+
+    /*for (int i = 27; i <= 46; i++) { 
+        uint16_t word = info[i];
     
+        uint8_t low   = (uint8_t)(word & 0xFF);
+        uint8_t high  = (uint8_t)(word >> 8);
+
+        service.vga->write_char(high);
+        service.vga->write_char(low);
+    }*/
+    service.vga->write_char('\n');
 
     service.vga->set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
     program_spawn(0x2000);
