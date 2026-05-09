@@ -54,8 +54,26 @@ _shell:
     call reset_buffer
     call get_user_name
 
+    mov eax, 3
+    mov ebx, 1
+    mov ecx, 0xB
+    int 0x80
+
     mov ecx, user_name
     call print_string
+
+    mov eax, 3
+    mov ebx, 1
+    mov ecx, 0xA
+    int 0x80
+    
+    mov ecx, privileged
+    call print_string
+
+    mov eax, 3
+    mov ebx, 1
+    mov ecx, 0xF
+    int 0x80
 
     mov ecx, prompt
     call print_string
@@ -484,14 +502,12 @@ logo:   db "    ___   __                      _  ______  _____",10
         db " / ___ / /_/ /_/ / / / / / /_____/   \__, / /_/ / ",10,0
 logo2:  db "/_/  |_\__/\____/_/ /_/ /_/     /_/|_/____/\____/ ",10,10,10,0  
 help_msg: db "Type 'help' to get a list of commands.",10,0
-prompt: db "$> ",0
-
+prompt: db "> ",0
+privileged: db "$",0
 ; Список команд
-list:   db 10, "+-----------------------------------------------+",10
-        db     "| help - out list of commands                   |",10
-        db     "| clear - clear screen                          |",10
-        db     "| memread <adres> <bytes> - reads RAM           |",10
-        db     "+-----------------------------------------------+",10,0
+list:   db  10,"help - out list of commands",10
+        db     "clear - clear screen",10
+        db     "memread <adres> <bytes> - reads RAM",10,0
 
 ; Команды
 help: db "help",0

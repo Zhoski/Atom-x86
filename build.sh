@@ -56,10 +56,3 @@ dd if=kernel.bin of=disk.img bs=512 seek=100 count=127 conv=notrunc
 qemu-system-x86_64 -drive format=raw,file=disk.img -m 16M
 
 
-rm boot.bin
-rm stage2.bin
-rm vga.o
-rm kernel.o
-
-rm memory.o
-rm stack.o
