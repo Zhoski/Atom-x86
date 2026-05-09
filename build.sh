@@ -41,18 +41,18 @@ ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o pata.o idt.o pic.o isr33.o
 
 objcopy -O binary kernel.elf kernel.bin
 
-dd if=/dev/zero of=disk.img bs=512 count=2048
-dd if=boot.bin of=disk.img bs=512 seek=0 count=1 conv=notrunc
-dd if=stage2.bin of=disk.img bs=512 seek=1 count=6 conv=notrunc
-dd if=config.bin of=disk.img bs=512 seek=8 count=1 conv=notrunc
-dd if=shell.bin of=disk.img bs=512 seek=40 count=20 conv=notrunc
-dd if=table.bin of=disk.img bs=512 seek=60 count=1 conv=notrunc
-dd if=file_table.bin of=disk.img bs=512 seek=90 count=10 conv=notrunc
-dd if=kernel.bin of=disk.img bs=512 seek=100 count=127 conv=notrunc
+dd if=/dev/zero of=atom_os.img bs=512 count=2048
+dd if=boot.bin of=atom_os.img bs=512 seek=0 count=1 conv=notrunc
+dd if=stage2.bin of=atom_os.img bs=512 seek=1 count=6 conv=notrunc
+dd if=config.bin of=atom_os.img bs=512 seek=8 count=1 conv=notrunc
+dd if=shell.bin of=atom_os.img bs=512 seek=40 count=20 conv=notrunc
+dd if=table.bin of=atom_os.img bs=512 seek=60 count=1 conv=notrunc
+dd if=file_table.bin of=atom_os.img bs=512 seek=90 count=10 conv=notrunc
+dd if=kernel.bin of=atom_os.img bs=512 seek=100 count=127 conv=notrunc
 
 
 
 #qemu-system-x86_64 -hda disk.img -m 16M
-qemu-system-x86_64 -drive format=raw,file=disk.img -m 16M
+qemu-system-x86_64 -drive format=raw,file=atom_os.img -m 16M
 
 
