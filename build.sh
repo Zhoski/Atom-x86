@@ -2,7 +2,7 @@
 nasm -f bin src/bootloader/boot.asm -o boot.bin
 nasm -f bin src/bootloader/table.asm -o table.bin
 nasm -f bin src/bootloader/stage2.asm -o stage2.bin
-
+nasm -f bin src/bootloader/file_table.asm -o file_table.bin
 # Драйвера
 gcc -m32 -ffreestanding -c src/drivers/VGA/vga.c -o vga.o
 gcc -m32 -ffreestanding -c src/drivers/Keyboard/keyboard.c -o keyboard.o
@@ -20,6 +20,9 @@ gcc -m32 -ffreestanding -c src/kernel/services/memory/process.c -o process.o
 gcc -m32 -ffreestanding -c src/kernel/services/memory/program.c -o program.o
 gcc -m32 -ffreestanding -c src/kernel/services/memory/allocate.c -o allocate.o
 gcc -m32 -ffreestanding -c src/kernel/services/syscall/syscall.c -o syscall.o
+
+gcc -m32 -ffreestanding -c src/kernel/services/fs/fs.c -o fs.o
+
 #gcc -m32 -ffreestanding -c src/kernel/services/FS/file_system.c -o file_system.o
 # Конфиги
 gcc -m32 -ffreestanding -c src/kernel/config/config.c -o config.o
@@ -34,7 +37,7 @@ nasm -f bin program/shell.asm -o shell.bin
 
 
 # Склеить все файлы в ядро
-ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o pata.o idt.o pic.o isr33.o isr46.o isr80.o allocate.o memory.o process.o syscall.o program.o config.o -o kernel.elf
+ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o pata.o idt.o pic.o isr33.o isr46.o isr80.o allocate.o memory.o process.o syscall.o fs.o program.o config.o -o kernel.elf
 
 objcopy -O binary kernel.elf kernel.bin
 
@@ -42,9 +45,13 @@ dd if=/dev/zero of=disk.img bs=512 count=2048
 dd if=boot.bin of=disk.img bs=512 seek=0 count=1 conv=notrunc
 dd if=stage2.bin of=disk.img bs=512 seek=1 count=6 conv=notrunc
 dd if=config.bin of=disk.img bs=512 seek=8 count=1 conv=notrunc
-dd if=kernel.bin of=disk.img bs=512 seek=10 conv=notrunc
 dd if=shell.bin of=disk.img bs=512 seek=40 count=20 conv=notrunc
 dd if=table.bin of=disk.img bs=512 seek=60 count=1 conv=notrunc
+dd if=file_table.bin of=disk.img bs=512 seek=90 count=10 conv=notrunc
+dd if=kernel.bin of=disk.img bs=512 seek=100 count=127 conv=notrunc
+
+
+
 #qemu-system-x86_64 -hda disk.img -m 16M
 qemu-system-x86_64 -drive format=raw,file=disk.img -m 16M
 

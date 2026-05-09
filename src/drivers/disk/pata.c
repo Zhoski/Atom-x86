@@ -1,5 +1,6 @@
 #include "pata.h"
 #include "../../kernel/port/io.h"
+#include "../../kernel/device/device.h"
 #include "../../kernel/services/services.h"
 
 #define BSY                     0x80
@@ -18,7 +19,15 @@
 #define DISK_DONT_SUPPORT_PATA     2
 #define DISK_ERROR                 3
 
-uint8_t init_pata() {
+static disk_interface disk_ops = {
+    .init_pata = &init_pata,
+    .read_sector = &read_sector,
+    .write_sector = &write_sector,
+};
+
+device disk_device;
+
+uint8_t init_pata(uint16_t info[256]) {
     /* IDENTIFY */
     outb(0x1F6, DRIVE);
     outb(0x1F2, 0);
@@ -55,18 +64,21 @@ uint8_t init_pata() {
         status = inb(ATA_PRIMARY_STATUS);
         if(status & DRQ) break;
         if(status & ERR) {
-            service.vga->write_string("Error\n");
             exit_status = DISK_ERROR;
             goto exit;
         }
     }
 
-    uint16_t info[BUFFER_SIZE];
+    /* Регистрация устройства */
+    disk_device.name = "HDD0";
+    disk_device.disk = &disk_ops;
+
+    //uint16_t info[BUFFER_SIZE];
     
     /* Читаем данные о диске из 0x1F0 в буффер */
     for(uint32_t i = 0;i < BUFFER_SIZE;i++) {
         info[i] = inw(ATA_PRIMARY_DATA);
-    }
+    } 
 
 exit:
     return exit_status;
