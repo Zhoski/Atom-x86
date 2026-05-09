@@ -29,12 +29,18 @@ start:
 
     mov si, config
     call found_file
+    call disk_read
+    
+    mov ax, [si+4]
+    mov [config_base], ax
 
     mov si, shell
     call found_file
+    call disk_read
 
     mov si, table
     call found_file
+    call disk_read
 
     mov si, get_cfg_msg
     call print
@@ -88,13 +94,14 @@ base_boot:
     call print  
 
     ; bx установить на 0x1001
-    mov bx, [lba_config+4]      ; 0x1000
-    add bx, 2           ; 0x1002
+    mov bx, [config_base]   ; 0x1000
+    add bx, 2               ; 0x1002
     mov si, user_name       ; Куда грузить данные 
 
     ; Сегменты в 0, cx обнулить
     xor cx, cx          
-    mov es, [lba_config+6]  ; 0x0000
+    xor ax, ax
+    mov es, ax        ; 0x0000
 
     ; Запись в si с 0x0000:0x1002   
 .loop:
@@ -137,13 +144,14 @@ first_boot:
     call print  
 
     ; es в ноль bx на 1 байт конфига
-    mov es, [lba_config+6]      ; 0x0000
-    mov bx, [lba_config+4]      ; 0x1000
+    xor ax, ax
+    mov es, ax                ; 0x0000
+    mov bx, [config_base]     ; 0x1000
 
     ; Ставим в 1 байт конфига 1
     add bx, 1
-    mov byte [es:bx], 0x1
-    
+    mov byte [es:bx], 0x1 
+
 set_user_name:
     ; в di буфер имени
     mov di, user_name
@@ -205,11 +213,12 @@ set_user_name:
     mov si, new_string
     call print
 
-    mov es, [lba_config+6]      ; 0x0000
-    mov bx, [lba_config+4]      ; 0x1000
-    add bx, 2           ; Теперь запись в 0x0000:0x1002
-
-    mov si, user_name       ; Грузим из буффера в es:bx
+    xor ax, ax
+    mov es, ax
+    mov es, ax                  ; 0x0000
+    mov bx, [config_base]       ; 0x1000
+    add bx, 2                   ; Теперь запись в 0x0000:0x1002 
+    mov si, user_name           ; Грузим из буффера в es:bx
 
 .write_name_cfg:
     ; Запись имени в конфиг пока не дойдем до 0
@@ -224,6 +233,8 @@ set_user_name:
     inc bx
     
     jmp .write_name_cfg
+
+    
 
 ; Установка пароля
 set_password:
@@ -273,9 +284,10 @@ set_password:
 .pass_write_cfg:
     ; es в ноль bx на 33 байт конфига
     mov si, user_password
-    mov es, [lba_config+6]      ; 0x0000
-    mov bx, [lba_config+4]      ; 0x1000
-    add bx, 34          ; Тут пароль на 0x0000:0x1022
+    xor ax, ax
+    mov es, ax                      ; 0x0000
+    mov bx, [config_base]           ; 0x1000
+    add bx, 34                      ; Тут пароль на 0x0000:0x1022
 
 .pass_write_loop:
     mov al, [si]
@@ -294,11 +306,23 @@ set_password:
     call print
     
     ; es в ноль bx на начало конфига
-    mov es, [lba_config+6]
-    mov bx, [lba_config+4]
+    xor ax, ax
+    mov es, ax
+    mov bx, [config_base] 
+    
+    push bx
+    mov bx, 0x1002
+    xor ax, ax
+    mov al, [es:bx]
+    call print_ax
+    pop bx
 
-    mov si, lba_config
+    mov si, config
+    call found_file
     call disk_write
+
+    ;mov si, config
+    ;call found_file
 
     jmp terminal
 
@@ -824,7 +848,6 @@ found_file:
     popa
 
     mov si, dap
-    call disk_read 
     jmp .done 
 
 .file_not_found: 
@@ -852,6 +875,8 @@ total_usable_ram_k: dw 0
 ; Конфиг
 config_segment: dw 0x0000
 config_offset:  dw 0x1000
+
+config_base: dw 0x1000
 
 ; Системные сообщения
 msg: db "Bootloader stage 2 load ",0
@@ -929,23 +954,6 @@ c_start:  db "start",0
 parren_close: db " ]",13,10,0
 
 ; ========================== DAP таблицы =============================
-; Конфиг
-lba_config:
-    db 0x10         ; Размер
-    db 0x00         ; Зарезервировано
-    dw 1            ; Читать 1 сектор
-    dw 0x1000       ; куда грузить
-    dw 0x0000       ;
-    dq 8            ; Сектор начала
-
-lba_kernel:
-    db 0x10         ; Размер
-    db 0x00         ; Зарезервировано
-    dw 127          ; Читать 1024 сектора
-    dw 0x0000       ; 0x1000:0x0000 64k
-    dw 0x1000       ; 
-    dq 100           ; Сектор начала
-
 dap:
     db 0x10
     db 0x00
@@ -991,12 +999,13 @@ kernel_load:
     mov si, kernel_load_status
     call print
 
-    mov si, lba_kernel
+    mov si, kernel
+    call found_file
     call disk_read
 
     ; Проверка на целостность
-    mov es, [lba_kernel+6]
-    mov bx, [lba_kernel+4]
+    mov es, [si+6]
+    mov bx, [si+4]
     mov al, [es:bx+1]
     mov ah, [es:bx]
 
@@ -1027,7 +1036,8 @@ kernel_launch:
     ; Передача всех данных ядру
     
     ; Загрузка конфигов в 0x0000:0x1000
-    mov si, lba_config
+    mov si, config
+    call found_file
     call disk_read
 
     ; По памяти 0x0000:0x0500 уже лежит таблица с картой памяти
