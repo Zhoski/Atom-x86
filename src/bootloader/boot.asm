@@ -49,24 +49,6 @@ start:
     call ADD_SIGNATURE_FAT
     call LOAD_BOOT
 
-    ;xor ax, ax
-    ;mov es, ax
-
-    ; Загрузка большого загрузчика по 0x0000:0x8000 из 2 сектора
-    ;mov ah, 0x2
-    ;mov al, 6
-    ;mov cl, 2
-    ;mov ch, 0
-    ;mov dh, 0
-    ;mov dl, 0x80
-    ;mov bx, 0x8000
-    ;int 0x13
-
-    ;jc stage2_load_error
-
-    ; Запуск большого загрузчика
-    ;jmp 0x0000:0x8000
-
 stage2_load_error:
     mov si, not_found 
     call print_string
@@ -110,14 +92,15 @@ ADD_SIGNATURE_FAT:
     add bx, 1
     mov byte[es:bx], 0xFF
 
-    mov ah, 0x03
-    mov bx, 0x1000
-    int 0x13
+    ;mov ah, 0x03
+    ;mov bx, 0x1000
+    ;int 0x13
 
     popa
     ret
 
 INIT_FAT:
+    xor dx, dx
     mov ax, [BPB_RsvdSecCnt]
     mov [FatStartSector], ax
 
@@ -136,6 +119,7 @@ INIT_FAT:
     add ax, [BPB_BytsPerSec]
     sub ax, 1
     mov cx, [BPB_BytsPerSec]
+    xor dx, dx
     div cx
     mov [RootDirSectors], ax
 
@@ -150,6 +134,8 @@ INIT_FAT:
     ret
 
 LOAD_FAT:
+    mov si, k
+    call print_string 
     mov si, lba
     mov ah, 0x42
     mov dl, 0x80
@@ -159,8 +145,12 @@ LOAD_FAT:
     ret
     
 LOAD_BOOT:
+    call INIT_FAT
     call LOAD_FAT
     mov si, stage2_file
+    
+    mov ax, [RootDirStartSector]
+    mov [lba+8], ax
     
     mov bx, 0x7E00
     xor ax, ax
@@ -184,48 +174,25 @@ LOAD_BOOT:
     ret
 
 .FOUND:
-    mov si, found
-    call print_string
+    mov ax, word [es:bx + 0x1A] 
 
-    ; Получаем сектор 
-    mov ax, word [FatStartSector]
-    add ax, word [FatSectors]
-    add ax, word [RootDirSectors]
-    push ax
-    mov ax, [es:bx + 0x1A]
-    sub ax, 0x002
-    mov cx, word [BPB_SecPerClus]
+    sub ax, 2
+    xor cx, cx
+    movzx cx, byte [BPB_SecPerClus]
     mul cx
-    pop bx
-
-    add ax, bx              ; Вот сектор
-
-    add ax, [BPB_RsvdSecCnt]
-    mov cx, 2
-    push ax
+    add ax, [DataStartSector]  
     
-    mov ax, [BPB_FATSz16]
-    mul cx
-    mov bx, ax
-    
-    pop ax
-
-    
-    mov cx, 0x8000              ; Грузим на 0x0000:0x8000
-    mov bx, 0x0000          
-    mov dx, 0x0006              ; 6 Секторов
-    mov si, 0x0000 
-    mov ax, 153 
+    mov word [lba],    0x0010
+    mov word [lba+2],  0x0006
+    mov word [lba+4],  0x8000
+    mov word [lba+6],  0x0000 
     mov word [lba+8],  ax
-    mov word [lba+10], si
-    mov word [lba+6],  bx
-    mov word [lba+4],  cx
-    mov word [lba+2],  dx
+    mov word [lba+10], 0x0000
 
     mov si, lba
     mov ah, 0x42
     mov dl, 0x80
-    int 0x13 
+    int 0x13
 
     jmp 0x0000:0x8000
 
@@ -266,7 +233,7 @@ lba:
     dw 1
     dw 0x7E00
     dw 0x0000
-    dq 129
+    dq 129          ; Тут начинается рут
 
 RootDirStartSector: dw 0
 RootDirSectors:     dw 0 
@@ -274,9 +241,10 @@ FatSectors:         dw 0
 FatStartSector:     dw 0
 DataStartSector:    dw 0
 DataSectors:        dw 0
-found: db "found",0
 not_found: db "error: BOOTLOADER not found",0
 stage2_file: db "BOOT    BIN",0
+e: db 10,"Error!",10,0
+k:db 10,"Ok",10,0
 
 times 510 - ($ - $$) db 0
 dw 0xAA55
