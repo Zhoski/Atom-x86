@@ -92,10 +92,6 @@ ADD_SIGNATURE_FAT:
     add bx, 1
     mov byte[es:bx], 0xFF
 
-    ;mov ah, 0x03
-    ;mov bx, 0x1000
-    ;int 0x13
-
     popa
     ret
 
@@ -134,8 +130,6 @@ INIT_FAT:
     ret
 
 LOAD_FAT:
-    mov si, k
-    call print_string 
     mov si, lba
     mov ah, 0x42
     mov dl, 0x80
@@ -145,32 +139,45 @@ LOAD_FAT:
     ret
     
 LOAD_BOOT:
+    CLD
     call INIT_FAT
-    call LOAD_FAT
-    mov si, stage2_file
-    
+
     mov ax, [RootDirStartSector]
     mov [lba+8], ax
-    
+
+    call LOAD_FAT
+    mov si, stage2_file  
+
     mov bx, 0x7E00
     xor ax, ax
+    mov dx, [BPB_RootEntCnt]
     mov es, ax
     mov ds, ax
-    mov cx, 0
 
 .FIND_FILE_LOOP:
-    cmp cx, 512
-    je .NOT_FOUND
-    mov di, bx  
-    call compare_strings 
-    je .FOUND
+    test dx, dx
+    jz .NOT_FOUND 
+ 
+    mov di, bx
     
-    add cx, 32
+    push si
+    mov cx, 11              ; Сравниваем 11 байт
+    repe cmpsb
+    pop si
+    
+    jz .FOUND
+
+    dec dx
     add bx, 32
 
     jmp .FIND_FILE_LOOP
 
 .NOT_FOUND:
+    mov si, file_not_found
+    call print_string 
+
+    call REBOOT
+
     ret
 
 .FOUND:
@@ -198,34 +205,14 @@ LOAD_BOOT:
 
     ret
 
-compare_strings:
-    pusha
-    xor cx, cx
+REBOOT:
+    mov si, reboot_msg
+    call print_string
 
-.next_char: 
-    lodsb
-    
-    cmp cx, 11
-    je .equal
-    
-    cmp al, [di] 
-    jne .not_equal
+    mov ah, 0x00
+    int 0x16
 
-    cmp al, 0
-    je .equal
-   
-    inc di
-    inc cx
-    
-    jmp .next_char
-
-.not_equal:
-    popa
-    ret
-
-.equal: 
-    popa
-    ret
+    int 0x19
     
 lba:
     db 0x10
@@ -233,7 +220,7 @@ lba:
     dw 1
     dw 0x7E00
     dw 0x0000
-    dq 129          ; Тут начинается рут
+    dq 0          
 
 RootDirStartSector: dw 0
 RootDirSectors:     dw 0 
@@ -243,8 +230,8 @@ DataStartSector:    dw 0
 DataSectors:        dw 0
 not_found: db "error: BOOTLOADER not found",0
 stage2_file: db "BOOT    BIN",0
-e: db 10,"Error!",10,0
-k:db 10,"Ok",10,0
+file_not_found: db "BOOTLOADER Not Found",13,10,0
+reboot_msg: db "Press any key to reboot...",0
 
 times 510 - ($ - $$) db 0
 dw 0xAA55
