@@ -49,11 +49,6 @@ start:
     call ADD_SIGNATURE_FAT
     call LOAD_BOOT
 
-stage2_load_error:
-    mov si, not_found 
-    call print_string
-    jmp $
-
 print_string:
     pusha
 loop:
@@ -228,7 +223,6 @@ FatSectors:         dw 0
 FatStartSector:     dw 0
 DataStartSector:    dw 0
 DataSectors:        dw 0
-not_found: db "error: BOOTLOADER not found",0
 stage2_file: db "BOOT    BIN",0
 file_not_found: db "BOOTLOADER Not Found",13,10,0
 reboot_msg: db "Press any key to reboot...",0
