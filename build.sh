@@ -35,20 +35,24 @@ nasm -f elf32 src/interrupts/isr80.asm -o isr80.o
 #ld -m elf_i386 -Ttext 0x200000 --oformat binary shell.o -o shell.bin
 nasm -f bin program/shell.asm -o shell.bin
 
-
 # Склеить все файлы в ядро
 ld -m elf_i386 -T linker.ld kernel.o vga.o keyboard.o pata.o idt.o pic.o isr33.o isr46.o isr80.o allocate.o memory.o process.o syscall.o fs.o program.o config.o -o kernel.elf
 
-objcopy -O binary kernel.elf kernel.bin
+objcopy -O binary kernel.elf KERNEL.BIN
 
-dd if=/dev/zero of=atom_os.img bs=512 count=2048
+dd if=/dev/zero of=atom_os.img bs=512 count=32768
 dd if=boot.bin of=atom_os.img bs=512 seek=0 count=1 conv=notrunc
-dd if=stage2.bin of=atom_os.img bs=512 seek=1 count=6 conv=notrunc
-dd if=config.bin of=atom_os.img bs=512 seek=8 count=1 conv=notrunc
-dd if=shell.bin of=atom_os.img bs=512 seek=40 count=20 conv=notrunc
-dd if=table.bin of=atom_os.img bs=512 seek=60 count=1 conv=notrunc
-dd if=file_table.bin of=atom_os.img bs=512 seek=90 count=10 conv=notrunc
-dd if=kernel.bin of=atom_os.img bs=512 seek=100 count=127 conv=notrunc
+
+mcopy -i atom_os.img stage2.bin ::/BOOT.BIN
+mcopy -i atom_os.img KERNEL.BIN ::/KERNEL.BIN
+mcopy -i atom_os.img config.bin ::/CONFIG.CFG
+
+#dd if=stage2.bin of=atom_os.img bs=512 seek=1 count=6 conv=notrunc
+#dd if=config.bin of=atom_os.img bs=512 seek=8 count=1 conv=notrunc
+#dd if=shell.bin of=atom_os.img bs=512 seek=40 count=20 conv=notrunc
+#dd if=table.bin of=atom_os.img bs=512 seek=60 count=1 conv=notrunc
+#dd if=file_table.bin of=atom_os.img bs=512 seek=90 count=10 conv=notrunc
+#dd if=kernel.bin of=atom_os.img bs=512 seek=100 count=127 conv=notrunc
 
 
 
