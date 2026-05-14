@@ -24,554 +24,33 @@ start:
     or al, 2
     out 0x92, al        ; A20 line включить 
 
-    mov si, msg
-    call print
-
-    mov si, ok_msg
-    call print
-    
-    call kernel_load    ; Загрузка ядра 
+    ; Установка видеорежима VGA TEXT 80x25 16 цветов
+    mov ah, 0x00         
+    mov al, 0x03
+    int 0x10  
     
     call get_memmap
-    ;call check_first_boot ; Проверка на первый запуск
 
-    mov si, config
-    call found_file
-    call disk_read
+    call INIT_FAT  
+
+    call kernel_load    ; Загрузка ядра 
+    ;mov si, kernel_image
+    ;call FIND_FILE
     
-    mov ax, [si+4]
-    mov [config_base], ax
+    call CONTINUE
 
-    mov si, shell
-    call found_file
-    call disk_read
-
-    mov si, table
-    call found_file
-    call disk_read
-
-    mov si, get_cfg_msg
-    call print
-
-    ;mov si, lba_config     ; Грузим конфиг
-    ;call disk_read         ; 
-    ;mov bx, [lba_config+4]     ; 0x1000
-    ;mov es, [lba_config+6]     ; 0x0000
-    ;mov ah, [es:bx]            ; читаем байт по 0x0000:0x1000 
-
-    xor ax, ax
-    mov es, ax
-    mov bx, 0x1000
-    mov ah, [es:bx]
-
-    cmp ah, 0xFF        ; Сигнатура конфига
-    jnz .config_error   ; Если сигнатура не найдена
+    call kernel_launch
     
-    mov si, ok_msg
-    call print 
-
-    add bx, 1
-    
-    mov ah, [es:bx]
-    cmp ah, 0x00        ; Если 0x0000:0x1001 это 0
-    jz first_boot       ; Прыжок в первый запуск
-    
-    jmp base_boot       ; Елси не первый то в базу
-
-    jmp $
-
-.config_error:
-
-    mov si, fail_msg
-    call print 
-
-    mov si, cfg_error
-    call print
-
-    mov si, cfg_error_signature
-    call print
-
-    mov si, cfg_error_addit
-    call print
-
-    jmp $
-
-; Базовая загрузка если 1-й байт в конфиге 1
-base_boot: 
-    mov si, hi_user
-    call print  
-
-    ; bx установить на 0x1001
-    mov bx, [config_base]   ; 0x1000
-    add bx, 2               ; 0x1002
-    mov si, user_name       ; Куда грузить данные 
-
-    ; Сегменты в 0, cx обнулить
-    xor cx, cx          
-    xor ax, ax
-    mov es, ax        ; 0x0000
-
-    ; Запись в si с 0x0000:0x1002   
-.loop:
-    ; Копируем имя пользователя из кoнфига 32 символа
-    cmp cx, 32          
-    je .exit
-    
-    mov al, [es:bx] ; в al текущий символ bx
-    mov [si], al    ; в буфер имени al
-    
-    ; Инкрименты
-    inc bx            
-    inc si             
-    inc cx              
-    jmp .loop
-
-.exit: 
-    mov si, user_name
-    call print
-    
-    mov al, '!'
-    mov ah, 0x0E
-    int 0x10
-
-    mov si, new_string
-    call print
-
-    jmp terminal    
-
-
-; Случай если это первый запуск и требуются конфиги
-first_boot:
-    mov si, sys_boot_first
-    call print
-
-    mov si, sys_boot_user
-    call print
-
-    mov si, prompt
-    call print  
-
-    ; es в ноль bx на 1 байт конфига
-    xor ax, ax
-    mov es, ax                ; 0x0000
-    mov bx, [config_base]     ; 0x1000
-
-    ; Ставим в 1 байт конфига 1
-    add bx, 1
-    mov byte [es:bx], 0x1 
-
-set_user_name:
-    ; в di буфер имени
-    mov di, user_name
-    xor cx, cx
-
-.loop:
-    ; Читаем пока не будет enter или cx > 32
-    mov ah, 0x0
-    int 0x16
-
-    cmp cx, 32
-    je .done_read
-
-    cmp al, 0x0D
-    jz .done_read
-
-    cmp al, 0x08
-    jz .name_backspace
-
-    mov [di], al
-    inc di
-    
-    mov ah, 0x0E
-    int 0x10
-
-    jmp .loop
-
-.name_backspace:
-    cmp di, 0
-    je .loop
-    dec di
-    dec cx
-    mov al, 0
-    mov [di], al
-    mov ah, 0x0E
-    mov al, 0x08
-    int 0x10
-    mov al, ' '
-    int 0x10
-    mov al, 0x08
-    int 0x10
-    jmp .loop
-
-.done_read:
-    mov si, new_string
-    call print
-
-.exit
-    mov si, hi_user
-    call print
-
-    mov si, user_name
-    call print
-        
-    mov ah, 0x0E
-    mov al, '!'
-    int 0x10
-
-    mov si, new_string
-    call print
-
-    xor ax, ax
-    mov es, ax
-    mov es, ax                  ; 0x0000
-    mov bx, [config_base]       ; 0x1000
-    add bx, 2                   ; Теперь запись в 0x0000:0x1002 
-    mov si, user_name           ; Грузим из буффера в es:bx
-
-.write_name_cfg:
-    ; Запись имени в конфиг пока не дойдем до 0
-    mov al, [si]
-    cmp al, 0
-
-    je set_password
-
-    mov [es:bx], al
-    
-    inc si
-    inc bx
-    
-    jmp .write_name_cfg
-
-    
-
-; Установка пароля
-set_password:
-    mov si, sys_boot_pass
-    call print
-    
-    mov si, user_name
-    call print
-    
-    mov si, prompt
-    call print
-
-    mov si, user_password   ; Буффер куда грузить
-
-.pass_loop:
-    mov ah, 0x0
-    int 0x16
-
-    cmp al, 0x0D
-    jz .pass_write_cfg
-
-    cmp al, 0x08
-    jz .pass_backspace
-
-    mov [si], al
-    inc si
-
-    jmp .pass_loop
-
-.pass_backspace:
-    cmp si, 0
-    je .pass_loop
-    dec si
-    dec cx
-    mov al, 0
-    mov [si], al
-    mov ah, 0x0E
-    mov al, 0x08
-    int 0x10
-    mov al, ' '
-    int 0x10
-    mov al, 0x08
-    int 0x10
-    jmp .pass_loop
-    
-
-.pass_write_cfg:
-    ; es в ноль bx на 33 байт конфига
-    mov si, user_password
-    xor ax, ax
-    mov es, ax                      ; 0x0000
-    mov bx, [config_base]           ; 0x1000
-    add bx, 34                      ; Тут пароль на 0x0000:0x1022
-
-.pass_write_loop:
-    mov al, [si]
-    cmp al, 0
-    jz .done
-
-    mov [es:bx], al
-    
-    inc bx
-    inc si
-
-    jmp .pass_write_loop
-
-.done:
-    mov si, new_string
-    call print
-    
-    ; es в ноль bx на начало конфига
-    xor ax, ax
-    mov es, ax
-    mov bx, [config_base] 
-    
-    push bx
-    mov bx, 0x1002
-    xor ax, ax
-    mov al, [es:bx]
-    call print_ax
-    pop bx
-
-    mov si, config
-    call found_file
-    call disk_write
-
-    ;mov si, config
-    ;call found_file
-
-    jmp terminal
-
-.error:
-    mov si, disk_error_msg
-    call print
-
-    jmp $
-
-; =========================== Терминал ===============================
-terminal:
-    mov si, user_name
-    call print
-    mov si, prompt
-    call print
-
-    mov di, c_buffer
-.loop:
-    ; Считываем нажатие пока не будет enter
-    mov ah, 0x0
-    int 0x16
-
-    cmp al, 0x0D
-    je .do_enter
-
-    cmp al, 0x08
-    je .do_backspace
-
-    mov [di], al
-    inc di
-
-    mov ah, 0x0E
-    int 0x10
-
-    jmp .loop
-
-.do_enter:
-    mov si, new_string
-    call print
-
-    mov dl, 0
-    
-    inc dh
-    jmp .done_read
-
-.do_backspace:
-    cmp di, 0
-    je .loop
-    dec di
-    dec cx
-    mov al, 0
-    mov [di], al
-    mov ah, 0x0E
-    mov al, 0x08
-    int 0x10
-    mov al, ' '
-    int 0x10
-    mov al, 0x08
-    int 0x10
-    jmp .loop
-
-.done_read:
-    jmp .execute
-
-.execute:
-    ; Исполнение команд
-    pusha
-    mov si, c_buffer
-    mov di, c_help
-
-    call compare_strings
-    je .do_help
-
-    mov si, c_buffer
-    mov di, c_clear
-
-    call compare_strings
-    je .do_clear
-
-    mov si, c_buffer
-    mov di, c_user
-    
-    call compare_strings
-    je .do_user
-
-    mov si, c_buffer
-    mov di, c_memmap
-
-    call compare_strings
-    je .do_memmap
-
-    mov si, c_buffer
-    mov di, c_start
-    
-    call compare_strings
-    je .do_start
-
-    popa
-
-; Коммандный буффер в ноль
-.reset_buffer:
-    ; Буффер в нулину
-    mov di, c_buffer ; Сюда буффер   
-    xor al, al       ; al в 0
-    mov cx, 64       ; Сколько байтов обнуляить 
-    cld              ; CF в 0
-    rep stosb           
-    mov di, c_buffer 
-
-    jmp terminal     ; Обратно в терминал
-
-
-; Command
-.do_help:
-    mov si, help_msg
-    call print
-
-    jmp .reset_buffer
-
-.do_clear:
-    mov ah, 0x0
-    mov al, 0x03
-    int 0x10
-
-    jmp .reset_buffer
-
-.do_user:
-    mov si, user_name
-    call print
-
-    mov si, new_string
-    call print
-
-    jmp .reset_buffer
-
-.do_memmap:
-    mov si, memmap_msg
-    call print
-
-    mov es, [memmap_segment]
-    mov bx, [memmap_buffer]
-    xor di, di
-    xor dx, dx
-
-    xor ecx, ecx    ; Будет в роли размера блока
-
-.mem_loop:
-
-    ; Старшие 4 байта базового адреса
-    mov eax, [es:bx+4]
-    call print_hex_32
-
-    ; Младшие 4 байта базового адреса
-    mov eax, [es:bx]
-    call print_hex_32
-
-    mov si, tab
-    call print
-
-    ; Старшие 4 байта размера
-    mov eax, [es:bx+12]
-    call print_hex_32
-    ;mov ecx, [es:bx+8]
-    ;mov eax, [es:bx]
-    ;sub ecx, eax
-    ;mov eax, ecx
-    ;call print_eax
-
-    ; Младшие 4 байта размера
-    mov eax, [es:bx+8]
-    call print_hex_32
-
-    mov si, tab
-    call print
-
-    ; 4 байта типа памяти
-    mov eax, [es:bx+16]
-
-    cmp eax, 1
-    jz .usable
-
-    cmp eax, 2
-    jz .reserved
-
-    cmp eax, 3
-    jz .acpi_rec
-
-    cmp eax, 4
-    jz .acpi_nvs 
-
-    cmp eax, 5
-    jz .bad_memory
-
-    jmp .usable
-
-.usable:
-    mov si, memmap_usable
-    call print
-    jmp .mem_type_end
-
-.reserved:
-    mov si, memmap_reserved
-    call print
-    jmp .mem_type_end
-
-.acpi_rec:
-    mov si, memmap_acpi_rec
-    call print
-    jmp .mem_type_end
-
-.acpi_nvs:
-    mov si, memmap_acpi_nvs
-    call print
-    jmp .mem_type_end
-
-.bad_memory:
-    mov si, memmap_bad_memory
-    call print
-
-.mem_type_end:
-    mov si, new_string
-    call print
-    
-    cmp dx, [memmap_block_count]
-    jz .reset_buffer
-    
-    add bx, 24
-    inc dx
-    jmp .mem_loop
-
-.do_start:
-    jmp kernel_launch
+    jmp $          
 
 ; ============================ Память ================================
 get_memmap:
-    pusha               ; Регистры запомнить
-    
-    mov si, get_memmap_msg
-    call print
+    pusha               ; Регистры запомнить 
 
     mov si, ok_msg
+    call print
+
+    mov si, get_memmap_msg
     call print
     
     mov es, [memmap_segment]    ; 0x0000
@@ -600,6 +79,9 @@ get_memmap:
     mov cx, [memmap_block_count]
     dec cx
     mov [memmap_block_count], cx    
+
+    mov si, info_msg
+    call print
 
     mov si, memmap_total_block_msg
     call print
@@ -638,6 +120,9 @@ get_memmap:
     jmp .ram_loop
 
 .done_read:
+    mov si, info_msg
+    call print
+
     mov si, memmap_total_ram_usable
     call print
 
@@ -656,7 +141,7 @@ get_memmap:
 
 ; ============================== Диск ================================
 
-; Загрузка диска в оперативку
+; Загрузка секторов в оперативку
 ; Вход es:bx al, cl
 disk_read:
     pusha
@@ -689,7 +174,7 @@ disk_read:
 
 .invalid_op:
     mov si, disk_invalid_op
-    call print
+    ;call print
 
     jmp .disk_read_exit
 
@@ -728,7 +213,7 @@ disk_write:
 
 .disk_write_error
     mov si, disk_write_error
-    call print
+    ;call print
     
     popa
     ret
@@ -747,7 +232,6 @@ print:
 .exit:
     popa
     ret
-
 
 print_hex_32:
     pushad
@@ -820,57 +304,301 @@ compare_strings:
 
 ; ================= Драйвер для работы с файлами ==================
 
-files_table:
-    incbin "table.bin"
-found_file:
+INIT_FAT:
+    ; Грузим загрузочный сектор по 0x7E00
+    mov word [LBA_FILE+2], 1
+    mov word [LBA_FILE+4], 0x7E00
+    mov word [LBA_FILE+6], 0x0000
+    mov word [LBA_FILE+8], 0
+
+    mov si, LBA_FILE
+    call disk_read
+
+    ; Теперь в 0x7E00 лежит загрузочный сектор
+    
+    mov ax, word  [es:bx+0xB]
+    mov [BPB_BytsPerSec],  ax
+    mov al, byte  [es:bx+0xD]
+    mov [BPB_SecPerClus],  al
+    mov ax, word  [es:bx+0xE]
+    mov [BPB_RsvdSecCnt], ax
+    mov al, byte [es:bx+0x10]
+    mov [BPB_NumFATs],     al
+    mov ax, word [es:bx+0x11]
+    mov [BPB_RootEntCnt],  ax
+    mov ax, word [es:bx+0x13]
+    mov [BPB_TotSec16],    ax
+    mov ax, word [es:bx+0x16]
+    mov [BPB_FATSz16],     ax
+
+    mov ax, [BPB_RsvdSecCnt]
+    mov [FatStartSector], ax
+
+    mov ax, [BPB_FATSz16]
+    movzx cx, byte [BPB_NumFATs]
+    mul cx
+    mov [FatSectors], ax
+
+    mov ax, [FatSectors]
+    add ax, [FatStartSector]
+    mov [RootDirStartSector], ax
+
+    mov ax, [BPB_RootEntCnt]
+    mov cx, 32
+    mul cx
+
+    add ax, [BPB_BytsPerSec]
+    sub ax, 1
+    
+    mov cx, [BPB_BytsPerSec]
+    div cx
+    mov [RootDirSectors], ax
+
+    mov ax, [RootDirStartSector]
+    add ax, [RootDirSectors]
+    mov [DataStartSector], ax 
+
+    mov ax, [BPB_TotSec16]
+    sub ax, [DataStartSector]
+    mov [DataSectors], ax
+    
+    mov ax, [RootDirStartSector]
+    mov word [LBA_ROOT+8], ax
+
+    mov word [LBA_ROOT+10], 0 
+
+    ret
+
+; Грузит 1 сектор рут каталога по 0x7E00
+LOAD_ROOT: 
+    push si
+    push ax
+    
+    mov ax, [RootDirStartSector]
+    add ax, [RootDirSectorOff]
+    mov word [LBA_ROOT+8], ax
+
+    mov si, LBA_ROOT
+    call disk_read
+    
+    pop  ax
+    pop  si
+    ret
+
+; Вход: si (Имя файла)
+; Выход: si (Указатель на таблицу LBA, если файл найден), ax (Код) 
+; ax = 0 (Файл найден)
+; ax = 1 (Файл не найден)
+FIND_FILE:
+    push bx
+    push cx
+    push dx
+    push di
+    push fs
+    
+    call LOAD_ROOT
+
+    mov bx, 0x7E00
+    mov dx, [BPB_RootEntCnt]
+
+    xor ax, ax
+    mov es, ax
+    mov ds, ax
+    mov fs, ax
+
+.FIND_LOOP:
+    test dx, dx
+    jz .NOT_FOUND 
+
+    push ax
+    mov al, [ToLoadRootSector]
+    cmp al, 16
+    pop ax
+
+    jz .LOAD_NEXT_ROOT_SECTOR
+    jmp .SKIP_LOAD
+
+.LOAD_NEXT_ROOT_SECTOR:
     pusha
-    mov di, files_table 
-.find_loop:
-    xor ax, ax 
-    mov al, [di] 
-    
-    cmp al, 0
-    jz .file_not_found 
-     
-    call compare_strings 
-    
-    jz .file_found 
+    xor ax, ax
+    mov [ToLoadRootSector], al
 
-    add di, 24 
-    
-    jmp .find_loop 
-    ;jmp .file_not_found 
-.file_found: 
-    ; Извлекаем данные из таблицы (DI указывает на начало записи) 
-    mov ax, [di+16] ; LBA (откуда) 
-    mov cx, [di+18] ; Сектора (сколько) 
-    mov dx, [di+20] ; Сегмент (куда) 
-    mov bx, [di+22] ; Смещение (куда) ; Заполняем DAP 
+    mov ax, [RootDirSectorOff]
+    inc ax
+    mov [RootDirSectorOff], ax
 
-    mov [dap+2], cx ; Кол-во секторов 
-    mov [dap+4], bx ; Смещение 
-    mov [dap+6], dx ; Сегмент ; Заполняем LBA (чистим все 8 байт для надежности) 
-    mov [dap+8], ax ; Записываем младшие 2 байта LBA 
-    mov word [dap+10], 0 ; Обнуляем следующие байты LBA
-    mov dword [dap+12], 0 ; Обнуляем старшие 4 байта LBA 
+    call LOAD_ROOT
+
     popa
 
-    mov si, dap
-    jmp .done 
+.SKIP_LOAD:
+    mov di, bx
 
-.file_not_found: 
-    mov si, file_not_found 
-    call print 
-.done: 
+    push si
+    mov cx, 11
+    repe cmpsb
+    pop si
+
+    jz .FOUND
+
+    dec dx
+    add bx, 32
+
+    push ax
+    mov ax, [ToLoadRootSector]
+    inc ax
+    mov [ToLoadRootSector], ax
+    pop ax
+
+    jmp .FIND_LOOP
+
+.FOUND:
+    ;mov si, file_found
+    ;call print
+
+    xor ax, ax
+    mov [ToLoadRootSector], ax
+    mov [RootDirSectorOff], ax
+
+    mov ax, word [es:bx+0x1A]       ; Записываем в ax начальный кластер файла
+    sub ax, 2
+    movzx cx, byte [BPB_SecPerClus]
+    mul cx
+    add ax, [DataStartSector]       ; Теперь в ax номер начального сектора
+
+    mov word [FirstSectorofCluster], ax
+
+    mov ax, word [es:bx+0x1C]       ; Записываем в ax размер файла в байтах
+    mov cx, [BPB_BytsPerSec]
+    div cx                          ; Делим ax на размер сектора
+
+    test dx, dx                     ; Если dx не 0, то то округляем и добавляем 1 сектор
+    jnz .add
+
+    jmp .skip
+
+.add:
+    add ax, 1
+
+.skip:
+    mov [FileSecSize], ax
+
+    mov ax, [FileSecSize]
+    mov [LBA_FILE+2], ax
+    mov ax, [FirstSectorofCluster]
+    mov [LBA_FILE+8], ax
+
+    mov si, LBA_FILE
+
+    movzx ax, [FoundCode]
+
+    pop fs
+    pop di
+    pop dx
+    pop cx
+    pop bx
     ret
-; =========================== Переменные =============================
 
+.NOT_FOUND:
+    ;mov si, file_not_found
+    ;call print
+
+    movzx ax, [NotFoundCode]
+    
+    pop fs
+    pop di
+    pop dx
+    pop cx
+    pop bx
+    ret
+
+LBA_FILE:
+    db 0x10
+    db 0
+    dw 0
+    dw 0
+    dw 0
+    dq 0
+
+LBA_ROOT:
+    db 0x10
+    db 0
+    dw 1
+    dw 0x7E00
+    dw 0x0000
+    dq 0
+
+
+REBOOT:
+    mov si, info_msg
+    call print
+    
+    mov si, reboot_msg
+    call print
+
+    ; Курсор за видимость экрана
+    mov ah, 0x02
+    mov bh, 0
+    mov dh, 26
+    mov dl, 0
+    int 0x10
+
+    mov ah, 0x00
+    int 0x16
+
+    int 0x19
+
+CONTINUE:
+    mov si, info_msg
+    call print
+
+    mov si, continue_msg
+    call print
+
+    ; Курсор за видимость экрана
+    mov ah, 0x02
+    mov bh, 0
+    mov dh, 26
+    mov dl, 0
+    int 0x10
+
+    mov ah, 0x00
+    int 0x16
+
+    ret
+
+RootDirSectorOff:       dw 0        
+ToLoadRootSector:       db 0
+
+FileSecSize:            dw 0        ; Размер файла в секторах
+FirstSectorofCluster:   dw 0        ; Начальный сектор файла
+
+BPB_BytsPerSec:         dw 0        ; Байт в секторе
+BPB_SecPerClus:         db 0        ; Секторов в кластере
+BPB_RsvdSecCnt:         dw 0        ; Зарезервировано секторов
+BPB_NumFATs:            db 0        ; число таблиц FAT
+BPB_RootEntCnt:         dw 0        ; Записей в рут каталоге
+BPB_TotSec16:           dw 0        ; Секторов на диске
+BPB_FATSz16:            dw 0        ; Размер одной таблицы FAT
+
+RootDirStartSector:     dw 0
+RootDirSectors:         dw 0 
+FatSectors:             dw 0
+FatStartSector:         dw 0
+DataStartSector:        dw 0
+DataSectors:            dw 0
+
+NotFoundCode:           db 1
+FoundCode:              db 0
+
+; =========================== Переменные =============================
 kernel: db "Kernel.bin",0
 config: db "Config.cfg",0
 shell:  db "Shell.bin", 0
 table: db "table.bin",0
 file_found: db "File found",13,10,0
 file_not_found: db "File not found",13,10,0
+kernel_image: db "KERNEL  BIN",0
 ; Адреса
 
 ; E820 карта памяти
@@ -894,36 +622,31 @@ cfg_error:   db "Config read error: ",0
 cfg_error_signature: db "Config is missing or damaged",13,10,0
 cfg_error_addit:     db "Additionally: The config file must begin with the signature 0xFF",13,10,0
 
-get_memmap_msg: db "Getting memory map ",0
+get_memmap_msg: db "Getting memory map ",13,10,0
 memmap_total_block_msg: db "Total block [ ",0
 memmap_total_ram_usable:db "Total usable ram [ ",0
 memmap_msg: db "  Base Address             Lenght             Type",13,10,0
-
-memmap_reserved:   db   "Reserved",0
-memmap_usable:     db   " Usable",0
-memmap_acpi_rec:   db   "ACPI Reclaimable",0
-memmap_acpi_nvs:   db   "ACPI NVS",0
-memmap_bad_memory: db   "Bad memory",0
 
 help_msg: db    "> clear  --- reset screen",13,10,"> user   --- write current user",13,10,"> start --- load kernel",13,10,"> memmap --- write memory map",13,10,0
 
 disk_error_msg: db "> Disk load error",13,10,0
 disk_load_error: db "Disk load error",13,10,0
 disk_write_error: db "Disk write error",13,10,0
-sys_boot_first: db "> The system is running for the first time, let's configure it",13,10,0
-
-sys_boot_user: db "> Enter your username (max 32 symbol)",13,10,0
-sys_boot_pass: db "> Enter your password (max 32 symbol)",13,10,0
 
 ; Статусы
-ok_msg:   db "[  OK  ]",13,10,0
-fail_msg: db "[ FAIL ]",13,10,0
+ok_msg:   db "[  OK  ] ",0
+fail_msg: db "[ FAIL ] ",0
+info_msg: db "[ INFO ] ",0
 
 kernel_load_msg: db "Load kernel from hard disk...",13,10,0
-kernel_load_status: db "Kernel load ",0
+kernel_load_status: db "Kernel load ",13,10,0
 kernel_load_error:  db "Kernel load error: ",0
 kernel_signature_error: db "Kernel is missing or damaged",13,10,0
+kernel_not_found_error: db "KERNEL.BIN not found on disk",13,10,0
 kernel_signature_addit: db "Additionaly: Kernel file must begin with the signature 0xAABB"
+
+reboot_msg: db "Press any key to reboot...",0
+continue_msg: db "Press any key to continue...",0
 
 ; Ошибки 
 disk_read_error:  db "Disk read error: ",0
@@ -949,6 +672,11 @@ tab:    db "      ",0
 c_buffer: times 64 db 0 
 user_name: times 32 db 0
 user_password: times 32 db 0
+
+; Массив для информации о системе
+bootInfo: times 256 dw 0
+; Шрифт
+;bios_font: times 1024 dq 0
 
 section .data
 ; Command
@@ -1001,32 +729,52 @@ gdt_ptr:
 ; ========================= Ядро =====================================
 ; Загрузка ядра из 10 сектора в 0x10000
 kernel_load:
-    mov si, kernel_load_msg
+    mov si, kernel_image
+    call FIND_FILE
+
+    test ax, ax
+    jnz .kernel_not_found
+
+    mov word [LBA_FILE+4], 0x0000
+    mov word [LBA_FILE+6], 0x1000
+
+    call disk_read
+
+    mov bx, 0x0000
+    mov ax, 0x1000
+    mov es, ax
+
+    mov ax, word [es:bx]
+    cmp ax, 0xBBAA
+    jnz .kernel_signature
+
+    mov si, ok_msg
+    call print
+    mov si, kernel_load_status
+    call print
+
+    ret
+
+.kernel_not_found:
+    mov si, fail_msg
     call print
 
     mov si, kernel_load_status
     call print
 
-    mov si, kernel
-    call found_file
-    call disk_read
-
-    ; Проверка на целостность
-    mov es, [si+6]
-    mov bx, [si+4]
-    mov al, [es:bx+1]
-    mov ah, [es:bx]
-
-    cmp ax, 0xAABB      ; Сигнатура ядра
-
-    jnz .kernel_load_error  ; Если первые два байта не AABB ядра нет или она повреждено
-
-    mov si, ok_msg
-    call print
-    ret
-
-.kernel_load_error:
     mov si, fail_msg
+    call print
+
+    mov si, kernel_not_found_error
+    call print
+
+    jmp REBOOT
+
+.kernel_signature:
+    mov si, fail_msg
+    call print
+
+    mov si, kernel_load_status
     call print
 
     mov si, kernel_load_error
@@ -1044,17 +792,17 @@ kernel_launch:
     ; Передача всех данных ядру
     
     ; Загрузка конфигов в 0x0000:0x1000
-    mov si, config
-    call found_file
-    call disk_read
+    ;mov si, config
+    ;call found_file
+    ;call disk_read
 
     ; По памяти 0x0000:0x0500 уже лежит таблица с картой памяти
     ; В 0x0000:0x0F00 количество блоков от Е820
-    xor ax, ax
-    mov es, ax
-    mov bx, 0xF00
-    mov ax, [memmap_block_count]
-    mov [es:bx], ax
+    ;xor ax, ax
+    ;mov es, ax
+    ;mov bx, 0xF00
+    ;mov ax, [memmap_block_count]
+    ;mov [es:bx], ax
 
     ; Теперь в 0x0000:0x0500 карта памяти 0x0000:0xF00 сколько блоков 0x0000:0x1000 конфиги
     ; Теперь ядро без суматохи прочитает эти адреса
@@ -1085,4 +833,3 @@ PMentry:
     rep movsd  
 
     jmp 0x8:0x100000
-
