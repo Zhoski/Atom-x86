@@ -3,26 +3,36 @@ org 0x300000
 global shell
 shell:
     ; ebx 1 = Вывести текст
-    ; ebx 2 = Вывести переменную 
+    ; ebx 2 = Вывести переменную
 
-    mov eax, 3
-    mov ebx, 1
-    mov ecx, 0xA
-    int 0x80
+;    mov eax, 1
+;    mov ebx, 1
+;    mov ecx, mm
+;    mov edx, 0xFF000000     ; rgb 255,255,255
+;    int 0x80
+;
+;mm: db "Mops",10,0
 
-    mov ecx, logo
-    call print_string
+;    mov eax, 3
+;    mov ebx, 1
+;    mov ecx, 0xA
+;    int 0x80
 
-    mov ecx, logo2
-    call print_string
+;    mov ecx, logo
+;    call print_string
+
+;    mov ecx, logo2
+;    call print_string
     
-    mov eax, 3
-    mov ebx, 1
-    mov ecx, 0xF
-    int 0x80
+;    mov eax, 3
+;    mov ebx, 1
+;    mov ecx, 0xF
+;    int 0x80
 
-    mov ecx, help_msg
-    call print_string
+;    mov ecx, help_msg
+;    mov edx, 0xFFFFFF00
+;    call print_string
+;    jmp $
 
     call get_user_name
 
@@ -231,6 +241,10 @@ execute:
 
 .new_line:
     push ecx
+    mov eax, 3
+    mov ebx, 1
+    mov ecx, 0x7
+    int 0x80
     mov ecx, left_parren
     call print_string
     pop ecx
@@ -288,6 +302,10 @@ execute:
     jmp .write_ascii_loop
 
 .exit:
+    mov eax, 3
+    mov ebx, 1
+    mov ecx, 0xF
+    int 0x80
     pop ecx
     pop edx
     ret
@@ -306,13 +324,14 @@ execute:
 
     push ecx
     push edx 
+
     mov eax, 1              ; Вывод
     mov ebx, 4              ; Hex
     mov edx, 7              ; Сколько знаков от нуля
     int 0x80
 
     mov ecx, adres
-    call print_string
+    call print_string 
 
     pop edx
     pop ecx
@@ -351,6 +370,11 @@ execute:
     jmp .while
 
 .end:
+    mov eax, 3
+    mov ebx, 1
+    mov ecx, 0x7
+    int 0x80
+
     mov ecx, left_parren
     call print_string
 
@@ -360,6 +384,10 @@ execute:
 
     mov ecx, new_string
     call print_string 
+    
+    mov eax, 3
+    mov ebx, 1
+    mov ecx, 0xF
 
     jmp _shell
 
