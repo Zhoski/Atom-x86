@@ -1,4 +1,4 @@
-#include "../drivers/VGA/vga.h"
+#include "../drivers/video/video.h"
 #include "../drivers/Keyboard/keyboard.h"
 #include "../drivers/disk/pata.h"
 #include "../cpu/idt.h"
@@ -6,18 +6,17 @@
 #include "services/memory/allocate.h"
 #include "services/memory/program.h"
 #include "services/syscall/syscall.h"
-#include "services/fs/fs.h"
+#include "../drivers/fs/fat16.h"
 #include "services/services.h"
 #include "port/io.h"
-#include "config/config.h"
 #include <stdint.h>
+
+#define BOOT_SECTOR         0
+#define BOOT_INFO_ADRESS    0x1000      // Сюда загрузчик поместит таблицу BOOT_INFO
 
 extern void isr33();
 extern void isr80();
 extern void isr46();
-
-uint8_t user_name[32];
-uint8_t user_pass[32];
 
 services service;
 
@@ -37,19 +36,30 @@ void kmain() {
     init_pata(info); 
    
     init_keyboard();                // Инициализация клавиатуры
-    init_vga();                     // Инициализация vga
     init_memory();                  // Инициализация памяти
     init_allocate();                // Инициализация алокатора
-    init_config();                  // Инициализация конфигов 
+    //init_config();                // Инициализация конфигов 
 
-    service.vga->clear();			// Очистка  
-    service.vga->set_attribute(VGA_COLOR_BLACK, VGA_COLOR_WHITE);
-                                
-    init_file_table();
+    uint8_t graphics_mode = *(uint8_t*)(BOOT_INFO_ADRESS + 0xE);
+    init_vga(graphics_mode);                  // Инициализация vga
+                                              
+    uint16_t bootSector[256];
+    disk.read_sector(BOOT_SECTOR, bootSector);
+    init_fat16(bootSector);
+
+    /*uint8_t status = find_file("SHELL   BIN"); 
+    
+    if(status == 1) {
+        video.write_string("File found\n",0,255,0);
+    }else {
+        video.write_string("File not found\n",255,0,0);
+    }*/
+
+    open("SHELL   BIN"); 
 
     //open("Shell.bin");
 
-    program_spawn(0x2000);
+    //program_spawn(0x2000);
 
 	for(;;) {
         asm("hlt");
