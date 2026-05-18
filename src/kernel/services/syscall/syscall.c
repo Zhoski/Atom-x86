@@ -4,17 +4,25 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
     switch(eax) {
         case SYSCALL_WRITE:  
             switch(ebx) {
+                uint8_t r, g, b;
                 case WRITE_TEXT:
-                    service.vga->write_string((uint8_t*)ecx);
+                    r = (uint8_t)(edx >> 24);
+                    g = (uint8_t)(edx >> 16);
+                    b = (uint8_t)(edx >> 8);
+                    video.write_string((uint8_t*)ecx,r,g,b);
+                    //service.vga->write_string((uint8_t*)ecx);
                     break;
                 case WRITE_INT:
-                    service.vga->write_int(ecx);
+                    //service.vga->write_int(ecx);
                     break;
                 case WRITE_CHAR:
-                    service.vga->write_char((uint8_t)ecx);
+                    r = (uint8_t)(edx >> 24);
+                    g = (uint8_t)(edx >> 16);
+                    b = (uint8_t)(edx >> 8);
+                    video.write_char((uint8_t*)ecx,r,g,b);
                     break;
                 case WRITE_HEX:
-                    service.vga->write_hex(ecx, edx);
+                    //service.vga->write_hex(ecx, edx);
                 defualt:
                     break;
             } 
@@ -24,7 +32,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
             switch(ebx) {
                 case RETURN_LAST_SYM:
                     //char c = keyboard_buf_get_las_sym();
-                    char c = kb_device.key->get_last_key();
+                    char c = kb.get_last_key();
                     asm("movl %0, %%eax\n"
                         :
                         : "r" ((int)c)

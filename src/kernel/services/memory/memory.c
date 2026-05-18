@@ -5,6 +5,7 @@
 static memory mem = {
     .memcpy = &memcpy,
     .memread = &memread,
+    .memread_dw = &memread_dw,
     .memread_dd = &memread_dd,
 };
 
@@ -21,6 +22,10 @@ void memcpy(void* from,void* in, uint32_t size) {
 }
 
 uint8_t memread(uint8_t* from) {
+    return from[0];
+}
+
+uint16_t memread_dw(uint16_t* from) {
     return from[0];
 }
 
