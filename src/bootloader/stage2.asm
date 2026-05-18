@@ -28,6 +28,9 @@ start:
     mov ah, 0x00         
     mov al, 0x03
     int 0x10  
+
+    mov si, bootMsg
+    call print
     
     call get_memmap
 
@@ -36,14 +39,222 @@ start:
     call kernel_load    ; Загрузка ядра 
     ;mov si, kernel_image
     ;call FIND_FILE
+
+    call INIT_VESA
     
     call CONTINUE
 
     call kernel_launch
     
-    jmp $          
+    jmp $         
+
+
+; ============================= VESA =================================
+INIT_VESA:
+    xor ax, ax
+    mov es, ax
+    mov di, vbe_info_structure
+    mov ax, 0x4F00
+    int 0x10
+
+    cmp ax, 0x004F
+    jne .dont_support
+
+    jmp .succes
+
+
+.dont_support:
+    mov si, fail_msg
+    call print
+
+    mov si, get_vbe_info
+    call print
+
+    mov si, info_msg
+    call print
+
+    mov si, vesa_dont_support
+    call print
+
+    xor ax, ax
+    mov es, ax
+    mov bx, bootInfo
+
+    mov al, 0
+    mov [vbe_support], al
+
+    movzx ax, [vga_640_480]
+    mov [es:bx+0xE], ax
+
+    ret
+
+.succes:
+    mov si, ok_msg
+    call print
+    
+    mov si, get_vbe_info
+    call print
+
+    mov si, info_msg
+    call print
+    mov si, vesa_support
+    call print
+
+    mov ax, [vbe_info_structure + 0x10]                ; Сегмент
+    mov es, ax
+    mov bx, [vbe_info_structure + 0x0E]                ; Смещение
+
+    xor cx, cx              ; Тут будет номер видеорежима в массиве
+
+.loop: 
+    mov ax, word [es:bx]
+    cmp ax, 0xFFFF
+    je .continue
+
+    cmp ax, 0x0118          ; VESA 1024x732x24
+    je .continue
+
+    add bx, 2 
+    inc cx
+
+    jmp .loop 
+
+.continue:
+    ; Получение информации о режиме
+    mov ax, 0x4F01
+    mov cx, 0x0118
+    mov di, vbe_mode_info_structure
+    int 0x10
+
+    cmp ax, 0x004F
+    jne .get_mode_error
+
+    jmp .get_mode_succes
+
+.get_mode_error:
+    mov si, fail_msg
+    call print
+
+    mov si, get_vbe_mode
+    call print
+
+    ret
+
+.get_mode_succes
+    mov si, ok_msg
+    call print
+
+    mov si, get_vbe_mode
+    call print
+
+    mov ax, word [vbe_mode_info_structure]
+    test ax, 0x80
+    jnz .lfb_support
+
+    jmp .lfb_not_support
+
+.lfb_support:
+    mov si, info_msg
+    call print
+
+    mov si, lfb_support_msg
+    call print
+
+    jmp .get_resolution
+
+.lfb_not_support:
+    mov si, info_msg
+    call print
+
+    mov si, lfb_not_support_msg
+    call print
+
+    jmp .get_resolution
+
+.get_resolution:
+    mov si, info_msg
+    call print
+    
+    mov si, resolution_screen
+    call print
+
+    mov ax, word [vbe_mode_info_structure+0x12]     ; Width
+    mov word [height], ax
+    call print_ax
+
+    mov ah, 0x0E
+    mov al, 'x'
+    int 0x10
+
+    mov ax, word [vbe_mode_info_structure+0x14]     ; Height
+    mov word [height], ax
+    call print_ax 
+
+    mov ah, 0x0E
+    mov al, 'x'
+    int 0x10
+
+    movzx ax, byte [vbe_mode_info_structure+0x19]
+    mov byte [bpp], al
+    call print_ax
+
+    mov si, new_string
+    call print
+
+    xor ax, ax
+    mov es, ax
+    mov bx, bootInfo
+
+    mov word [es:bx],   vbe_info_structure
+    mov word [es:bx+0x02], vbe_mode_info_structure
+     
+    mov ax, word [vbe_mode_info_structure+0x12]
+    mov word [es:bx+0x04], ax          ; Ширина экрана
+
+    mov ax, word [vbe_mode_info_structure+0x14]
+    mov word [es:bx+0x06], ax          ; Высота экрана
+
+    movzx ax, byte [vbe_mode_info_structure+0x19]
+    mov word [es:bx+0x08], ax          ; Бит на пиксель
+
+    mov word [es:bx+0x09], 0           ; Зарезервировано
+
+    mov eax, dword [vbe_mode_info_structure+0x28]
+    mov dword [es:bx+0xA], eax       ; Адрес lfb в памяти в формате сегмент:смещение
+
+    movzx ax, byte [vbe_1024_768]
+    mov word [es:bx+0xE], ax
+
+    ;call print_hex_32 
+
+    ret 
 
 ; ============================ Память ================================
+; Вход:  si (Откуда грузить), di (Куда грузить), cx (Сколько байт грузить)
+; Выход: ax (Результат)
+; ax = 0 (Успешно)
+; ax = 1 (Ошибка)
+memcpy:
+   pusha
+   push si
+   mov si, s
+   call print
+   pop si
+    
+.copy_loop:
+    test cx, cx
+    jz .done
+
+    inc si
+    inc di
+    dec cx
+
+    jmp .copy_loop
+
+.done:
+    popa
+    ret
+
 get_memmap:
     pusha               ; Регистры запомнить 
 
@@ -64,22 +275,17 @@ get_memmap:
     int 0x15
     
     jc .done       
-    add di, 24          
-        
+    add di, 24      
+
     mov cx, [memmap_block_count]
     inc cx
-    mov [memmap_block_count], cx
+    mov [memmap_block_count], cx 
 
     test ebx, ebx       
     jz .done          
     jmp .next_entry     
 
 .done:  
-    ; Уменьшить на 1 потому что какой то баг выдает на 1 сектор больше
-    mov cx, [memmap_block_count]
-    dec cx
-    mov [memmap_block_count], cx    
-
     mov si, info_msg
     call print
 
@@ -136,8 +342,25 @@ get_memmap:
     mov si, parren_close
     call print
 
+    xor ax, ax
+    mov es, ax
+    mov bx, bootInfo 
+
+    ;add bx, [bootInfoMemoryOff]
+    ;mov ax, [total_usable_ram_k]
+    ;mov [es:bx], ax
+    ;add bx, 2
+
+    ;mov ax, [memmap_block_count]
+    ;mov [es:bx], ax
+    ;add bx, 2
+
+    ;mov ax, [memmap_buffer]         ; В ax адрес карты памяти
+    ;mov [es:bx], ax
+
     popa
     ret
+    
 
 ; ============================== Диск ================================
 
@@ -453,9 +676,6 @@ FIND_FILE:
     jmp .FIND_LOOP
 
 .FOUND:
-    ;mov si, file_found
-    ;call print
-
     xor ax, ax
     mov [ToLoadRootSector], ax
     mov [RootDirSectorOff], ax
@@ -591,11 +811,30 @@ DataSectors:            dw 0
 NotFoundCode:           db 1
 FoundCode:              db 0
 
+; =========================== Структуры ==============================
+vbe_info_structure:
+    .signature db "VBE2"
+    .table_data times 512 - 4 db 0
+
+vbe_mode_info_structure:
+    .reserved times 512 db 0
+
 ; =========================== Переменные =============================
-kernel: db "Kernel.bin",0
-config: db "Config.cfg",0
-shell:  db "Shell.bin", 0
-table: db "table.bin",0
+
+vesa_dont_support:  db "VESA is not supported",13,10,0
+vesa_support:       db "VESA supported",13,10,0
+get_vbe_info:       db "Getting VBE info",13,10,0
+get_vbe_mode:       db "Getting VBE mode",13,10,0  
+lfb_support_msg:    db "Linear Frame Buffer supported",13,10,0
+lfb_not_support_msg:db "Linear Frame Buffer is not supported",13,10,0
+resolution_screen:  db "Resolution screen: ",0
+
+vbe_support: db 1       ; 0 не поддерживается, 1 поддерживается
+
+vga_80_25: db 0x1
+vga_640_480: db 0x2
+vbe_1024_768: db 0x3
+
 file_found: db "File found",13,10,0
 file_not_found: db "File not found",13,10,0
 kernel_image: db "KERNEL  BIN",0
@@ -608,26 +847,14 @@ memmap_segment: dw 0x0000
 memmap_block_count: dw 0
 total_usable_ram_k: dw 0
 
-; Конфиг
-config_segment: dw 0x0000
-config_offset:  dw 0x1000
-
 config_base: dw 0x1000
 
 ; Системные сообщения
 msg: db "Bootloader stage 2 load ",0
 
-get_cfg_msg: db "Getting config system ",0
-cfg_error:   db "Config read error: ",0
-cfg_error_signature: db "Config is missing or damaged",13,10,0
-cfg_error_addit:     db "Additionally: The config file must begin with the signature 0xFF",13,10,0
-
 get_memmap_msg: db "Getting memory map ",13,10,0
 memmap_total_block_msg: db "Total block [ ",0
 memmap_total_ram_usable:db "Total usable ram [ ",0
-memmap_msg: db "  Base Address             Lenght             Type",13,10,0
-
-help_msg: db    "> clear  --- reset screen",13,10,"> user   --- write current user",13,10,"> start --- load kernel",13,10,"> memmap --- write memory map",13,10,0
 
 disk_error_msg: db "> Disk load error",13,10,0
 disk_load_error: db "Disk load error",13,10,0
@@ -638,10 +865,9 @@ ok_msg:   db "[  OK  ] ",0
 fail_msg: db "[ FAIL ] ",0
 info_msg: db "[ INFO ] ",0
 
-kernel_load_msg: db "Load kernel from hard disk...",13,10,0
 kernel_load_status: db "Kernel load ",13,10,0
 kernel_load_error:  db "Kernel load error: ",0
-kernel_signature_error: db "Kernel is missing or damaged",13,10,0
+kernel_signature_error: db "Kernel is damaged",13,10,0
 kernel_not_found_error: db "KERNEL.BIN not found on disk",13,10,0
 kernel_signature_addit: db "Additionaly: Kernel file must begin with the signature 0xAABB"
 
@@ -658,36 +884,22 @@ disk_sector_not_found:  db "Sector not found",13,10,0
 disk_seek_failed:   db "Seek Failed",13,10,0
 disk_invalid_op:    db "Invalid function or invalid parameter",13,10,0
 
-; Консоль команды
-prompt: db "> ",0
-hi_user: db "Hi ",0
-
-k_msg: db "k",0
-m_msg: db "M",0
-
 new_string: db 13,10,0
-tab:    db "      ",0
+tab:    db " ",0
+parren_close: db " ]",13,10,0
+s: db "Start MEMCPY",13,10,0
 
-; Буфферы
-c_buffer: times 64 db 0 
-user_name: times 32 db 0
-user_password: times 32 db 0
+width:  dw 0
+height: dw 0
+bpp:    db 0
+
+bios_error_msg: db "Bios error",13,10,0
+bootMsg: db "================================ ATOM-BOOT v0.1 ================================",13,10,0
 
 ; Массив для информации о системе
 bootInfo: times 256 dw 0
-; Шрифт
-;bios_font: times 1024 dq 0
 
 section .data
-; Command
-c_help: db "help",0
-c_clear: db "clear",0
-c_user: db "user", 0
-c_memmap: db "memmap",0
-c_start:  db "start",0
-
-; Специально
-parren_close: db " ]",13,10,0
 
 ; ========================== DAP таблицы =============================
 dap:
@@ -777,11 +989,16 @@ kernel_load:
     mov si, kernel_load_status
     call print
 
-    mov si, kernel_load_error
+    mov si, fail_msg
     call print
+
+    mov si, kernel_load_error
+    call print 
 
     mov si, kernel_signature_error
     call print
+
+    call REBOOT
 
     jmp $
 
@@ -789,23 +1006,45 @@ kernel_load:
 
 ; Загрузка ядра
 kernel_launch:
-    ; Передача всех данных ядру
-    
-    ; Загрузка конфигов в 0x0000:0x1000
-    ;mov si, config
-    ;call found_file
-    ;call disk_read
+    mov ax, 0x4F02
+    mov bx, 0x4118	
+    int 0x10			
+    cmp ax, 0x004F
+    jne .bios_error
 
-    ; По памяти 0x0000:0x0500 уже лежит таблица с картой памяти
-    ; В 0x0000:0x0F00 количество блоков от Е820
-    ;xor ax, ax
-    ;mov es, ax
-    ;mov bx, 0xF00
-    ;mov ax, [memmap_block_count]
-    ;mov [es:bx], ax
+    ; Копируем bootInfo в адрес 0x1000
+    xor ax, ax
+    mov es, ax
+    mov ds, ax
 
-    ; Теперь в 0x0000:0x0500 карта памяти 0x0000:0xF00 сколько блоков 0x0000:0x1000 конфиги
-    ; Теперь ядро без суматохи прочитает эти адреса
+    mov si, bootInfo
+    mov di, 0x1000
+    mov cx, 256
+
+    cld
+
+    repe movsw
+
+    jmp .after
+
+.bios_error:
+    mov si, bios_error_msg
+    call print
+
+    call REBOOT
+
+
+.after:
+    mov al, [vbe_support]
+    cmp al, 1
+    je .skip
+
+    ; Переключение видеорежима на 640x480 16 цветов 
+    mov ah, 0x00
+    mov al, 0x12
+    int 0x10 
+
+.skip:
 
 ; Переключение в защищенный режим
 switch_to_PM:
@@ -831,5 +1070,6 @@ PMentry:
     mov edi, 0x100000   
     mov ecx, 16384     
     rep movsd  
-
+    
+    ;call kmain
     jmp 0x8:0x100000
