@@ -18,8 +18,8 @@ typedef struct {
     disk_interface     *disk;
 } device;
 
-extern device kb_device;
-extern device disk_device;
+extern keyboard_interface kb;
+extern disk_interface disk;
 
 
 #endif
