@@ -4,6 +4,7 @@
 #include "../memory/memory.h"
 #include "../../device/device.h"
 #include "../../services/services.h"
+#include "../../../drivers/video/video.h"
 
 /*-------- Вывод --------*/
 #define SYSCALL_WRITE           1
