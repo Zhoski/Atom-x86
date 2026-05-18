@@ -138,27 +138,6 @@ uint8_t open(const uint8_t *file_name) {
         offset += BPB_BytsPerSec;
     }
 
-    /*uint8_t m = service.memory->memread(entry);
-    int x = (int)m;
-
-    if(x == 0) {
-        putchar('0');
-        return;
-    }
-    if(x < 0) {
-        putchar('-');
-    }
-    char _buffer[12];
-    int i = 0;
-    while (x > 0) {
-        _buffer[i++] = (x % 10) + '0';
-        x /= 10;
-    }
-
-    while (i > 0) {
-        video.write_char(_buffer[--i],255,255,255);
-    }*/
-
     //program_spawn(entry);
     uint32_t stack_top = service.allocate->malloc_stack() + 0x2000; // Верхушка стека
     program_execute(entry, stack_top);
