@@ -19,13 +19,13 @@
 #define DISK_DONT_SUPPORT_PATA     2
 #define DISK_ERROR                 3
 
-static disk_interface disk_ops = {
-    .init_pata = &init_pata,
-    .read_sector = &read_sector,
-    .write_sector = &write_sector,
-};
+//static disk_interface disk_ops = {
+//    .init_pata = &init_pata,
+//    .read_sector = &read_sector,
+//    .write_sector = &write_sector,
+//};
 
-device disk_device;
+disk_interface disk;
 
 uint8_t init_pata(uint16_t info[256]) {
     /* IDENTIFY */
@@ -70,8 +70,12 @@ uint8_t init_pata(uint16_t info[256]) {
     }
 
     /* Регистрация устройства */
-    disk_device.name = "HDD0";
-    disk_device.disk = &disk_ops;
+    //disk_device.name = "HDD0";
+    //disk_device.disk = &disk_ops;
+
+    disk.read_sector = &read_sector;
+    disk.write_sector = &write_sector;
+    disk.init_pata = &init_pata;
 
     //uint16_t info[BUFFER_SIZE];
     

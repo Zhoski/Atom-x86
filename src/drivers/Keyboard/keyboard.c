@@ -34,15 +34,14 @@ uint8_t _keyboard_buf_read   = 0;
 uint8_t isShift = 0;
 uint8_t isCaps = 0;
 
-static keyboard_interface kb_ops = {
-    .get_last_key = keyboard_buf_get_las_sym
-};
+//static keyboard_interface kb_ops = {
+//    .get_last_key = keyboard_buf_get_las_sym
+//};
 
-device kb_device; 
+keyboard_interface kb; 
 
 void init_keyboard() {
-    kb_device.name = "kb";
-    kb_device.key  = &kb_ops; 
+    kb.get_last_key = &keyboard_buf_get_las_sym; 
 }
 
 void keyboard_buf_insert(uint8_t c) {
