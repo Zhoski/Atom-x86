@@ -185,7 +185,7 @@ LOAD_BOOT:
     add ax, [DataStartSector]  
     
     mov word [lba],    0x0010
-    mov word [lba+2],  0x0006
+    mov word [lba+2],  0x0008
     mov word [lba+4],  0x8000
     mov word [lba+6],  0x0000 
     mov word [lba+8],  ax
@@ -224,7 +224,7 @@ FatStartSector:     dw 0
 DataStartSector:    dw 0
 DataSectors:        dw 0
 stage2_file: db "BOOT    BIN",0
-file_not_found: db "BOOTLOADER Not Found",13,10,0
+file_not_found: db "BOOT.BIN not found on disk",13,10,0
 reboot_msg: db "Press any key to reboot...",0
 
 times 510 - ($ - $$) db 0
