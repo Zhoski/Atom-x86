@@ -32,28 +32,23 @@ uint8_t terminal_column = 0;
 uint8_t terminal_color = 0x07;
 uint32_t screen_x_off = 0;
 uint32_t screen_y_off = 0;
+uint8_t* vbe_lfb = 0;
 
-/*static vga _vga = {
-    .clear = &clear_screen,
-    .write_string = &kwrite_string,
-    .write_char = &putchar,
-    .write_int = &kwrite_int,
-    .write_hex = &kwrite_hex,
-    .set_cursor_position = &updateCursorPosition,
-    .set_attribute = &vga_set_attribute,
-    .draw_string = &vesa_1024_768_draw_string,
-    .draw_char = &vesa_1024_768_draw_char,
-    .draw_int = &vesa_1024_768_draw_int,
-    .putpixel = &putpixel,
-};*/
+uint32_t terminal_fg_vbe = 0xFFFFFF00;   // Белый
+uint32_t terminal_bg_vbe = 0x00000000;   // Черный
 
 void init_vga(uint8_t mode) {
-    //service.vga = &_vga;
     if(mode == VBE_1024_768) {
         video.write_string = &vesa_1024_768_draw_string;
         video.write_char = &vesa_1024_768_draw_char;
         video.putpixel = &vesa_1024_768_putpixel;
         video.clear_screen = &vesa_1024_768_clear_screen;
+        video.terminal_bg_vbe_set = &terminal_bg_vbe_set;
+        video.terminal_fg_vbe_set = &terminal_fg_vbe_set;
+
+        uint32_t lfb_adress = *(uint32_t*)(0x1000 + 0x0A);
+        vbe_lfb = (uint8_t*)lfb_adress;
+
     }else if(mode == VGA_640_480) {
         video.write_string = &vga_640_480_draw_string;
         video.write_char = &vga_640_480_draw_char;
@@ -200,6 +195,40 @@ void vga_640_480_draw_int(int x, uint8_t color, uint8_t n, uint8_t n2) {
 
 // =================== VESA ====================
 
+void terminal_fg_vbe_set(uint8_t r, uint8_t g, uint8_t b) {
+    uint32_t color = 0x00000000;
+
+    uint32_t _r = r;
+    _r <<= 24;
+    uint32_t _g = g;
+    _g <<= 16;
+    uint32_t _b = b;
+    _b <<= 8;
+
+    color |= _r;
+    color |= _g;
+    color |= _b;
+
+    terminal_fg_vbe = color;
+}
+
+void terminal_bg_vbe_set(uint8_t r, uint8_t g, uint8_t b) {
+    uint32_t color = 0x00000000;
+
+    uint32_t _r = r;
+    _r <<= 24;
+    uint32_t _g = g;
+    _g <<= 16;
+    uint32_t _b = b;
+    _b <<= 8;
+
+    color |= _r;
+    color |= _g;
+    color |= _b;
+
+    terminal_bg_vbe = color;
+}
+
 void vesa_1024_768_clear_screen(uint8_t r, uint8_t g, uint8_t b) {
     screen_x_off = 0;
     screen_y_off = 0;
@@ -218,23 +247,61 @@ void vesa_1024_768_clear_screen(uint8_t r, uint8_t g, uint8_t b) {
 }
 
 void vesa_1024_768_putpixel(uint32_t x, uint32_t y, uint8_t r, uint8_t g, uint8_t b) {
-    uint32_t lfb_adress = *(uint32_t*)(0x1000 + 0x0A);
-    uint8_t* lfb = (uint8_t*)lfb_adress;
-
     uint32_t pitch = 1024 * 3;
     uint32_t offset = (y * pitch) + (x * 3);
 
-    lfb[offset]     = b; // Синий
-    lfb[offset + 1] = g; // Зеленый
-    lfb[offset + 2] = r; // Красный
+    vbe_lfb[offset]     = b; // Синий
+    vbe_lfb[offset + 1] = g; // Зеленый
+    vbe_lfb[offset + 2] = r; // Красный
 }
 
-void vesa_1024_768_draw_char(uint8_t c, uint8_t r, uint8_t g, uint8_t b) {
+void vesa_1024_768_scroll() { 
+    uint32_t pitch = 3072;
+    uint32_t new_y = 0, y = 1;
+    uint32_t old_pos = (y * pitch);
+    uint32_t new_pos = (new_y * pitch);
+    while (y < VESA_1024_768_HEIGHT)
+    {
+        service.memory->memcpy((vbe_lfb+old_pos), (vbe_lfb+new_pos), pitch);
+
+        y++;
+        new_y++;
+
+        old_pos = (y * pitch);
+        new_pos = (new_y * pitch);
+    }
+    
+    for(uint32_t x = 0; x < 1024;x++) {
+        vesa_1024_768_putpixel(x, y, 0,0,0);
+    }
+    
+}
+
+void vesa_1024_768_draw_char(uint8_t c) {
     if(c == '\n') {
         screen_x_off = 0;
         screen_y_off += 16;
+        if(screen_y_off >= 752) {
+            for(uint32_t i = 0;i < 16;i++) {
+                vesa_1024_768_scroll();
+            }
+            screen_y_off -= 16;
+        }
         return;
     }
+
+    if(c == "\"") {
+        c = '"';
+    }
+
+    uint8_t fgR = (uint8_t)(terminal_fg_vbe >> 24);
+    uint8_t fgG = (uint8_t)(terminal_fg_vbe >> 16);
+    uint8_t fgB = (uint8_t)(terminal_fg_vbe >> 8);
+
+    uint8_t bgR = (uint8_t)(terminal_bg_vbe >> 24);
+    uint8_t bgG = (uint8_t)(terminal_bg_vbe >> 16);
+    uint8_t bgB = (uint8_t)(terminal_bg_vbe >> 8);
+
     for (int i = 0; i < 16; i++) {
         
         uint8_t row_byte = font8x16[c][i]; 
@@ -244,7 +311,9 @@ void vesa_1024_768_draw_char(uint8_t c, uint8_t r, uint8_t g, uint8_t b) {
             uint8_t is_pixel_active = (row_byte >> (7 - j)) & 1; 
 
             if (is_pixel_active) {
-                vesa_1024_768_putpixel(j + screen_x_off, i + screen_y_off, r,g,b); 
+                vesa_1024_768_putpixel(j + screen_x_off, i + screen_y_off,fgR,fgG,fgB); 
+            } else {               
+                vesa_1024_768_putpixel(j + screen_x_off, i + screen_y_off, bgR,bgG,bgB); 
             }
         }
     }
@@ -252,20 +321,20 @@ void vesa_1024_768_draw_char(uint8_t c, uint8_t r, uint8_t g, uint8_t b) {
     screen_x_off+=8;
 }
 
-void vesa_1024_768_draw_string(const uint8_t* s, uint8_t r, uint8_t g, uint8_t b) {
+void vesa_1024_768_draw_string(const uint8_t* s) {
     while(*s) {
-        vesa_1024_768_draw_char(*s, r,g,b);
+        vesa_1024_768_draw_char(*s);
         s++; 
     }
 }
 
 void vesa_1024_768_draw_int(int x, uint8_t r, uint8_t g, uint8_t b) {
     if(x == 0) {
-        vesa_1024_768_draw_char('0',r,g,b);
+        vesa_1024_768_draw_char('0');
         return;
     }
     if(x < 0) {
-        vesa_1024_768_draw_char('-',r,g,b);
+        vesa_1024_768_draw_char('-');
     }
     char buffer[12];
     int i = 0;
@@ -275,6 +344,6 @@ void vesa_1024_768_draw_int(int x, uint8_t r, uint8_t g, uint8_t b) {
     }
 
     while (i > 0) {
-        vesa_1024_768_draw_char(buffer[--i],r,g,b);
+        vesa_1024_768_draw_char(buffer[--i]);
     }
 }

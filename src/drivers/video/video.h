@@ -27,13 +27,15 @@ enum vga_color {
 };
 
 typedef struct {
-    void(*write_string)(uint8_t* s, uint8_t r, uint8_t g, uint8_t b);
-    void(*write_char)(uint8_t c, uint8_t r, uint8_t g, uint8_t b);
+    void(*write_string)(uint8_t* s);
+    void(*write_char)(uint8_t c);
     void(*clear_screen)(uint8_t r, uint8_t g, uint8_t b);
     void(*set_screen_pos)(uint32_t x, uint32_t y);
 
     /* Только для графический режимов */
     void(*putpixel)(uint32_t x, uint32_t y, uint8_t r, uint8_t g, uint8_t n);
+	void(*terminal_fg_vbe_set) (uint8_t r, uint8_t g, uint8_t b);
+	void(*terminal_bg_vbe_set) (uint8_t r, uint8_t g, uint8_t b);
 }Video;
 
 extern Video video;
@@ -54,8 +56,10 @@ void vga_640_480_draw_string(const uint8_t* s, uint8_t color, uint8_t n, uint8_t
 void vga_640_480_draw_int(int x, uint8_t color, uint8_t n, uint8_t n2);
 void vga_640_480_clear_screen(uint8_t r, uint8_t g, uint8_t b);
 // VESA
+void terminal_fg_vbe_set(uint8_t r, uint8_t g, uint8_t b);
+void terminal_bg_vbe_set(uint8_t r, uint8_t g, uint8_t b);
 void vesa_1024_768_putpixel(uint32_t x, uint32_t y, uint8_t r, uint8_t g, uint8_t b);
-void vesa_1024_768_draw_char(uint8_t c, uint8_t r, uint8_t g, uint8_t b);
-void vesa_1024_768_draw_string(const uint8_t* s, uint8_t r, uint8_t g, uint8_t b);
+void vesa_1024_768_draw_char(uint8_t c);
+void vesa_1024_768_draw_string(const uint8_t* s);
 void vesa_1024_768_clear_screen(uint8_t r, uint8_t g, uint8_t b);
 #endif

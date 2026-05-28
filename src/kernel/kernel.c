@@ -47,14 +47,6 @@ void kmain() {
     disk.read_sector(BOOT_SECTOR, bootSector);
     init_fat16(bootSector);
 
-    /*uint8_t status = find_file("SHELL   BIN"); 
-    
-    if(status == 1) {
-        video.write_string("File found\n",0,255,0);
-    }else {
-        video.write_string("File not found\n",255,0,0);
-    }*/
-
     open("SHELL   BIN"); 
 
     //open("Shell.bin");

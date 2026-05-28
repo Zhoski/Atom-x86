@@ -10,19 +10,18 @@
 #define SYSCALL_WRITE           1
 /*----- Виды вывода -----*/
 #define WRITE_TEXT              1
-#define WRITE_INT               2
-#define WRITE_CHAR              3
-#define WRITE_HEX               4
+#define WRITE_CHAR              2
+#define PUTPIXEL                3
 
 /*----- Клавиатура ------*/
 #define SYSCALL_KEYBOARD        2
 /*--- Вернуть символ ----*/
 #define RETURN_LAST_SYM         1
 
-/* -------- VGA ---------*/
-#define SYSCALL_VGA             3
-#define SET_ATTRIBUTE           1
-#define SET_CURSOR_POSITION     2
+/* ----- GRAPHICS -------*/
+#define SYSCALL_VBE             3
+#define SET_FG_COLOR            1
+#define SET_BG_COLOR            2
 #define CLEAR_SCREEN            3
 
 /*-------- MEMORY -------*/

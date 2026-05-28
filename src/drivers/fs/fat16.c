@@ -54,10 +54,6 @@ void init_fat16(uint16_t bootSector[256]) {
         BS_FileSysType[byteOff - 0x36] = bootSectorByte[byteOff];
     } 
 
-    //service.vga->draw_string(BS_OEMName, 15);
-    //service.vga->draw_char('\n', 15);
-    //service.vga->draw_string(BS_FileSysType, 15);
-
     FatStartSector = BPB_RsvdSecCnt;
     FatSectors = BPB_FATSz16 * BPB_NumFATs;
 
@@ -119,22 +115,23 @@ uint8_t open(const uint8_t *file_name) {
     uint16_t first_clus = _file.first_clus;
 
     uint16_t FirstSectorofCluster = DataStartSector + (first_clus - 2) * BPB_SecPerClus;
+    uint16_t Sector = FirstSectorofCluster;
     uint16_t SizeInSec = size_in_byte / BPB_BytsPerSec;
     uint16_t SizeInSecModule = size_in_byte & BPB_BytsPerSec;
     if(SizeInSecModule != 0)
         SizeInSec++;
 
-    //_file.ext[2] = 0;
-    //_file.name[0] = 'M';
-    //video.write_string(_file.name,255,255,255);
+    if(size_in_byte < 512) 
+        SizeInSec = 1;
 
     /* Загрузка файла в память */
     uint16_t buffer[256];
     uint32_t entry = service.allocate->malloc_page();       /* Сюда грузим программу */
     uint32_t offset = 0;
     for(uint32_t i = 0;i < SizeInSec;i++) {
-        disk.read_sector(FirstSectorofCluster, buffer);
+        disk.read_sector(Sector, buffer);
         service.memory->memcpy(buffer, (entry+offset), BPB_BytsPerSec);
+        Sector++;
         offset += BPB_BytsPerSec;
     }
 

@@ -9,21 +9,24 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                     r = (uint8_t)(edx >> 24);
                     g = (uint8_t)(edx >> 16);
                     b = (uint8_t)(edx >> 8);
-                    video.write_string((uint8_t*)ecx,r,g,b);
-                    //service.vga->write_string((uint8_t*)ecx);
-                    break;
-                case WRITE_INT:
-                    //service.vga->write_int(ecx);
-                    break;
-                case WRITE_CHAR:
+                    video.write_string((uint8_t*)ecx); 
+                    break; 
+                case WRITE_CHAR: 
                     r = (uint8_t)(edx >> 24);
                     g = (uint8_t)(edx >> 16);
                     b = (uint8_t)(edx >> 8);
-                    video.write_char((uint8_t*)ecx,r,g,b);
+                    video.write_char((uint8_t)ecx);
                     break;
-                case WRITE_HEX:
-                    //service.vga->write_hex(ecx, edx);
-                defualt:
+                case PUTPIXEL:
+                    uint16_t x = (uint16_t)(ecx >> 16);
+                    uint16_t y = (uint16_t)ecx;
+                    r = (uint8_t)(edx >> 24);
+                    g = (uint8_t)(edx >> 16);
+                    b = (uint8_t)(edx >> 8);
+                    
+                    video.putpixel(x,y,r,g,b);
+                    break;
+                default:
                     break;
             } 
             asm("movl $0, %%eax":::"%eax");
@@ -44,15 +47,33 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                     break;
             }
             break;
-        case SYSCALL_VGA:
+        case SYSCALL_VBE:
+            uint32_t r;
+            uint32_t g;
+            uint32_t b;
             switch(ebx) {
-                case SET_ATTRIBUTE:
-                    uint8_t bg = ecx >> 8;
-                    uint8_t fg = ecx;
-                    service.vga->set_attribute(bg, fg);
+                case SET_BG_COLOR:
+                    r = (uint8_t)(ecx >> 24);
+                    g = (uint8_t)(ecx >> 16);
+                    b = (uint8_t)(ecx >> 8);
+
+                    video.terminal_bg_vbe_set(r,g,b);
+                    
+                    break;
+                case SET_FG_COLOR:
+                    r = (uint8_t)(ecx >> 24);
+                    g = (uint8_t)(ecx >> 16);
+                    b = (uint8_t)(ecx >> 8);
+
+                    video.terminal_fg_vbe_set(r,g,b);
+
                     break;
                 case CLEAR_SCREEN:
-                    service.vga->clear();
+                    r = (uint8_t)(ecx >> 24);
+                    g = (uint8_t)(ecx >> 16);
+                    b = (uint8_t)(ecx >> 8);
+
+                    video.clear_screen(r,g,b);
                     break;
             }
             break;
@@ -62,7 +83,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                 "jmp *%0"
                 :
                 : "r"(kernel_return_ptr), "r"(kernel_stack_ptr)
-                : "esp"
+                : 
             );    
 
             break;
