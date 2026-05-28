@@ -1,7 +1,7 @@
 #include "allocate.h"
 #include "../services.h"
 
-#define STACK_BASE  0x200000
+#define STACK_BASE  0x400000
 #define PAGE_BASE   0x300000
 
 #define STACK_SIZE  0x2000      // 8Kib
