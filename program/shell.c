@@ -1,5 +1,6 @@
 #include "../libs/libio.h"
 #include "../libs/string.h"
+#include "../libs/file.h"
 
 #define COMMAND_BUFFER_SIZE     64
 #define COMMAND_COUNT            3
@@ -33,7 +34,7 @@ void clear() {
 }
 
 void show_license() {
-    const char *license = 
+    /*const char *license = 
         "\nMIT License\n"
         "Copyright (c) 2026 Zhoski\n\n"
         "Permission is hereby granted, free of charge, to any person obtaining a copy\n"
@@ -50,9 +51,17 @@ void show_license() {
         "AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\n"
         "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,\n"
         "OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE\n"
-        "SOFTWARE.\n";
+        "SOFTWARE.\n";*/
     
-    printf(license);
+    //printf(license);
+    unsigned char *file;
+    uint32 status = cat("LICENSE TXT",file);
+    
+    if(status == 0) {
+        printf(file);
+    }else if(status == 1) {
+        printf("FILE NOT FOUND\n");
+    }
 }
 
 void execute() {

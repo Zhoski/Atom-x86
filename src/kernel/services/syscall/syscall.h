@@ -5,6 +5,7 @@
 #include "../../device/device.h"
 #include "../../services/services.h"
 #include "../../../drivers/video/video.h"
+#include "../../../drivers/fs/fat16.h"
 
 /*-------- Вывод --------*/
 #define SYSCALL_WRITE           1
@@ -18,16 +19,20 @@
 /*--- Вернуть символ ----*/
 #define RETURN_LAST_SYM         1
 
-/* ----- GRAPHICS -------*/
+/*------ GRAPHICS -------*/
 #define SYSCALL_VBE             3
 #define SET_FG_COLOR            1
 #define SET_BG_COLOR            2
 #define CLEAR_SCREEN            3
 
-/*-------- MEMORY -------*/
+/* ------- MEMORY -------*/
 #define SYSCALL_MEMORY          4
 #define READ_MEMORY             1
 #define WRITE_MEMORY            2
+
+/*-------- DISK --------*/      
+#define SYSCALL_DISK            5
+#define CAT_FILE                1
 
 /*----- Завершение ------*/
 #define SYSCALL_DIED            60
