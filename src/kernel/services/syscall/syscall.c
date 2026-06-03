@@ -77,6 +77,22 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                     break;
             }
             break;
+        case SYSCALL_DISK:
+            switch (ebx)
+            {
+                case CAT_FILE:
+                    uint8_t *file = (uint8_t*)ecx;
+                    uint8_t *out = (uint8_t*)edx;
+                    uint32_t status = read_file(file, out);
+
+                    asm volatile(
+                        "movl %%eax, %0"
+                        : "=r" (status)
+                        :
+                        : "memory"
+                    );
+                    break;
+            break;
         case SYSCALL_DIED:
             asm volatile (
                 "movl %1, %%esp\n"
@@ -85,7 +101,6 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                 : "r"(kernel_return_ptr), "r"(kernel_stack_ptr)
                 : 
             );    
-
             break;
         default:
             break;
@@ -102,5 +117,6 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                     
                     break;
             }
+        }
     } 
 }

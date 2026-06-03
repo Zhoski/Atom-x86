@@ -38,6 +38,7 @@ dd if=boot.bin of=atom_os.img bs=512 seek=0 count=1 conv=notrunc
 mcopy -i atom_os.img stage2.bin ::/BOOT.BIN
 mcopy -i atom_os.img kernel.bin ::/KERNEL.BIN
 mcopy -i atom_os.img shell.bin  ::/SHELL.BIN
+mcopy -i atom_os.img LICENSE.txt   ::/LICENSE.TXT
 
 qemu-system-x86_64 -drive format=raw,file=atom_os.img -m 16M
 

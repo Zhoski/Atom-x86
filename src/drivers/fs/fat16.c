@@ -139,3 +139,41 @@ uint8_t open(const uint8_t *file_name) {
     uint32_t stack_top = service.allocate->malloc_stack() + 0x2000; // Верхушка стека
     program_execute(entry, stack_top);
 }
+
+uint8_t read_file(const uint8_t *file_name, uint8_t *out) {
+    if(!find_file(file_name)) 
+        return FILE_NOT_FOUND;
+
+    uint32_t size_in_byte = _file.size_in_b;
+    uint16_t first_clus = _file.first_clus;
+
+    uint16_t FirstSectorofCluster = DataStartSector + (first_clus - 2) * BPB_SecPerClus;
+
+    uint16_t SizeInSec = size_in_byte / BPB_BytsPerSec;
+    uint16_t SizeInSecModule = size_in_byte & BPB_BytsPerSec;
+    if(SizeInSecModule != 0)
+        SizeInSec++;
+
+    if(size_in_byte < 512) 
+        SizeInSec = 1;
+
+    uint8_t sector[512];
+    uint32_t SectorOff = 0;
+    for(;SectorOff < SizeInSec;SectorOff++) {
+        disk.read_sector(FirstSectorofCluster + SectorOff, sector);
+        for(uint32_t j = 0;j < 512;j++) {
+            *out = sector[j];
+            out++;
+        }
+    }
+
+    disk.read_sector(FirstSectorofCluster + SectorOff, sector);
+    for(uint32_t i = 0;i < size_in_byte - (SizeInSec * 512);i++) {
+        *out = sector[i];
+        out++;
+    }
+
+    *out = '\0';
+    
+    return 0;
+} 

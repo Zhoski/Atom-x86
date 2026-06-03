@@ -15,6 +15,7 @@ typedef struct __attribute__((packed)) {
 
 void init_fat16(uint16_t bootSector[256]);
 uint8_t find_file(const uint8_t *file_name);
-uint8_t open(const uint8_t *file_name) ;
+uint8_t open(const uint8_t *file_name);
+uint8_t read_file(const uint8_t *file_name, uint8_t buffer[512]);
 
 #endif
