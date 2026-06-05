@@ -37,197 +37,10 @@ start:
     call INIT_FAT  
 
     call kernel_load    ; Загрузка ядра 
-    ;mov si, kernel_image
-    ;call FIND_FILE
-
-    call INIT_VESA
-    
-    call CONTINUE
 
     call kernel_launch
     
     jmp $         
-
-
-; ============================= VESA =================================
-INIT_VESA:
-    xor ax, ax
-    mov es, ax
-    mov di, vbe_info_structure
-    mov ax, 0x4F00
-    int 0x10
-
-    cmp ax, 0x004F
-    jne .dont_support
-
-    jmp .succes
-
-
-.dont_support:
-    mov si, fail_msg
-    call print
-
-    mov si, get_vbe_info
-    call print
-
-    mov si, info_msg
-    call print
-
-    mov si, vesa_dont_support
-    call print
-
-    xor ax, ax
-    mov es, ax
-    mov bx, bootInfo
-
-    mov al, 0
-    mov [vbe_support], al
-
-    movzx ax, [vga_640_480]
-    mov [es:bx+0xE], ax
-
-    ret
-
-.succes:
-    mov si, ok_msg
-    call print
-    
-    mov si, get_vbe_info
-    call print
-
-    mov si, info_msg
-    call print
-    mov si, vesa_support
-    call print
-
-    mov ax, [vbe_info_structure + 0x10]                ; Сегмент
-    mov es, ax
-    mov bx, [vbe_info_structure + 0x0E]                ; Смещение
-
-    xor cx, cx              ; Тут будет номер видеорежима в массиве
-
-.loop: 
-    mov ax, word [es:bx]
-    cmp ax, 0xFFFF
-    je .continue
-
-    cmp ax, 0x0118          ; VESA 1024x732x24
-    je .continue
-
-    add bx, 2 
-    inc cx
-
-    jmp .loop 
-
-.continue:
-    ; Получение информации о режиме
-    mov ax, 0x4F01
-    mov cx, 0x0118
-    mov di, vbe_mode_info_structure
-    int 0x10
-
-    cmp ax, 0x004F
-    jne .get_mode_error
-
-    jmp .get_mode_succes
-
-.get_mode_error:
-    mov si, fail_msg
-    call print
-
-    mov si, get_vbe_mode
-    call print
-
-    ret
-
-.get_mode_succes
-    mov si, ok_msg
-    call print
-
-    mov si, get_vbe_mode
-    call print
-
-    mov ax, word [vbe_mode_info_structure]
-    test ax, 0x80
-    jnz .lfb_support
-
-    jmp .lfb_not_support
-
-.lfb_support:
-    mov si, info_msg
-    call print
-
-    mov si, lfb_support_msg
-    call print
-
-    jmp .get_resolution
-
-.lfb_not_support:
-    mov si, info_msg
-    call print
-
-    mov si, lfb_not_support_msg
-    call print
-
-    jmp .get_resolution
-
-.get_resolution:
-    mov si, info_msg
-    call print
-    
-    mov si, resolution_screen
-    call print
-
-    mov ax, word [vbe_mode_info_structure+0x12]     ; Width
-    mov word [height], ax
-    call print_ax
-
-    mov ah, 0x0E
-    mov al, 'x'
-    int 0x10
-
-    mov ax, word [vbe_mode_info_structure+0x14]     ; Height
-    mov word [height], ax
-    call print_ax 
-
-    mov ah, 0x0E
-    mov al, 'x'
-    int 0x10
-
-    movzx ax, byte [vbe_mode_info_structure+0x19]
-    mov byte [bpp], al
-    call print_ax
-
-    mov si, new_string
-    call print
-
-    xor ax, ax
-    mov es, ax
-    mov bx, bootInfo
-
-    mov word [es:bx],   vbe_info_structure
-    mov word [es:bx+0x02], vbe_mode_info_structure
-     
-    mov ax, word [vbe_mode_info_structure+0x12]
-    mov word [es:bx+0x04], ax          ; Ширина экрана
-
-    mov ax, word [vbe_mode_info_structure+0x14]
-    mov word [es:bx+0x06], ax          ; Высота экрана
-
-    movzx ax, byte [vbe_mode_info_structure+0x19]
-    mov word [es:bx+0x08], ax          ; Бит на пиксель
-
-    mov word [es:bx+0x09], 0           ; Зарезервировано
-
-    mov eax, dword [vbe_mode_info_structure+0x28]
-    mov dword [es:bx+0xA], eax       ; Адрес lfb в памяти в формате сегмент:смещение
-
-    movzx ax, byte [vbe_1024_768]
-    mov word [es:bx+0xE], ax
-
-    ;call print_hex_32 
-
-    ret 
 
 ; ============================ Память ================================
 ; Вход:  si (Откуда грузить), di (Куда грузить), cx (Сколько байт грузить)
@@ -342,21 +155,19 @@ get_memmap:
     mov si, parren_close
     call print
 
+    ; Записываем в bootInfo количество свободной оперативной памяти
     xor ax, ax
     mov es, ax
-    mov bx, bootInfo 
+    mov bx, bootInfo                
+    mov ax, [total_usable_ram_k]
+    mov [es:bx], ax
 
-    ;add bx, [bootInfoMemoryOff]
-    ;mov ax, [total_usable_ram_k]
-    ;mov [es:bx], ax
-    ;add bx, 2
-
-    ;mov ax, [memmap_block_count]
-    ;mov [es:bx], ax
-    ;add bx, 2
-
-    ;mov ax, [memmap_buffer]         ; В ax адрес карты памяти
-    ;mov [es:bx], ax
+    ; Записываем в bootInfo где искать карту памяти для ядра
+    mov ax, [memmap_segment]                   
+    mov [es:bx+2], ax
+    
+    mov ax, [memmap_buffer]
+    mov [es:bx+4], ax
 
     popa
     ret
@@ -1035,10 +846,6 @@ kernel_launch:
 
 
 .after:
-    mov al, [vbe_support]
-    cmp al, 1
-    je .skip
-
     ; Переключение видеорежима на 640x480 16 цветов 
     mov ah, 0x00
     mov al, 0x12

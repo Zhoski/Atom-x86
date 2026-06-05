@@ -4,27 +4,12 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
     switch(eax) {
         case SYSCALL_WRITE:  
             switch(ebx) {
-                uint8_t r, g, b;
+                uint8_t color;
                 case WRITE_TEXT:
-                    r = (uint8_t)(edx >> 24);
-                    g = (uint8_t)(edx >> 16);
-                    b = (uint8_t)(edx >> 8);
                     video.write_string((uint8_t*)ecx); 
                     break; 
                 case WRITE_CHAR: 
-                    r = (uint8_t)(edx >> 24);
-                    g = (uint8_t)(edx >> 16);
-                    b = (uint8_t)(edx >> 8);
                     video.write_char((uint8_t)ecx);
-                    break;
-                case PUTPIXEL:
-                    uint16_t x = (uint16_t)(ecx >> 16);
-                    uint16_t y = (uint16_t)ecx;
-                    r = (uint8_t)(edx >> 24);
-                    g = (uint8_t)(edx >> 16);
-                    b = (uint8_t)(edx >> 8);
-                    
-                    video.putpixel(x,y,r,g,b);
                     break;
                 default:
                     break;
@@ -47,33 +32,22 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                     break;
             }
             break;
-        case SYSCALL_VBE:
-            uint32_t r;
-            uint32_t g;
-            uint32_t b;
+        case SYSCALL_VGA:
+            uint8_t color;
             switch(ebx) {
                 case SET_BG_COLOR:
-                    r = (uint8_t)(ecx >> 24);
-                    g = (uint8_t)(ecx >> 16);
-                    b = (uint8_t)(ecx >> 8);
+                    color = (uint8_t)edx;
 
-                    video.terminal_bg_vbe_set(r,g,b);
+                    video.terminal_bg_vbe_set(color);
                     
                     break;
                 case SET_FG_COLOR:
-                    r = (uint8_t)(ecx >> 24);
-                    g = (uint8_t)(ecx >> 16);
-                    b = (uint8_t)(ecx >> 8);
-
-                    video.terminal_fg_vbe_set(r,g,b);
+                    uint8_t color = (uint8_t)edx;
+                    video.terminal_fg_vbe_set(color);
 
                     break;
                 case CLEAR_SCREEN:
-                    r = (uint8_t)(ecx >> 24);
-                    g = (uint8_t)(ecx >> 16);
-                    b = (uint8_t)(ecx >> 8);
-
-                    video.clear_screen(r,g,b);
+                    video.clear_screen((uint8_t)edx);
                     break;
             }
             break;
@@ -106,15 +80,44 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
             break;
         case SYSCALL_MEMORY:
             switch(ebx) {
-                case READ_MEMORY:
-                    uint8_t data = service.memory->memread((uint8_t*)ecx);
+                uint8_t data;
+                uint32_t target_mem;
+                case READ_MEMORY_B:
+                    data = service.memory->memread((uint8_t*)ecx);
                     asm volatile(
                         "movl %0, %%eax"
                         :
                         : "r" ((int)data)
                         : "eax"
                     );
-                    
+                    break;
+                case READ_MEMORY_DW:
+                    data = service.memory->memread_dw((uint8_t*)ecx);
+                    asm volatile(
+                        "movl %0, %%eax"
+                        :
+                        : "r" ((int)data)
+                        : "eax"
+                    );
+                    break;
+                case READ_MEMORY_DD:
+                    data = service.memory->memread_dd((uint8_t*)ecx);
+                    asm volatile(
+                        "movl %0, %%eax"
+                        :
+                        : "r" ((int)data)
+                        : "eax"
+                    );
+                    break;
+                case WRITE_MEMORY:
+                    data = (uint8_t*)ecx;
+                    target_mem = edx;
+                    asm volatile(
+                        "movl %[data], %[mem]"
+                        : [data] "=m" (data)
+                        : [mem]  "r"  (target_mem)
+                        : "memory"
+                    );
                     break;
             }
         }
