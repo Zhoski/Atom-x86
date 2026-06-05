@@ -112,12 +112,12 @@ uint8_t open(const uint8_t *file_name) {
         return FILE_NOT_FOUND;
 
     uint32_t size_in_byte = _file.size_in_b;
-    uint16_t first_clus = _file.first_clus;
+    uint32_t first_clus = _file.first_clus;
 
-    uint16_t FirstSectorofCluster = DataStartSector + (first_clus - 2) * BPB_SecPerClus;
-    uint16_t Sector = FirstSectorofCluster;
-    uint16_t SizeInSec = size_in_byte / BPB_BytsPerSec;
-    uint16_t SizeInSecModule = size_in_byte & BPB_BytsPerSec;
+    uint32_t FirstSectorofCluster = DataStartSector + (first_clus - 2) * BPB_SecPerClus;
+    uint32_t Sector = FirstSectorofCluster;
+    uint32_t SizeInSec = size_in_byte / BPB_BytsPerSec;
+    uint32_t SizeInSecModule = size_in_byte & BPB_BytsPerSec;
     if(SizeInSecModule != 0)
         SizeInSec++;
 
@@ -126,7 +126,7 @@ uint8_t open(const uint8_t *file_name) {
 
     /* Загрузка файла в память */
     uint16_t buffer[256];
-    uint32_t entry = service.allocate->malloc_page();       /* Сюда грузим программу */
+    uint32_t entry = 0x300000;       /* Сюда грузим программу */
     uint32_t offset = 0;
     for(uint32_t i = 0;i < SizeInSec;i++) {
         disk.read_sector(Sector, buffer);
@@ -136,7 +136,7 @@ uint8_t open(const uint8_t *file_name) {
     }
 
     //program_spawn(entry);
-    uint32_t stack_top = service.allocate->malloc_stack() + 0x2000; // Верхушка стека
+    uint32_t stack_top = 0x400000;  // Верхушка стека
     program_execute(entry, stack_top);
 }
 
@@ -147,10 +147,10 @@ uint8_t read_file(const uint8_t *file_name, uint8_t *out) {
     uint32_t size_in_byte = _file.size_in_b;
     uint16_t first_clus = _file.first_clus;
 
-    uint16_t FirstSectorofCluster = DataStartSector + (first_clus - 2) * BPB_SecPerClus;
+    uint32_t FirstSectorofCluster = DataStartSector + (first_clus - 2) * BPB_SecPerClus;
 
-    uint16_t SizeInSec = size_in_byte / BPB_BytsPerSec;
-    uint16_t SizeInSecModule = size_in_byte & BPB_BytsPerSec;
+    uint32_t SizeInSec = size_in_byte / BPB_BytsPerSec;
+    uint32_t SizeInSecModule = size_in_byte & BPB_BytsPerSec;
     if(SizeInSecModule != 0)
         SizeInSec++;
 

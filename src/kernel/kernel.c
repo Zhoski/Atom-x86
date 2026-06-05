@@ -3,7 +3,7 @@
 #include "../drivers/disk/pata.h"
 #include "../cpu/idt.h"
 #include "../cpu/PIC.h"
-#include "services/memory/allocate.h"
+//#include "services/memory/allocate.h"
 #include "services/memory/program.h"
 #include "services/syscall/syscall.h"
 #include "../drivers/fs/fat16.h"
@@ -37,16 +37,15 @@ void kmain() {
    
     init_keyboard();                // Инициализация клавиатуры
     init_memory();                  // Инициализация памяти
-    init_allocate();                // Инициализация алокатора
     //init_config();                // Инициализация конфигов 
 
-    uint8_t graphics_mode = *(uint8_t*)(BOOT_INFO_ADRESS + 0xE);
-    init_vga(graphics_mode);                  // Инициализация vga
+    init_vga(0x2);                  // Инициализация vga
                                               
     uint16_t bootSector[256];
     disk.read_sector(BOOT_SECTOR, bootSector);
     init_fat16(bootSector);
 
+    terminal_bg_vbe_set(1);
     open("SHELL   BIN"); 
 
     //open("Shell.bin");

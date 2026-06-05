@@ -20,15 +20,18 @@
 #define RETURN_LAST_SYM         1
 
 /*------ GRAPHICS -------*/
-#define SYSCALL_VBE             3
+#define SYSCALL_VGA             3
 #define SET_FG_COLOR            1
 #define SET_BG_COLOR            2
 #define CLEAR_SCREEN            3
 
 /* ------- MEMORY -------*/
 #define SYSCALL_MEMORY          4
-#define READ_MEMORY             1
-#define WRITE_MEMORY            2
+#define READ_MEMORY_B           1
+#define READ_MEMORY_DW          2
+#define READ_MEMORY_DD          3
+#define WRITE_MEMORY            4
+#define COPY_MEMORY             5
 
 /*-------- DISK --------*/      
 #define SYSCALL_DISK            5
