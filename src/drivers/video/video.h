@@ -35,9 +35,9 @@ typedef struct {
     /* Только для графический режимов */
 	void(*terminal_fg_vbe_set) (uint8_t color);
 	void(*terminal_bg_vbe_set) (uint8_t color);
-}Video;
+}VideoDriver;
 
-extern Video video;
+extern VideoDriver video;
 
 void clear_screen(uint8_t r, uint8_t g, uint8_t b);
 void vga_80_25_write_char(const uint8_t c, uint8_t color, uint8_t n, uint8_t n2);
