@@ -24,7 +24,7 @@ enum graphics_mode {
     VBE_1024_768 = 0x03,       // VBE графический 1024x768 16M цветов
 };
 
-Video video;
+VideoDriver video;
 
 uint16_t* vga_video = (uint16_t*)VGA_MEMORY;
 uint8_t terminal_row = 0;
