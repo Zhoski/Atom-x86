@@ -1,7 +1,7 @@
 make
 # Загрузчик
 nasm -f bin src/bootloader/boot.asm -o boot.bin
-nasm -f bin src/bootloader/stage2.asm -o stage2.bin
+nasm -f bin src/bootloader/stage2.asm -o binaries/stage2.bin
 # Драйвера
 gcc -m32 -march=i486 -ffreestanding -c src/drivers/video/video.c -w -o video.o
 gcc -m32 -march=i486 -ffreestanding -c src/drivers/Keyboard/keyboard.c -w -o keyboard.o
@@ -17,7 +17,6 @@ gcc -m32 -march=i486 -ffreestanding -c src/kernel/services/memory/program.c -w -
 gcc -m32 -march=i486 -ffreestanding -c src/kernel/services/syscall/syscall.c -w -o syscall.o
 gcc -m32 -march=i486 -ffreestanding -c src/drivers/fs/fat16.c -w -o fs.o
 
-
 # Прерывания
 nasm -f elf32 src/interrupts/isr33.asm -o isr33.o
 nasm -f elf32 src/interrupts/isr46.asm -o isr46.o
@@ -25,18 +24,17 @@ nasm -f elf32 src/interrupts/isr80.asm -o isr80.o
 # Склеить все файлы в ядро
 ld -m elf_i386 -T linker.ld kernel.o video.o keyboard.o pata.o idt.o pic.o isr33.o isr46.o isr80.o memory.o syscall.o fs.o program.o -w -o kernel.elf
 
-objcopy -O binary kernel.elf kernel.bin
+objcopy -O binary kernel.elf binaries/kernel.bin
 
-dd if=/dev/zero of=atom_os.img bs=512 count=32768
-dd if=boot.bin of=atom_os.img bs=512 seek=0 count=1 conv=notrunc
+python3 afs-pack.py
 
-mcopy -i atom_os.img stage2.bin ::/BOOT.BIN
-mcopy -i atom_os.img kernel.bin ::/KERNEL.BIN
-mcopy -i atom_os.img shell.bin  ::/SHELL.BIN
-mcopy -i atom_os.img LICENSE.txt ::/LICENSE.TXT
+qemu-system-i386 -cpu 486 -drive format=raw,file=atom.img -m 4M -icount shift=6,sleep=off -rtc clock=vm
 
-qemu-system-i386 -drive format=raw,file=atom_os.img -m 4M
+
+rm binaries/boot.bin
+rm binaries/stage2.bin
 
 make clean
 rm *bin
+rm binaries/*bin
 rm *elf

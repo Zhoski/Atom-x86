@@ -5,12 +5,9 @@
 typedef struct __attribute__((packed)) {
     uint8_t name[8];
     uint8_t ext[3];
-    uint8_t atr;
-    uint8_t reserved[10];
-    uint16_t t_creation;
-    uint16_t d_creation;
-    uint16_t first_clus;
-    uint32_t size_in_b;
+    uint16_t size_in_sec;
+    uint16_t start_sec;
+    uint8_t flags;
 } File;
 
 void init_fat16(uint16_t bootSector[256]);

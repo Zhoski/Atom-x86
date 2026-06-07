@@ -1,4 +1,4 @@
-TARGET = shell.bin
+TARGET = binaries/shell.bin
 
 $(TARGET) : shell.elf
 	objcopy -O binary shell.elf $(TARGET)

@@ -17,6 +17,9 @@ static memory mem = {
     .memread_dw = &memread_dw,
     .memread_dd = &memread_dd,
     .memset = &memset,
+    .malloc = &malloc,
+    .free = &free,
+    .create_heap = &create_heap
 };
 
 typedef struct {
@@ -26,6 +29,12 @@ typedef struct {
 } Heap;
 
 Heap* block_heap = (Heap*)HEAP_BASE;
+
+void create_heap() {
+    block_heap->is_free = FREE;
+    block_heap->size = HEAP_SIZE;
+    block_heap->next = NULL;
+}
 
 uint8_t* malloc(uint32_t size) {
     // offset_in_vmem теперь становится реальным физическим адресом в ОЗУ

@@ -29,7 +29,7 @@ def create_atom_image(source_dir, output_img, boot_bin_path):
         return
 
     # Получаем список файлов на ПК
-    files = [f for f in os.listdir(source_dir) if os.path.isfile(os.path.join(source_dir, f))]
+    files = sorted([f for f in os.listdir(source_dir) if os.path.isfile(os.path.join(source_dir, f)) and f != 'boot.bin'])
     
     current_free_data_sector = DATA_START_SECTOR
     root_offset = ROOT_START_SECTOR * SECTOR_SIZE
@@ -82,4 +82,4 @@ def create_atom_image(source_dir, output_img, boot_bin_path):
 
 # ЗАПУСК СКРИПТА
 # Сканирует папку 'binaries', берет 'boot.bin' и собирает диск 'os.img'
-create_atom_image('binaries', 'atom.img', 'binaries/boot.bin')
+create_atom_image('binaries', 'atom.img', 'boot.bin')

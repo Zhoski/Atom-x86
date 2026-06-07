@@ -4,68 +4,19 @@
 #include "../../kernel/services/services.h"
 #include "../../kernel/services/memory/program.h"
 
-#define RECORD_SIZE         32      // byte
+#define RECORD_SIZE         16      // byte
+#define ROOT_SECTORS        16
+#define ROOT_BASE            2
 
 #define TRUE                 1
 #define FALSE                0
 
 #define FILE_NOT_FOUND       1
-
-// BPB 
-uint8_t  BS_OEMName[8];  
-uint16_t BPB_BytsPerSec;
-uint8_t  BPB_SecPerClus;
-uint16_t BPB_RsvdSecCnt;
-uint8_t  BPB_NumFATs;
-uint16_t BPB_RootEntCnt;
-uint16_t BPB_TotSec16;
-uint16_t BPB_FATSz16;
-// Extended BPB
-uint8_t  BS_DrvNum;
-uint8_t  BS_FileSysType[8];
-
-uint32_t RootDirStartSector;
-uint32_t RootDirSectors;
-uint32_t FatSectors;
-uint32_t FatStartSector;
-uint32_t DataStartSector;
-uint32_t DataSectors;
+#define FILE_FOUND           0
 
 File _file;
 
-void init_fat16(uint16_t bootSector[256]) {
-    uint8_t *bootSectorByte = (uint8_t*)bootSector;
-    uint8_t byteOff = 0x03;         // Читаем начиная с 0x03
-
-    for(;byteOff < 0x0B;byteOff++) {
-        BS_OEMName[byteOff - 0x03] = bootSectorByte[byteOff];
-    }
-    BPB_BytsPerSec = *(uint16_t*)&bootSectorByte[0xB];
-    BPB_SecPerClus = (uint8_t)bootSectorByte[0xD];
-    BPB_RsvdSecCnt = *(uint16_t*)&bootSectorByte[0xE];
-    BPB_NumFATs = (uint8_t)bootSectorByte[0x10];
-    BPB_RootEntCnt = *(uint16_t*)&bootSectorByte[0x11];
-    BPB_TotSec16 = *(uint16_t*)&bootSectorByte[0x13];
-    BPB_FATSz16 = *(uint16_t*)&bootSectorByte[0x16];
-    BS_DrvNum = (uint8_t)bootSectorByte[0x24];
-
-    byteOff = 0x36;
-    for(;byteOff < 0x3E;byteOff++) {
-        BS_FileSysType[byteOff - 0x36] = bootSectorByte[byteOff];
-    } 
-
-    FatStartSector = BPB_RsvdSecCnt;
-    FatSectors = BPB_FATSz16 * BPB_NumFATs;
-
-    RootDirStartSector = FatStartSector + FatSectors;
-    RootDirSectors = (32 * BPB_RootEntCnt + BPB_BytsPerSec - 1) / BPB_BytsPerSec; 
-
-    DataStartSector = RootDirStartSector + RootDirSectors;
-    DataSectors = BPB_TotSec16 - DataStartSector;
-
-}
-
-uint8_t cmpFileName(uint8_t *file_name1, uint8_t *file_name2) {
+static inline uint8_t cmpFileName(uint8_t *file_name1, uint8_t *file_name2) {
     uint8_t counter = 0;
     while(counter != 11 && *file_name1 == *file_name2) {
         counter++;
@@ -76,32 +27,30 @@ uint8_t cmpFileName(uint8_t *file_name1, uint8_t *file_name2) {
     return counter == 11;
 }
 
-uint8_t load_root(uint16_t buffer[256]) {
-    disk.read_sector(RootDirStartSector, buffer); 
-}
-
 uint8_t find_file(const uint8_t *file_name) {
-    uint8_t buffer[512];
-    uint8_t file_find_status = FALSE;
-    uint8_t file_name_in_root[11];
-    uint32_t i = 0;
-    load_root(buffer);
+    uint8_t* AFS_ROOT = service.memory->malloc(8192);
+    uint8_t* AFS_HEAD = AFS_ROOT;
+    uint8_t file_find_status = FILE_NOT_FOUND;
 
-    while(buffer[i] != 0) {
-        for(uint32_t j = 0;j < 11;j++) {
-            file_name_in_root[j] = buffer[i + j];
-        }
-        if(cmpFileName(file_name_in_root, file_name)) {
-            file_find_status = TRUE;
-            /* Копирование данных в структуру */
-            for(uint32_t j = 0;j < 32;j++) {
-                uint8_t *file_ptr = &_file;
-                file_ptr[j] = buffer[i + j]; 
-            }
+    for(uint32_t i = 0;i < ROOT_SECTORS;i++) {
+        disk.read_sector(ROOT_BASE + i, AFS_ROOT + i * 512);
+    }
+
+    while (TRUE)
+    {
+        if(cmpFileName(AFS_HEAD, file_name)) {
+            file_find_status = FILE_FOUND;
             break;
         }
-        i += RECORD_SIZE;
-    } 
+
+        AFS_HEAD += RECORD_SIZE;
+        if(AFS_HEAD >= (8192 + AFS_ROOT)) {
+            file_find_status = FILE_NOT_FOUND;
+            break;
+        }
+    }
+    
+    service.memory->free(AFS_ROOT);
 
     return file_find_status;
 }
@@ -111,28 +60,14 @@ uint8_t open(const uint8_t *file_name) {
     if(!file)
         return FILE_NOT_FOUND;
 
-    uint32_t size_in_byte = _file.size_in_b;
-    uint32_t first_clus = _file.first_clus;
-
-    uint32_t FirstSectorofCluster = DataStartSector + (first_clus - 2) * BPB_SecPerClus;
-    uint32_t Sector = FirstSectorofCluster;
-    uint32_t SizeInSec = size_in_byte / BPB_BytsPerSec;
-    uint32_t SizeInSecModule = size_in_byte & BPB_BytsPerSec;
-    if(SizeInSecModule != 0)
-        SizeInSec++;
-
-    if(size_in_byte < 512) 
-        SizeInSec = 1;
-
     /* Загрузка файла в память */
     uint16_t buffer[256];
     uint32_t entry = 0x300000;       /* Сюда грузим программу */
     uint32_t offset = 0;
-    for(uint32_t i = 0;i < SizeInSec;i++) {
-        disk.read_sector(Sector, buffer);
-        service.memory->memcpy(buffer, (entry+offset), BPB_BytsPerSec);
-        Sector++;
-        offset += BPB_BytsPerSec;
+    for(uint32_t i = 0;i < _file.size_in_sec;i++) {
+        disk.read_sector(_file.start_sec + i, buffer);
+        service.memory->memcpy(buffer, (entry+offset), 512);
+        offset += 512;
     }
 
     //program_spawn(entry);
@@ -141,39 +76,5 @@ uint8_t open(const uint8_t *file_name) {
 }
 
 uint8_t read_file(const uint8_t *file_name, uint8_t *out) {
-    if(!find_file(file_name)) 
-        return FILE_NOT_FOUND;
-
-    uint32_t size_in_byte = _file.size_in_b;
-    uint16_t first_clus = _file.first_clus;
-
-    uint32_t FirstSectorofCluster = DataStartSector + (first_clus - 2) * BPB_SecPerClus;
-
-    uint32_t SizeInSec = size_in_byte / BPB_BytsPerSec;
-    uint32_t SizeInSecModule = size_in_byte & BPB_BytsPerSec;
-    if(SizeInSecModule != 0)
-        SizeInSec++;
-
-    if(size_in_byte < 512) 
-        SizeInSec = 1;
-
-    uint8_t sector[512];
-    uint32_t SectorOff = 0;
-    for(;SectorOff < SizeInSec;SectorOff++) {
-        disk.read_sector(FirstSectorofCluster + SectorOff, sector);
-        for(uint32_t j = 0;j < 512;j++) {
-            *out = sector[j];
-            out++;
-        }
-    }
-
-    disk.read_sector(FirstSectorofCluster + SectorOff, sector);
-    for(uint32_t i = 0;i < size_in_byte - (SizeInSec * 512);i++) {
-        *out = sector[i];
-        out++;
-    }
-
-    *out = '\0';
-    
     return 0;
 } 
