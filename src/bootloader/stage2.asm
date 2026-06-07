@@ -1,11 +1,10 @@
-; =======================================================================
-; stage2.bin - является основным загрузчиком чья задача подготовить почву
-; для загрузки ядра. На данный момент загрузчик имеет обработчики исключе
-; ний, работу с диском, получение карты памяти, работа с config.cfg. Загр
-; узчик переключается в защищенный режим и передает управление ядру. Сраз
-; у хочу сказать что на старте ядро лежит на 0x10000:0x0000. После перехо
-; да в защищенный режим ядро копируется в 0x100000.
-; =======================================================================
+; =============================================================================
+;  Atom OS Bootloader (Stage 1 / MBR)
+;  Copyright (C) 2026 [Zhoski]. All rights reserved.
+;
+;  File: stage2.asm
+;  Description: Loading the kernel, switching to PM, getting system information
+; =============================================================================
 bits 16
 org 0x8000
 
@@ -34,40 +33,13 @@ start:
     
     call get_memmap
 
-    call INIT_FAT  
-
     call kernel_load    ; Загрузка ядра 
 
     call kernel_launch
-    
-    jmp $         
+
+    jmp $        
 
 ; ============================ Память ================================
-; Вход:  si (Откуда грузить), di (Куда грузить), cx (Сколько байт грузить)
-; Выход: ax (Результат)
-; ax = 0 (Успешно)
-; ax = 1 (Ошибка)
-memcpy:
-   pusha
-   push si
-   mov si, s
-   call print
-   pop si
-    
-.copy_loop:
-    test cx, cx
-    jz .done
-
-    inc si
-    inc di
-    dec cx
-
-    jmp .copy_loop
-
-.done:
-    popa
-    ret
-
 get_memmap:
     pusha               ; Регистры запомнить 
 
@@ -181,7 +153,7 @@ disk_read:
     pusha
 
     mov ah, 0x42
-    mov dl, 0x80
+    mov dl, [drive]
 
     int 0x13
 
@@ -267,29 +239,6 @@ print:
     popa
     ret
 
-print_hex_32:
-    pushad
-    mov edx, eax        ; Копируем число в EDX, его портить не будем
-    mov cx, 8           ; 8 цифр
-.loop:
-    rol edx, 4          ; Вращаем EDX!
-    mov al, dl          ; Берем младшие 4 бита из EDX (после вращения они там)
-    and al, 0x0F        ; Маска
-    
-    cmp al, 10
-    jl .is_digit
-    add al, 7
-.is_digit:
-    add al, '0'
-    
-    mov ah, 0x0E        ; Теперь AX можно портить
-    mov bx, 0x0007      ; Режим: страница 0, цвет (для графики)
-    int 0x10
-    
-    loop .loop
-    popad
-    ret
-
 print_ax:
     pusha
     mov cx, 10
@@ -337,135 +286,38 @@ compare_strings:
     ret
 
 ; ================= Драйвер для работы с файлами ==================
-
-INIT_FAT:
-    ; Грузим загрузочный сектор по 0x7E00
-    mov word [LBA_FILE+2], 1
-    mov word [LBA_FILE+4], 0x7E00
-    mov word [LBA_FILE+6], 0x0000
-    mov word [LBA_FILE+8], 0
-
-    mov si, LBA_FILE
-    call disk_read
-
-    ; Теперь в 0x7E00 лежит загрузочный сектор
-    
-    mov ax, word  [es:bx+0xB]
-    mov [BPB_BytsPerSec],  ax
-    mov al, byte  [es:bx+0xD]
-    mov [BPB_SecPerClus],  al
-    mov ax, word  [es:bx+0xE]
-    mov [BPB_RsvdSecCnt], ax
-    mov al, byte [es:bx+0x10]
-    mov [BPB_NumFATs],     al
-    mov ax, word [es:bx+0x11]
-    mov [BPB_RootEntCnt],  ax
-    mov ax, word [es:bx+0x13]
-    mov [BPB_TotSec16],    ax
-    mov ax, word [es:bx+0x16]
-    mov [BPB_FATSz16],     ax
-
-    mov ax, [BPB_RsvdSecCnt]
-    mov [FatStartSector], ax
-
-    mov ax, [BPB_FATSz16]
-    movzx cx, byte [BPB_NumFATs]
-    mul cx
-    mov [FatSectors], ax
-
-    mov ax, [FatSectors]
-    add ax, [FatStartSector]
-    mov [RootDirStartSector], ax
-
-    mov ax, [BPB_RootEntCnt]
-    mov cx, 32
-    mul cx
-
-    add ax, [BPB_BytsPerSec]
-    sub ax, 1
-    
-    mov cx, [BPB_BytsPerSec]
-    div cx
-    mov [RootDirSectors], ax
-
-    mov ax, [RootDirStartSector]
-    add ax, [RootDirSectors]
-    mov [DataStartSector], ax 
-
-    mov ax, [BPB_TotSec16]
-    sub ax, [DataStartSector]
-    mov [DataSectors], ax
-    
-    mov ax, [RootDirStartSector]
-    mov word [LBA_ROOT+8], ax
-
-    mov word [LBA_ROOT+10], 0 
-
-    ret
-
-; Грузит 1 сектор рут каталога по 0x7E00
-LOAD_ROOT: 
-    push si
-    push ax
-    
-    mov ax, [RootDirStartSector]
-    add ax, [RootDirSectorOff]
-    mov word [LBA_ROOT+8], ax
-
-    mov si, LBA_ROOT
-    call disk_read
-    
-    pop  ax
-    pop  si
-    ret
-
-; Вход: si (Имя файла)
-; Выход: si (Указатель на таблицу LBA, если файл найден), ax (Код) 
-; ax = 0 (Файл найден)
-; ax = 1 (Файл не найден)
-FIND_FILE:
-    push bx
-    push cx
-    push dx
-    push di
-    push fs
-    
-    call LOAD_ROOT
-
-    mov bx, 0x7E00
-    mov dx, [BPB_RootEntCnt]
-
-    xor ax, ax
-    mov es, ax
-    mov ds, ax
-    mov fs, ax
-
-.FIND_LOOP:
-    test dx, dx
-    jz .NOT_FOUND 
-
-    push ax
-    mov al, [ToLoadRootSector]
-    cmp al, 16
-    pop ax
-
-    jz .LOAD_NEXT_ROOT_SECTOR
-    jmp .SKIP_LOAD
-
-.LOAD_NEXT_ROOT_SECTOR:
+; Грузим 16 секторов начиная со 2-го по адресу 0x0000:0x0500
+LOAD_ROOT_TO_MEM:
     pusha
-    xor ax, ax
-    mov [ToLoadRootSector], al
 
-    mov ax, [RootDirSectorOff]
-    inc ax
-    mov [RootDirSectorOff], ax
-
-    call LOAD_ROOT
+    mov ah, 0x42
+    mov si, LBA_ROOT
+    mov dl, [drive]
+    int 0x13
 
     popa
+    ret
 
-.SKIP_LOAD:
+.error:
+    mov si, disk_read_error
+    call print
+    jmp $
+
+
+OPEN_FILE:
+    call LOAD_ROOT_TO_MEM
+
+    ; ES:BX на начало таблицы в памяти
+    xor ax, ax
+    mov es, ax
+    mov bx, [LoadRootAddres]
+    
+    mov dx, 512     ; Максимальное количество файлов
+
+.FIND_FILE_LOOP:
+    test dx, dx
+    jz .FILE_NOT_FOUND
+
     mov di, bx
 
     push si
@@ -476,71 +328,25 @@ FIND_FILE:
     jz .FOUND
 
     dec dx
-    add bx, 32
+    add bx, 16
 
-    push ax
-    mov ax, [ToLoadRootSector]
-    inc ax
-    mov [ToLoadRootSector], ax
-    pop ax
+    jmp .FIND_FILE_LOOP
 
-    jmp .FIND_LOOP
-
-.FOUND:
-    xor ax, ax
-    mov [ToLoadRootSector], ax
-    mov [RootDirSectorOff], ax
-
-    mov ax, word [es:bx+0x1A]       ; Записываем в ax начальный кластер файла
-    sub ax, 2
-    movzx cx, byte [BPB_SecPerClus]
-    mul cx
-    add ax, [DataStartSector]       ; Теперь в ax номер начального сектора
-
-    mov word [FirstSectorofCluster], ax
-
-    mov ax, word [es:bx+0x1C]       ; Записываем в ax размер файла в байтах
-    mov cx, [BPB_BytsPerSec]
-    div cx                          ; Делим ax на размер сектора
-
-    test dx, dx                     ; Если dx не 0, то то округляем и добавляем 1 сектор
-    jnz .add
-
-    jmp .skip
-
-.add:
-    add ax, 1
-
-.skip:
-    mov [FileSecSize], ax
-
-    mov ax, [FileSecSize]
-    mov [LBA_FILE+2], ax
-    mov ax, [FirstSectorofCluster]
-    mov [LBA_FILE+8], ax
-
-    mov si, LBA_FILE
-
-    movzx ax, [FoundCode]
-
-    pop fs
-    pop di
-    pop dx
-    pop cx
-    pop bx
+.FILE_NOT_FOUND:
+    mov ax, 1           ; Код: файл не найден
     ret
 
-.NOT_FOUND:
-    ;mov si, file_not_found
-    ;call print
+.FOUND:
+    mov ax, [es:bx + 13]
+    mov bx, [es:bx + 11]
 
-    movzx ax, [NotFoundCode]
-    
-    pop fs
-    pop di
-    pop dx
-    pop cx
-    pop bx
+    mov word [LBA_FILE],    0x0010
+    mov word [LBA_FILE+2],      ax
+    mov word [LBA_FILE+8],      bx
+    mov word [LBA_FILE+10], 0x0000
+
+    mov ax, 0           ; Код: Файл найден
+
     ret
 
 LBA_FILE:
@@ -553,11 +359,11 @@ LBA_FILE:
 
 LBA_ROOT:
     db 0x10
-    db 0
-    dw 1
-    dw 0x7E00
+    db 0x00
+    dw 16
+    dw 0x0500
     dw 0x0000
-    dq 0
+    dq 2
 
 
 REBOOT:
@@ -598,54 +404,7 @@ CONTINUE:
 
     ret
 
-RootDirSectorOff:       dw 0        
-ToLoadRootSector:       db 0
-
-FileSecSize:            dw 0        ; Размер файла в секторах
-FirstSectorofCluster:   dw 0        ; Начальный сектор файла
-
-BPB_BytsPerSec:         dw 0        ; Байт в секторе
-BPB_SecPerClus:         db 0        ; Секторов в кластере
-BPB_RsvdSecCnt:         dw 0        ; Зарезервировано секторов
-BPB_NumFATs:            db 0        ; число таблиц FAT
-BPB_RootEntCnt:         dw 0        ; Записей в рут каталоге
-BPB_TotSec16:           dw 0        ; Секторов на диске
-BPB_FATSz16:            dw 0        ; Размер одной таблицы FAT
-
-RootDirStartSector:     dw 0
-RootDirSectors:         dw 0 
-FatSectors:             dw 0
-FatStartSector:         dw 0
-DataStartSector:        dw 0
-DataSectors:            dw 0
-
-NotFoundCode:           db 1
-FoundCode:              db 0
-
-; =========================== Структуры ==============================
-vbe_info_structure:
-    .signature db "VBE2"
-    .table_data times 512 - 4 db 0
-
-vbe_mode_info_structure:
-    .reserved times 512 db 0
-
 ; =========================== Переменные =============================
-
-vesa_dont_support:  db "VESA is not supported",13,10,0
-vesa_support:       db "VESA supported",13,10,0
-get_vbe_info:       db "Getting VBE info",13,10,0
-get_vbe_mode:       db "Getting VBE mode",13,10,0  
-lfb_support_msg:    db "Linear Frame Buffer supported",13,10,0
-lfb_not_support_msg:db "Linear Frame Buffer is not supported",13,10,0
-resolution_screen:  db "Resolution screen: ",0
-
-vbe_support: db 1       ; 0 не поддерживается, 1 поддерживается
-
-vga_80_25: db 0x1
-vga_640_480: db 0x2
-vbe_1024_768: db 0x3
-
 file_found: db "File found",13,10,0
 file_not_found: db "File not found",13,10,0
 kernel_image: db "KERNEL  BIN",0
@@ -658,11 +417,7 @@ memmap_segment: dw 0x0000
 memmap_block_count: dw 0
 total_usable_ram_k: dw 0
 
-config_base: dw 0x1000
-
 ; Системные сообщения
-msg: db "Bootloader stage 2 load ",0
-
 get_memmap_msg: db "Getting memory map ",13,10,0
 memmap_total_block_msg: db "Total block [ ",0
 memmap_total_ram_usable:db "Total usable ram [ ",0
@@ -690,19 +445,20 @@ disk_read_error:  db "Disk read error: ",0
 disr_write_error: db "Disk write error: ",0
 
 ; Кода ошибок
-disk_time_out:      db "Time out",13,10,0
+disk_time_out:          db "Time out",13,10,0
 disk_sector_not_found:  db "Sector not found",13,10,0
-disk_seek_failed:   db "Seek Failed",13,10,0
-disk_invalid_op:    db "Invalid function or invalid parameter",13,10,0
+disk_seek_failed:       db "Seek Failed",13,10,0
+disk_invalid_op:        db "Invalid function or invalid parameter",13,10,0
+drive: db 0x80
+
+RootStartSector: db 2
+RootSectors:     db 16 
+DataStartSector: db 18
+LoadRootAddres:  dw 0x500
 
 new_string: db 13,10,0
 tab:    db " ",0
 parren_close: db " ]",13,10,0
-s: db "Start MEMCPY",13,10,0
-
-width:  dw 0
-height: dw 0
-bpp:    db 0
 
 bios_error_msg: db "Bios error",13,10,0
 bootMsg: db "================================ ATOM-BOOT v0.1 ================================",13,10,0
@@ -735,12 +491,12 @@ gdt_start:
     db 0x00     ; Base High
 
     ; Kernel Mode Data Segment
-    dw 0xFFFF   ; Limit Low
-    dw 0x0000   ; Base Low
-    db 0x00     ; Base Mid
+    dw 0xFFFF       ; Limit Low
+    dw 0x0000       ; Base Low
+    db 0x00         ; Base Mid
     db 0b10010010   ; Acces
     db 0b11001111   ; Flags
-    db 0x00     ; Base High
+    db 0x00         ; Base High
     
 
 gdt_end:    
@@ -750,10 +506,9 @@ gdt_ptr:
     dd gdt_start
 
 ; ========================= Ядро =====================================
-; Загрузка ядра из 10 сектора в 0x10000
 kernel_load:
     mov si, kernel_image
-    call FIND_FILE
+    call OPEN_FILE
 
     test ax, ax
     jnz .kernel_not_found
@@ -761,6 +516,7 @@ kernel_load:
     mov word [LBA_FILE+4], 0x0000
     mov word [LBA_FILE+6], 0x1000
 
+    mov si, LBA_FILE
     call disk_read
 
     mov bx, 0x0000
@@ -817,12 +573,6 @@ kernel_load:
 
 ; Загрузка ядра
 kernel_launch:
-    mov ax, 0x4F02
-    mov bx, 0x4118	
-    int 0x10			
-    cmp ax, 0x004F
-    jne .bios_error
-
     ; Копируем bootInfo в адрес 0x1000
     xor ax, ax
     mov es, ax
@@ -837,13 +587,6 @@ kernel_launch:
     repe movsw
 
     jmp .after
-
-.bios_error:
-    mov si, bios_error_msg
-    call print
-
-    call REBOOT
-
 
 .after:
     ; Переключение видеорежима на 640x480 16 цветов 

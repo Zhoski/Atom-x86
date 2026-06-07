@@ -43,10 +43,17 @@ void kmain() {
                                               
     uint16_t bootSector[256];
     disk.read_sector(BOOT_SECTOR, bootSector);
-    init_fat16(bootSector);
 
+    service.memory->create_heap(); 
+
+    video.write_string("Kernel");
     terminal_bg_vbe_set(1);
-    open("SHELL   BIN"); 
+    uint8_t status = find_file("SHELL   BIN"); 
+    if(status == 1) {
+        video.write_string("File Not Found\n");
+    } else  {
+        video.write_string("File Found\n");
+    }
 
     //open("Shell.bin");
 

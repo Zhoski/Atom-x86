@@ -1,38 +1,14 @@
-; ===============================================================================
-; boot.bin отвечает за загрузку stage2.bin (Основной загрузчик). Начальный загруз
-; чик ищет на диске файл BOOT.BIN и загружает его по 0x0000:0x8000, после чего пр
-; ыгает по этому адресу. Использует файловую систему FAT16
-; ================================================================================
+; =====================================================================
+;  Atom OS Bootloader (Stage 1 / MBR)
+;  Copyright (C) 2026 [Zhoski]. All rights reserved.
+;
+;  File: boot.asm
+;  Description: AtomFS LBA block parser & Stage 2 loader
+; =====================================================================
+
 
 bits 16
 org 0x7C00
-
-; Перепрыгивание BPB
-jmp short start
-nop
-db "ATOM-X86"           ; OEM identifier
-
-; ================= BPB =================
-BPB_BytsPerSec: dw 512                  ; 512 байт на сектор
-BPB_SecPerClus: db 8                    ; 4 сектора на кластер
-BPB_RsvdSecCnt: dw 1                    ; Зарезервировано под загрузчик
-BPB_NumFATs:    db 2                    ; Будет две записи FAT
-BPB_RootEntCnt: dw 256                  ; Записей в root каталоге
-BPB_TotSec16:   dw 32768                ; 32768 сектора (16Мб)
-BPB_Media:      db 0xF8                 ; Жетский диск
-BPB_FATSz16:    dw 64                   ; Размер одной FAT
-BPB_SecPerTrk:  dw 63                   ; Секторов на одной дорожке
-BPB_NumHeads:   dw 255                  ; Головок на одной стороне
-BPB_HiddSec:    dd 0
-BPB_TotSec32:   dd 0
-
-; =========== Extended BPB ==============
-BS_DrvNum:      db 0x80                 ; Номер диска
-BS_Reserved1:   db 0x00                 ; Зарезервировано
-BS_BootSig:     db 0x29                 ; Сигнатура
-BS_VolID:       dd 0x41544F4D           ; Серийный номер 'ATOM'
-BS_VolLab:      db "NO NAME    "        ; 
-BS_FilSysType:  db "FAT16   "           ; Системный идентификатор
 
 start:
     ; Сегменты
@@ -41,13 +17,19 @@ start:
     mov ss, ax
     mov sp, 0x7C00
     
+    mov [drive], dl
+
     ; Видеорежим
     mov ah, 0x0
     mov al, 0x3
     int 0x10
 
-    call ADD_SIGNATURE_FAT
-    call LOAD_BOOT
+    mov si, atom_boot
+    call print_string
+
+    call OPEN_FILE
+
+    jmp $
 
 print_string:
     pusha
@@ -63,143 +45,6 @@ exit:
     popa
     ret
 
-ADD_SIGNATURE_FAT:
-    pusha
-    
-    xor ax, ax
-    mov es, ax
-
-    mov ah, 0x2
-    mov al, 6
-    mov cl, 2
-    mov ch, 0
-    mov dh, 0
-    mov dl, 0x80
-    mov bx, 0x1000
-    
-    int 0x13 
-
-    mov byte[es:bx], 0xF8
-    add bx, 1
-    mov byte[es:bx], 0xFF
-    add bx, 1
-    mov byte[es:bx], 0xFF
-    add bx, 1
-    mov byte[es:bx], 0xFF
-
-    popa
-    ret
-
-INIT_FAT:
-    xor dx, dx
-    mov ax, [BPB_RsvdSecCnt]
-    mov [FatStartSector], ax
-
-    mov ax, [BPB_FATSz16]
-    movzx cx, byte [BPB_NumFATs]
-    mul cx
-    mov [FatSectors], ax
-
-    mov ax, [FatSectors]
-    add ax, [FatStartSector]
-    mov [RootDirStartSector], ax
-
-    mov ax, [BPB_RootEntCnt]
-    mov cx, 32
-    mul cx
-    add ax, [BPB_BytsPerSec]
-    sub ax, 1
-    mov cx, [BPB_BytsPerSec]
-    xor dx, dx
-    div cx
-    mov [RootDirSectors], ax
-
-    mov ax, [RootDirStartSector]
-    add ax, [RootDirSectors]
-    mov [DataStartSector], ax
-
-    mov ax, [BPB_TotSec16]
-    sub ax, [DataStartSector]
-    mov [DataSectors], ax
-
-    ret
-
-LOAD_FAT:
-    mov si, lba
-    mov ah, 0x42
-    mov dl, 0x80
-
-    int 0x13
-
-    ret
-    
-LOAD_BOOT:
-    CLD
-    call INIT_FAT
-
-    mov ax, [RootDirStartSector]
-    mov [lba+8], ax
-
-    call LOAD_FAT
-    mov si, stage2_file  
-
-    mov bx, 0x7E00
-    xor ax, ax
-    mov dx, [BPB_RootEntCnt]
-    mov es, ax
-    mov ds, ax
-
-.FIND_FILE_LOOP:
-    test dx, dx
-    jz .NOT_FOUND 
- 
-    mov di, bx
-    
-    push si
-    mov cx, 11              ; Сравниваем 11 байт
-    repe cmpsb
-    pop si
-    
-    jz .FOUND
-
-    dec dx
-    add bx, 32
-
-    jmp .FIND_FILE_LOOP
-
-.NOT_FOUND:
-    mov si, file_not_found
-    call print_string 
-
-    call REBOOT
-
-    ret
-
-.FOUND:
-    mov ax, word [es:bx + 0x1A] 
-
-    sub ax, 2
-    xor cx, cx
-    movzx cx, byte [BPB_SecPerClus]
-    mul cx
-    add ax, [DataStartSector]  
-    
-    mov word [lba],    0x0010
-    mov word [lba+2],  0x0008
-    mov word [lba+4],  0x8000
-    mov word [lba+6],  0x0000 
-    mov word [lba+8],  ax
-    mov word [lba+10], 0x0000
-
-    mov si, lba
-    mov ah, 0x42
-    mov dl, 0x80
-    int 0x13
-
-    jmp 0x0000:0x8000
-
-    ret
-
 REBOOT:
     mov si, reboot_msg
     call print_string
@@ -208,24 +53,102 @@ REBOOT:
     int 0x16
 
     int 0x19
+
+; Грузим 16 секторов начиная со 2-го по адресу 0x0000:0x0500
+LOAD_ROOT_TO_MEM:
+    pusha
+
+    mov ah, 0x42
+    mov si, lba
+    mov dl, [drive]
+    int 0x13
+
+    popa
+    ret
+
+.error:
+    mov si, disk_read_error
+    call print_string
+    jmp $
+
+
+OPEN_FILE:
+    call LOAD_ROOT_TO_MEM
+
+    ; ES:BX на начало таблицы в памяти
+    xor ax, ax
+    mov es, ax
+    mov bx, [LoadRootAddres]
     
+    mov dx, 512     ; Максимальное количество файлов
+
+    mov si, stage2_file
+
+.FIND_FILE_LOOP:
+    test dx, dx
+    jz .FILE_NOT_FOUND
+
+    mov di, bx
+
+    push si
+    mov cx, 11
+    repe cmpsb
+    pop si
+
+    jz .FOUND
+
+    dec dx
+    add bx, 16
+
+    jmp .FIND_FILE_LOOP
+
+.FILE_NOT_FOUND:
+    mov si, file_not_found
+    call print_string
+    call REBOOT
+
+.FOUND:
+    mov ax, [es:bx + 13]
+    mov dx, [es:bx + 11]
+
+    mov word [lba],    0x0010
+    mov word [lba+2],  ax
+    mov word [lba+4],  0x8000
+    mov word [lba+6],  0x0000 
+    mov word [lba+8],  dx
+    mov word [lba+10], 0x0000
+
+    mov ah, 0x42
+    mov si, lba
+    mov dl, [drive]
+    int 0x13
+
+    jmp 0x0000:0x8000
+
+    jmp $
+
 lba:
     db 0x10
     db 0x00
-    dw 1
-    dw 0x7E00
+    dw 16
+    dw 0x0500
     dw 0x0000
-    dq 0          
+    dq 2          
 
-RootDirStartSector: dw 0
-RootDirSectors:     dw 0 
-FatSectors:         dw 0
-FatStartSector:     dw 0
-DataStartSector:    dw 0
-DataSectors:        dw 0
-stage2_file: db "BOOT    BIN",0
-file_not_found: db "BOOT.BIN not found on disk",13,10,0
+RootStartSector: db 2
+RootSectors:     db 16 
+DataStartSector: db 18
+
+LoadRootAddres:  dw 0x500
+
+drive: db 0
+
+atom_boot: db "ATOM-x86 BOOT SECTOR",13,10,0
+stage2_file: db "STAGE2  BIN",0
+file_not_found: db "STAGE2.BIN not found on disk",13,10,0
+file_found: db "File found",13,10,0
 reboot_msg: db "Press any key to reboot...",0
+disk_read_error: db "Disk read error",13,10,0
 
 times 510 - ($ - $$) db 0
 dw 0xAA55
