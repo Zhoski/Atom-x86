@@ -40,6 +40,12 @@ uint8_t find_file(const uint8_t *file_name) {
     {
         if(cmpFileName(AFS_HEAD, file_name)) {
             file_find_status = FILE_FOUND;
+
+            uint8_t* p_to_file = (uint8_t*)&_file;
+            for(uint32_t i = 0;i < RECORD_SIZE;i++) {
+                p_to_file[i] = AFS_HEAD[i];
+            }
+
             break;
         }
 
@@ -49,7 +55,11 @@ uint8_t find_file(const uint8_t *file_name) {
             break;
         }
     }
-    
+
+    if(_file.size_in_sec != 0x7) {
+        video.write_string("Incorect Size\n");
+    }
+
     service.memory->free(AFS_ROOT);
 
     return file_find_status;
@@ -57,7 +67,7 @@ uint8_t find_file(const uint8_t *file_name) {
 
 uint8_t open(const uint8_t *file_name) {
     uint8_t file = find_file(file_name);
-    if(!file)
+    if(file == FILE_NOT_FOUND)
         return FILE_NOT_FOUND;
 
     /* Загрузка файла в память */
@@ -71,8 +81,8 @@ uint8_t open(const uint8_t *file_name) {
     }
 
     //program_spawn(entry);
-    uint32_t stack_top = 0x400000;  // Верхушка стека
-    program_execute(entry, stack_top);
+    uint32_t stack = 0x400000;
+    program_execute(entry, stack);
 }
 
 uint8_t read_file(const uint8_t *file_name, uint8_t *out) {

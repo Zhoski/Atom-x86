@@ -46,14 +46,7 @@ void kmain() {
 
     service.memory->create_heap(); 
 
-    video.write_string("Kernel");
-    terminal_bg_vbe_set(1);
-    uint8_t status = find_file("SHELL   BIN"); 
-    if(status == 1) {
-        video.write_string("File Not Found\n");
-    } else  {
-        video.write_string("File Found\n");
-    }
+    open("SHELL   BIN"); 
 
     //open("Shell.bin");
 

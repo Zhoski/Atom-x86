@@ -30,7 +30,6 @@ python3 afs-pack.py
 
 qemu-system-i386 -cpu 486 -drive format=raw,file=atom.img -m 4M -icount shift=6,sleep=off -rtc clock=vm
 
-
 rm binaries/boot.bin
 rm binaries/stage2.bin
 
