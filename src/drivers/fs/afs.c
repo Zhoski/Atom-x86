@@ -1,4 +1,5 @@
-#include "fat16.h"
+#include "afs.h"
+#include "../disk/disk.h"
 #include "../video/video.h"
 #include "../../kernel/device/device.h"
 #include "../../kernel/services/services.h"
@@ -56,16 +57,12 @@ uint8_t find_file(const uint8_t *file_name) {
         }
     }
 
-    if(_file.size_in_sec != 0x7) {
-        video.write_string("Incorect Size\n");
-    }
-
     service.memory->free(AFS_ROOT);
 
     return file_find_status;
 }
 
-uint8_t open(const uint8_t *file_name) {
+uint8_t afs_open(const uint8_t *file_name) {
     uint8_t file = find_file(file_name);
     if(file == FILE_NOT_FOUND)
         return FILE_NOT_FOUND;

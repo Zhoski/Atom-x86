@@ -5,7 +5,7 @@
 #include "../../device/device.h"
 #include "../../services/services.h"
 #include "../../../drivers/video/video.h"
-#include "../../../drivers/fs/fat16.h"
+#include "../../../drivers/fs/fs.h"
 
 /*-------- Вывод --------*/
 #define SYSCALL_WRITE           1

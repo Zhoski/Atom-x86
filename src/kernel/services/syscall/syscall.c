@@ -6,10 +6,10 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
             switch(ebx) {
                 uint8_t color;
                 case WRITE_TEXT:
-                    video.write_string((uint8_t*)ecx); 
+                    video->write_string((uint8_t*)ecx); 
                     break; 
                 case WRITE_CHAR: 
-                    video.write_char((uint8_t)ecx);
+                    video->write_char((uint8_t)ecx);
                     break;
                 default:
                     break;
@@ -38,16 +38,16 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                 case SET_BG_COLOR:
                     color = (uint8_t)edx;
 
-                    video.terminal_bg_vbe_set(color);
+                    video->terminal_bg_vbe_set(color);
                     
                     break;
                 case SET_FG_COLOR:
                     uint8_t color = (uint8_t)edx;
-                    video.terminal_fg_vbe_set(color);
+                    video->terminal_fg_vbe_set(color);
 
                     break;
                 case CLEAR_SCREEN:
-                    video.clear_screen((uint8_t)edx);
+                    video->clear_screen((uint8_t)edx);
                     break;
             }
             break;
@@ -55,16 +55,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
             switch (ebx)
             {
                 case CAT_FILE:
-                    uint8_t *file = (uint8_t*)ecx;
-                    uint8_t *out = (uint8_t*)edx;
-                    uint32_t status = read_file(file, out);
-
-                    asm volatile(
-                        "movl %%eax, %0"
-                        : "=r" (status)
-                        :
-                        : "memory"
-                    );
+                    
                     break;
             break;
         case SYSCALL_DIED:

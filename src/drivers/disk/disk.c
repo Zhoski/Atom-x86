@@ -1,4 +1,4 @@
-#include "pata.h"
+#include "disk.h"
 #include "../../kernel/port/io.h"
 #include "../../kernel/device/device.h"
 #include "../../kernel/services/services.h"
