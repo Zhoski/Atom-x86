@@ -1,12 +1,11 @@
 #include "../drivers/video/video.h"
 #include "../drivers/Keyboard/keyboard.h"
-#include "../drivers/disk/pata.h"
+#include "../drivers/disk/disk.h"
 #include "../cpu/idt.h"
 #include "../cpu/PIC.h"
-//#include "services/memory/allocate.h"
 #include "services/memory/program.h"
 #include "services/syscall/syscall.h"
-#include "../drivers/fs/fat16.h"
+#include "../drivers/fs/fs.h"
 #include "services/services.h"
 #include "port/io.h"
 #include <stdint.h>
@@ -31,26 +30,24 @@ void kmain() {
     pic_irq_mask(0x21, 0b11111001); // Включить IRQ
     pic_irq_mask(0xA1, 0b10111111); // PATA включить
     asm("sti");                     // Включить перывания	
-    
-    uint16_t info[256];
-    init_pata(info); 
+
+    init_memory();                  // Инициализация памяти
+    service.memory->create_heap();  // Создание кучи
    
     init_keyboard();                // Инициализация клавиатуры
-    init_memory();                  // Инициализация памяти
-    //init_config();                // Инициализация конфигов 
 
-    init_vga(0x2);                  // Инициализация vga
-                                              
+    init_vga(VGA_640_480);          // Инициализация vga        
+    init_fs();                   
+
+    uint16_t disk_info[256];
+    //init_ata(disk_info);
+    //disk_init(disk_info);
+    init_pata(disk_info);
+
     uint16_t bootSector[256];
     disk.read_sector(BOOT_SECTOR, bootSector);
 
-    service.memory->create_heap(); 
-
-    open("SHELL   BIN"); 
-
-    //open("Shell.bin");
-
-    //program_spawn(0x2000);
+    fs->open("SHELL   BIN"); 
 
 	for(;;) {
         asm("hlt");

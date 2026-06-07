@@ -2,11 +2,6 @@
 #define __VGA__
 #include <stdint.h>
 
-#define VGA_MEMORY 0xB8000
-#define VGA_640_480_MEMORY (uint8_t*)0xA0000
-#define VGA_HEIGHT 25
-#define VGA_WIDTH  80
-
 enum vga_color {
     VGA_COLOR_BLACK = 0,
 	VGA_COLOR_BLUE = 1,
@@ -26,6 +21,12 @@ enum vga_color {
 	VGA_COLOR_WHITE = 15,
 };
 
+enum graphics_mode {
+    VGA_80_25 = 0x03,          // VGA текстовый 80x25 16 цветов
+    VGA_640_480 = 0x12,        // VGA графический 640x480 16 цветов
+    VGA_320_200 = 0x13,        // VGA графический 320x200 256 цветов
+};
+
 typedef struct {
     void(*write_string)(uint8_t* s);
     void(*write_char)(uint8_t c);
@@ -37,23 +38,6 @@ typedef struct {
 	void(*terminal_bg_vbe_set) (uint8_t color);
 }VideoDriver;
 
-extern VideoDriver video;
-
-void clear_screen(uint8_t r, uint8_t g, uint8_t b);
-void vga_80_25_write_char(const uint8_t c, uint8_t color, uint8_t n, uint8_t n2);
-uint8_t vga_entry_color(uint8_t bg, uint8_t fg);
-void vga_set_attribute(uint8_t bg, uint8_t fg);
-void vga_80_25_write_string(const char* s, uint8_t color, uint8_t n, uint8_t n2);
-//void vga_80_25_write_int(int x);
-//void kwrite_hex(int x, int t);
-void updateCursorPosition(uint8_t x, uint8_t y);
-void init_vga(uint8_t graphics_mode);
-// VGA
-void vga_640_480_putpixel(uint32_t x, uint32_t y, uint8_t color);
-void vga_640_480_draw_char(uint8_t c);
-void vga_640_480_draw_string(const uint8_t* s);
-void vga_640_480_clear_screen(uint8_t color);
-void terminal_fg_vbe_set(uint8_t color);
-void terminal_bg_vbe_set(uint8_t color);
+extern VideoDriver* video;
 
 #endif

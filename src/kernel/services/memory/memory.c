@@ -37,7 +37,6 @@ void create_heap() {
 }
 
 uint8_t* malloc(uint32_t size) {
-    // offset_in_vmem теперь становится реальным физическим адресом в ОЗУ
     uint32_t current_address = HEAP_BASE + sizeof(Heap) + size;
     Heap* current = block_heap;
     

@@ -21,5 +21,4 @@ typedef struct {
 extern keyboard_interface kb;
 extern disk_interface disk;
 
-
 #endif
