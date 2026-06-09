@@ -1,11 +1,17 @@
-#ifndef __PATA__
-#define __PATA__
+#ifndef __DISK__
+#define __DISK__
 
 #include <stdint.h>
 
-extern uint8_t init_pata(uint16_t info[256]);
-extern void disk_handler();
-extern uint8_t read_sector(uint32_t lba, uint16_t word[256]);
-extern void write_sector(uint32_t lba, uint16_t word[256]);
+typedef struct
+{
+    void (*init)(uint16_t disk_info[256]);
+    uint8_t (*read_sector)(uint32_t lba, uint16_t word[256]);
+    uint8_t (*write_sector)(uint32_t lba, uint16_t word[256]);
+} Disk;
+
+extern Disk* disk;
+
+uint8_t disk_init(uint16_t disk_info[256]);
 
 #endif
