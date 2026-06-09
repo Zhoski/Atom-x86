@@ -34,7 +34,7 @@ uint8_t find_file(const uint8_t *file_name) {
     uint8_t file_find_status = FILE_NOT_FOUND;
 
     for(uint32_t i = 0;i < ROOT_SECTORS;i++) {
-        disk.read_sector(ROOT_BASE + i, AFS_ROOT + i * 512);
+        disk->read_sector(ROOT_BASE + i, AFS_ROOT + i * 512);
     }
 
     while (TRUE)
@@ -72,7 +72,7 @@ uint8_t afs_open(const uint8_t *file_name) {
     uint32_t entry = 0x300000;       /* Сюда грузим программу */
     uint32_t offset = 0;
     for(uint32_t i = 0;i < _file.size_in_sec;i++) {
-        disk.read_sector(_file.start_sec + i, buffer);
+        disk->read_sector(_file.start_sec + i, buffer);
         service.memory->memcpy(buffer, (entry+offset), 512);
         offset += 512;
     }

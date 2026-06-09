@@ -27,7 +27,7 @@ nasm -f elf32 src/interrupts/isr33.asm -o isr33.o
 nasm -f elf32 src/interrupts/isr46.asm -o isr46.o
 nasm -f elf32 src/interrupts/isr80.asm -o isr80.o
 # Склеить все файлы в ядро
-ld -m elf_i386 -T linker.ld kernel.o vga_640_480.o vga_80_25.o video.o keyboard.o disk.o idt.o pic.o isr33.o isr46.o isr80.o memory.o syscall.o afs.o fs.o program.o -w -o kernel.elf
+ld -m elf_i386 -T linker.ld kernel.o vga_640_480.o vga_80_25.o video.o keyboard.o ata.o disk.o idt.o pic.o isr33.o isr46.o isr80.o memory.o syscall.o afs.o fs.o program.o -w -o kernel.elf
 
 objcopy -O binary kernel.elf binaries/kernel.bin
 
@@ -39,6 +39,7 @@ rm binaries/boot.bin
 rm binaries/stage2.bin
 
 make clean
+rm *.o
 rm *bin
 rm binaries/*bin
 rm *elf

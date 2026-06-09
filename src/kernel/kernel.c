@@ -40,12 +40,7 @@ void kmain() {
     init_fs();                   
 
     uint16_t disk_info[256];
-    //init_ata(disk_info);
-    //disk_init(disk_info);
-    init_pata(disk_info);
-
-    uint16_t bootSector[256];
-    disk.read_sector(BOOT_SECTOR, bootSector);
+    disk_init(disk_info);
 
     fs->open("SHELL   BIN"); 
 

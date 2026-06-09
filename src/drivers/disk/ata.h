@@ -1,5 +1,5 @@
-#ifndef __PATA__
-#define __PATA__
+#ifndef __ATA__
+#define __ATA__
 
 #include <stdint.h>
 
