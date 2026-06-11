@@ -38,9 +38,7 @@ def create_atom_image(source_dir, output_img, boot_bin_path):
     for file_name in files:
         file_path = os.path.join(source_dir, file_name)
         file_size_bytes = os.path.getsize(file_path)
-        
-        # Переводим размер в честные 512-байтные секторы (округление вверх)
-        file_sectors = (file_size_bytes + SECTOR_SIZE - 1) // SECTOR_SIZE
+        file_sectors = (file_size_bytes + 511) // 512
         
         # Разбиваем имя на Имя (8 байт) и Расширение (3 байта)
         name_part, ext_part = os.path.splitext(file_name)
@@ -53,7 +51,7 @@ def create_atom_image(source_dir, output_img, boot_bin_path):
                                  name_part.encode('ascii'), 
                                  ext_part.encode('ascii'), 
                                  current_free_data_sector, 
-                                 file_sectors, 
+                                 file_size_bytes, 
                                  attribute)
         
         disk[root_offset:root_offset+16] = file_entry

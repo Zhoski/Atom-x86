@@ -55,7 +55,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
             switch (ebx)
             {
                 case CAT_FILE:
-                    
+                    fs->read((uint8_t*)ecx, (uint8_t*)edx);
                     break;
             break;
         case SYSCALL_DIED:

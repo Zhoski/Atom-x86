@@ -29,18 +29,23 @@ void kmain() {
     pic_remap();                    // Установка PIC
     pic_irq_mask(0x21, 0b11111001); // Включить IRQ
     pic_irq_mask(0xA1, 0b10111111); // PATA включить
-    asm("sti");                     // Включить перывания	
 
     init_memory();                  // Инициализация памяти
     service.memory->create_heap();  // Создание кучи
    
     init_keyboard();                // Инициализация клавиатуры
 
+    asm("sti");                     // Включить перывания	
+
     init_vga(VGA_640_480);          // Инициализация vga        
     init_fs();                   
 
-    uint16_t disk_info[256];
+    uint16_t disk_info = service.memory->malloc(512);
     disk_init(disk_info);
+
+    free(disk_info);
+
+    fs->create("TEST    TXT", 65200);
 
     fs->open("SHELL   BIN"); 
 
