@@ -93,7 +93,7 @@ uint8_t afs_read(const uint8_t *file_name, uint8_t *out) {
 
     uint32_t size_in_sec = (_file.size + 511) / 512;
 
-    uint8_t file_buffer = service.memory->malloc(512);
+    uint8_t file_buffer[512];
     uint8_t *head_out = out;
 
     for(uint32_t i = 0;i < size_in_sec;i++) {
