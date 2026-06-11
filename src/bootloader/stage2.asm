@@ -338,11 +338,21 @@ OPEN_FILE:
 
 .FOUND:
     mov ax, [es:bx + 13]
-    mov bx, [es:bx + 11]
+    mov cx, 512
+    xor dx, dx
+    div cx
+    
+    test dx, dx
+    je .skip
+
+    inc ax
+
+.skip
+    mov dx, [es:bx + 11]
 
     mov word [LBA_FILE],    0x0010
     mov word [LBA_FILE+2],      ax
-    mov word [LBA_FILE+8],      bx
+    mov word [LBA_FILE+8],      dx
     mov word [LBA_FILE+10], 0x0000
 
     mov ax, 0           ; Код: Файл найден

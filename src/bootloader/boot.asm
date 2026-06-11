@@ -109,6 +109,16 @@ OPEN_FILE:
 
 .FOUND:
     mov ax, [es:bx + 13]
+    mov cx, 512
+    xor dx, dx
+    div cx
+    
+    test dx, dx
+    je .skip
+
+    inc ax
+
+.skip
     mov dx, [es:bx + 11]
 
     mov word [lba],    0x0010

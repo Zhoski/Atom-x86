@@ -12,8 +12,10 @@
 #define TRUE                 1
 #define FALSE                0
 
+#define NO_FREE_ENTRY_FOUND  1
 #define FILE_NOT_FOUND       1
 #define FILE_FOUND           0
+#define SUCCES               0
 
 File _file;
 
@@ -31,7 +33,6 @@ static inline uint8_t cmpFileName(uint8_t *file_name1, uint8_t *file_name2) {
 uint8_t find_file(const uint8_t *file_name) {
     uint8_t* AFS_ROOT = service.memory->malloc(8192);
     uint8_t* AFS_HEAD = AFS_ROOT;
-    uint8_t file_find_status = FILE_NOT_FOUND;
 
     for(uint32_t i = 0;i < ROOT_SECTORS;i++) {
         disk->read_sector(ROOT_BASE + i, AFS_ROOT + i * 512);
@@ -39,27 +40,28 @@ uint8_t find_file(const uint8_t *file_name) {
 
     while (TRUE)
     {
-        if(cmpFileName(AFS_HEAD, file_name)) {
-            file_find_status = FILE_FOUND;
+        if(!*AFS_HEAD)
+            break;
 
+        if(cmpFileName(AFS_HEAD, file_name)) {
             uint8_t* p_to_file = (uint8_t*)&_file;
             for(uint32_t i = 0;i < RECORD_SIZE;i++) {
                 p_to_file[i] = AFS_HEAD[i];
             }
 
-            break;
+            service.memory->free(AFS_ROOT);
+            return FILE_FOUND;
         }
 
         AFS_HEAD += RECORD_SIZE;
         if(AFS_HEAD >= (8192 + AFS_ROOT)) {
-            file_find_status = FILE_NOT_FOUND;
             break;
         }
     }
 
     service.memory->free(AFS_ROOT);
 
-    return file_find_status;
+    return FILE_NOT_FOUND;
 }
 
 uint8_t afs_open(const uint8_t *file_name) {
@@ -67,11 +69,13 @@ uint8_t afs_open(const uint8_t *file_name) {
     if(file == FILE_NOT_FOUND)
         return FILE_NOT_FOUND;
 
+    uint32_t size_in_sec = (_file.size + 511) / 512;
+
     /* Загрузка файла в память */
     uint16_t buffer[256];
     uint32_t entry = 0x300000;       /* Сюда грузим программу */
     uint32_t offset = 0;
-    for(uint32_t i = 0;i < _file.size_in_sec;i++) {
+    for(uint32_t i = 0;i < size_in_sec;i++) {
         disk->read_sector(_file.start_sec + i, buffer);
         service.memory->memcpy(buffer, (entry+offset), 512);
         offset += 512;
@@ -82,6 +86,99 @@ uint8_t afs_open(const uint8_t *file_name) {
     program_execute(entry, stack);
 }
 
-uint8_t read_file(const uint8_t *file_name, uint8_t *out) {
-    return 0;
+uint8_t afs_read(const uint8_t *file_name, uint8_t *out) {
+    uint8_t file = find_file(file_name);
+    if(file == FILE_NOT_FOUND)
+        return FILE_NOT_FOUND;
+
+    uint32_t size_in_sec = (_file.size + 511) / 512;
+
+    uint8_t file_buffer = service.memory->malloc(512);
+    uint8_t *head_out = out;
+
+    for(uint32_t i = 0;i < size_in_sec;i++) {
+        disk->read_sector(_file.start_sec + i, file_buffer);
+        service.memory->memcpy(file_buffer, head_out, 512);
+        head_out += 512;
+    }
+
+    out[_file.size] = '\0';
+
+    service.memory->free(file_buffer);
+
+    return SUCCES;
 } 
+
+uint8_t afs_delete(const uint8_t* file_name) {
+    uint8_t* AFS_ROOT = service.memory->malloc(8192);
+    uint8_t* AFS_HEAD = AFS_ROOT;
+
+    for(uint32_t i = 0;i < ROOT_SECTORS;i++) {
+        disk->read_sector(ROOT_BASE + i, AFS_ROOT + i * 512);
+    }
+
+    while (TRUE)
+    {
+        if(!*AFS_HEAD)
+            break;
+
+        if(cmpFileName(AFS_HEAD, file_name)) {
+            *AFS_HEAD = 0;
+            
+            service.memory->free(AFS_ROOT);
+            return SUCCES;
+        }
+
+        AFS_HEAD += RECORD_SIZE;
+        if(AFS_HEAD >= (8192 + AFS_ROOT)) {
+            break;
+        }
+    }
+
+    service.memory->free(AFS_ROOT);
+    return FILE_NOT_FOUND;
+}
+
+uint8_t afs_create(uint8_t* file_name, uint16_t size) {
+    uint8_t* AFS_ROOT_BUFFER = service.memory->malloc(512);
+    uint8_t* AFS_ROOT_HEAD = AFS_ROOT_BUFFER;
+    
+    File new_file;
+    uint8_t* t = (uint8_t*)&new_file;
+    uint8_t file_created = FALSE;
+
+    for(uint32_t sector = ROOT_BASE; sector < ROOT_BASE + ROOT_SECTORS;sector++) {
+        if(file_created) {
+            service.memory->free(AFS_ROOT_BUFFER);
+            return SUCCES;
+        }
+        
+        disk->read_sector(sector, AFS_ROOT_BUFFER);
+
+        for(uint32_t i = 0; i < 32;i++) {
+            if(!*AFS_ROOT_HEAD) {
+                for(uint32_t j = 0;j < 11;j++) {
+                    t[j] = file_name[j];
+                }
+                new_file.size = size;
+                new_file.start_sec = 256;
+
+                for(uint32_t j = 0;j < 16;j++) {
+                    AFS_ROOT_HEAD[j] = t[j];
+                }
+
+                disk->write_sector(sector, AFS_ROOT_BUFFER);
+
+                file_created = TRUE;
+                break;
+            }
+
+            AFS_ROOT_HEAD += RECORD_SIZE;
+        }
+        AFS_ROOT_HEAD = AFS_ROOT_BUFFER;
+    }
+
+    service.memory->free(AFS_ROOT_BUFFER);
+
+    return NO_FREE_ENTRY_FOUND;
+}
