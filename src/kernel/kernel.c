@@ -33,19 +33,27 @@ void kmain() {
     init_memory();                  // Инициализация памяти
     service.memory->create_heap();  // Создание кучи
    
-    init_keyboard();                // Инициализация клавиатуры
-
-    asm("sti");                     // Включить перывания	
+    init_keyboard();                // Инициализация клавиатуры              
 
     init_vga(VGA_640_480);          // Инициализация vga        
     init_fs();                   
 
-    uint16_t disk_info = service.memory->malloc(512);
+    uint16_t* disk_info = service.memory->malloc(512);
     disk_init(disk_info);
 
     free(disk_info);
 
-    fs->create("TEST    TXT", 65200);
+    asm("sti");   
+
+    //fs->create("TEST    TXT", 65200);
+
+    fs->create("TEST1   TXT",255);
+    fs->create("TEST2   TXT",255);
+    fs->create("TEST3   TXT",255);
+    fs->create("TEST4   TXT",255);
+
+    fs->delete("TEST3   TXT");
+    fs->create("MOPS    TXT",255);
 
     fs->open("SHELL   BIN"); 
 
