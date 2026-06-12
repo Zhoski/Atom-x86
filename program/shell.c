@@ -23,6 +23,10 @@ command_list cmd;
 uint32 command_index = 0;
 uint8 command_buffer[COMMAND_BUFFER_SIZE];
 
+uint8* info =   "\nAtom interactive shell %[13v 0.1%[15\n"
+                    "Copyright (c) 2026 Zhoski. Licensed under the MIT License.\n\n"
+                    "Type \"help\" or \"license\" for more information.\n\n";
+
 void help() {
     uint8* help_msg =   "\nclear -- clear screen\n"
                         "license -- show license\n"
@@ -32,6 +36,8 @@ void help() {
 
 void clear(uint8 color) {
     clear_screen(color);
+
+    printf(info);
 }
 
 void show_license() {
@@ -73,9 +79,6 @@ void execute() {
 }
 
 void shell_main() {
-    uint8* info =   "\nAtom interactive shell %[13v 0.1%[15\n"
-                    "Copyright (c) 2026 Zhoski. Licensed under the MIT License.\n\n"
-                    "Type \"help\" or \"license\" for more information.\n\n";
     printf(info);
     printf("%[10root> %[15");
     for(uint32 i = 0;i < COMMAND_BUFFER_SIZE;i++) {
