@@ -35,25 +35,28 @@ void kmain() {
    
     init_keyboard();                // Инициализация клавиатуры              
 
-    init_vga(VGA_640_480);          // Инициализация vga        
-    init_fs();                   
+    init_vga(VGA_640_480);          // Инициализация vga                       
 
     uint16_t* disk_info = service.memory->malloc(512);
     disk_init(disk_info);
+    service.memory->free(disk_info);
+    init_fs();    
+
+    fs->create("TEST1   TXT",255);
+    fs->create("TEST2   TXT",255);
+
+    uint8_t* data = service.memory->malloc(512);
+    data[0] = 'M';
+    data[1] = 'O';
+    data[2] = 'P';
+    data[3] = 'S';
+    data[4] = '\0';
+    fs->update("LICENSE TXT",data, 4);
+    service.memory->free(data);
 
     free(disk_info);
 
     asm("sti");   
-
-    //fs->create("TEST    TXT", 65200);
-
-    fs->create("TEST1   TXT",255);
-    fs->create("TEST2   TXT",255);
-    fs->create("TEST3   TXT",255);
-    fs->create("TEST4   TXT",255);
-
-    fs->delete("TEST3   TXT");
-    fs->create("MOPS    TXT",255);
 
     fs->open("SHELL   BIN"); 
 
