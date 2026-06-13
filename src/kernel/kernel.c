@@ -45,16 +45,9 @@ void kmain() {
     fs->create("TEST1   TXT",255);
     fs->create("TEST2   TXT",255);
 
-    uint8_t* data = service.memory->malloc(512);
-    data[0] = 'M';
-    data[1] = 'O';
-    data[2] = 'P';
-    data[3] = 'S';
-    data[4] = '\0';
-    fs->update("LICENSE TXT",data, 4);
-    service.memory->free(data);
-
     free(disk_info);
+
+    fs->update("LICENSE TXT", "MOPS", 4);
 
     asm("sti");   
 

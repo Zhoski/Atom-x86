@@ -3,7 +3,7 @@
 #include <stdint.h>
 
 typedef struct {
-   void (*memcpy)(uint8_t*, uint8_t*, uint32_t);
+   void (*memcpy)(void* from,void* in, uint32_t size);
    uint8_t (*memread)(uint8_t*);
    uint16_t (*memread_dw)(uint16_t*);
    uint32_t (*memread_dd)(uint32_t*);

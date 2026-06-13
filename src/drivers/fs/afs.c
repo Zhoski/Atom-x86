@@ -21,6 +21,7 @@
 
 File _file;
 static uint16_t next_free_sector = 0;
+static uint16_t file_lba_index = 0;
 
 static inline uint8_t cmpFileName(uint8_t *file_name1, uint8_t *file_name2) {
     uint8_t counter = 0;
@@ -69,6 +70,8 @@ uint8_t find_file(const uint8_t *file_name) {
         disk->read_sector(ROOT_BASE + i, AFS_ROOT + (i << 9));  // i << 9 == i * 512
     }
 
+    file_lba_index = 0;
+
     while (*AFS_HEAD)
     {
         if(*AFS_HEAD == FILE_DELETED) {
@@ -85,6 +88,7 @@ uint8_t find_file(const uint8_t *file_name) {
         }
 
         AFS_HEAD += RECORD_SIZE;
+        file_lba_index++;
         if(AFS_HEAD >= (8192 + AFS_ROOT)) {
             break;
         }
@@ -206,22 +210,48 @@ uint8_t afs_update(const uint8_t* file_name, uint8_t* in, uint32_t bytes) {
     if(file == FILE_NOT_FOUND)
         return FILE_NOT_FOUND;
 
-    uint32_t size_in_sec = (bytes + 511) >> 9;
+    uint32_t size_in_sec = (_file.size + 511) >> 9;
+    uint8_t* t_buff = service.memory->malloc(512);
+    service.memory->memset(t_buff, 0, 512);
+
+    for(uint32_t i = 0;i < size_in_sec;i++) {
+        disk->write_sector(_file.start_sec + i, t_buff);
+    }
+
+    uint32_t size_in_sec_data = bytes >> 9;
     uint8_t* head = in;
-
     uint32_t sector = 0;
-    for(;sector < size_in_sec;sector++) {
-        disk->write_sector(_file.start_sec + sector, head);
+    uint32_t t_bytes = bytes;
+
+    for(;sector < size_in_sec_data;sector++) {
+        service.memory->memcpy(head, t_buff, 512);
+        disk->write_sector(_file.start_sec + sector, t_buff);
         head += 512;
+        t_bytes -= 512;
     }
 
-    uint8_t* buffer = service.memory->malloc(512);
-    for(uint32_t j = 0;j < bytes;j++) {
-        buffer[j] = head[j];
-    }
+    service.memory->memset(t_buff, 0, 512);
+    service.memory->memcpy(head, t_buff, t_bytes);
 
-    disk->write_sector(_file.start_sec + sector, buffer);
+    disk->write_sector(_file.start_sec + sector, t_buff);
 
-    service.memory->free(buffer);
+    service.memory->free(t_buff);
+
+    uint32_t off_sec_in_root = file_lba_index >> 5;
+    uint32_t off_lba_in_sec = file_lba_index & 31;
+    uint8_t* AFS_ROOT = service.memory->malloc(512);
+    uint8_t* AFS_HEAD = AFS_ROOT;
+
+    disk->read_sector(ROOT_BASE + off_sec_in_root, AFS_ROOT);
+
+    _file.size = bytes;
+    
+    AFS_HEAD += (off_lba_in_sec << 4);
+    service.memory->memcpy((uint8_t*)&_file, AFS_HEAD, RECORD_SIZE);
+    
+    disk->write_sector(ROOT_BASE + off_sec_in_root, AFS_ROOT);
+    
+    service.memory->free(AFS_ROOT);
+
     return SUCCES;
 }
