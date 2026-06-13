@@ -25,7 +25,7 @@ uint8 command_buffer[COMMAND_BUFFER_SIZE];
 
 uint8* info =   "\nAtom interactive shell %[13v 0.1%[15\n"
                     "Copyright (c) 2026 Zhoski. Licensed under the MIT License.\n\n"
-                    "Type \"help\" or \"license\" for more information.\n\n";
+                    "Type %[14\"help\"%[15 or %[14\"license\"%[15 for more information.\n\n";
 
 void help() {
     uint8* help_msg =   "\nclear -- clear screen\n"
@@ -48,7 +48,7 @@ void show_license() {
         printf("\n%s",file);
     }else if(status == 1) {
         SetFGColor(12);
-        printf("%[12\nFILE NOT FOUND%[15");
+        printf("%[12\nLICENSE.TXT NOT FOUND%[15");
         SetFGColor(15);
     }
 }
@@ -92,9 +92,7 @@ void shell_main() {
         if(c) {
             if(c == ENTER) {
                 execute();
-                SetFGColor(10);
                 printf("\n%[10root> %[15");
-                SetFGColor(15);
             }else {
                 if (command_index < COMMAND_BUFFER_SIZE - 1) {
                     command_buffer[command_index++] = c;
