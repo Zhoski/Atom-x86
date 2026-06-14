@@ -47,9 +47,7 @@ void show_license() {
     if(status == 0) {
         printf("\n%s",file);
     }else if(status == 1) {
-        SetFGColor(12);
         printf("%[12\nLICENSE.TXT NOT FOUND%[15");
-        SetFGColor(15);
     }
 }
 

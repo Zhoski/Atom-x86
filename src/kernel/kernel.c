@@ -47,8 +47,6 @@ void kmain() {
 
     free(disk_info);
 
-    fs->update("LICENSE TXT", "MOPS", 4);
-
     asm("sti");   
 
     fs->open("SHELL   BIN"); 

@@ -111,18 +111,28 @@ void init_memory() {
     service.memory = &mem;
 }
 
-void memset(uint8_t* in, uint8_t v, uint32_t size) {
-    for(uint32_t i = 0;i < size;i++) {
-        *in++ = v;
-    }
+void memset(void* in, uint8_t v, uint32_t size) {
+    asm volatile (
+        "movl %[v], %%eax\n"
+        "movl %[in], %%edi\n"
+        "movl %[count], %%ecx\n"
+        "rep stosb"
+        :
+        : [in] "r" ((uint8_t*)in), [v] "r" ((uint32_t)v), [count] "r" (size)
+        : "eax", "edi", "ecx", "memory"
+    );
 }
 
 void memcpy(void* from,void* in, uint32_t size) {
-    uint8_t *from_byte = (uint8_t*)from;
-    uint8_t *in_byte = (uint8_t*)in;
-    for(int i = 0;i < size;i++)  {
-        *in_byte++ = *from_byte++; 
-    }   
+    asm volatile (
+        "movl %[from], %%esi\n"
+        "movl %[in],   %%edi\n"
+        "movl %[count],%%ecx\n"
+        "rep movsb"
+        :
+        : [from] "r" ((uint8_t*)from), [in] "r" ((uint8_t*)in), [count] "r" (size)
+        : "esi", "edi", "ecx","memory"
+    );
 }
 
 uint8_t memread(uint8_t* from) {
