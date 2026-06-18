@@ -48,7 +48,6 @@ void kmain() {
     free(disk_info);
 
     asm("sti");   
-
     fs->open("SHELL   BIN"); 
 
 	for(;;) {

@@ -6,6 +6,8 @@
 #include "../../services/services.h"
 #include "../../../drivers/video/video.h"
 #include "../../../drivers/fs/fs.h"
+#include "../../../cpu/registers.h"
+#include "../memory/program.h"
 
 /*-------- Вывод --------*/
 #define SYSCALL_WRITE           1
@@ -32,10 +34,17 @@
 #define READ_MEMORY_DD          3
 #define WRITE_MEMORY            4
 #define COPY_MEMORY             5
+#define MALLOC                  6
+#define FREE                    7
 
 /*-------- DISK --------*/      
 #define SYSCALL_DISK            5
 #define CAT_FILE                1
+#define GET_ROOT                2
+
+/*------- SYSTEM -------*/
+#define SYSCALL_SYSTEM          6
+#define SYS_RUN                 1
 
 /*----- Завершение ------*/
 #define SYSCALL_DIED            60
@@ -44,5 +53,5 @@
 #define SUCCES_READ             0
 #define KERNEL_BASE             0x110000
 
-extern void syscall_handler(int eax, int ebx,int ecx, int edx);
+void syscall_handler(int eax, int ebx,int ecx, int edx);
 #endif
