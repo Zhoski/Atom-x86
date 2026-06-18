@@ -1,14 +1,8 @@
 #ifndef FILE
 #define FILE
 
-typedef struct
-{
-    unsigned int size;      // Размер в байтах
-    unsigned char* buffer;  // Начало файла
-    unsigned char* ptr;     // Текущее смещение в файле
-    unsigned int eoi;       // Конец файла
-} File;
-
-unsigned char cat(const unsigned char* file_name, unsigned char buffer[512]);
-
+unsigned char cat(const unsigned char* file_name, unsigned char *out);
+unsigned char get_root(unsigned char *__restrict__ out);
+unsigned int sys_run(unsigned char* __restrict__ file);
+unsigned int sys_died();
 #endif

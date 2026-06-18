@@ -30,7 +30,7 @@ void vga_640_480_clear_screen(uint8_t color) {
     screen_x_off = 0;
     screen_y_off = 0;
 
-    service.memory->memset(VGA_640_480_MEMORY, color, 640 * 80);  
+    service.memory->memset(VGA_640_480_MEMORY, terminal_bg_vbe, 640 * 80);  
 }
 
 void vga_640_480_write_row(uint32_t x, uint32_t y, uint8_t b, uint8_t fg, uint8_t bg) {
@@ -45,17 +45,27 @@ void vga_640_480_write_row(uint32_t x, uint32_t y, uint8_t b, uint8_t fg, uint8_
     outb(0x03C5, 0x0F);
 
     outb(INDEX_REGISTER, 0x00);
-    outb(DATA_REGISTER, fg);
+    outb(DATA_REGISTER, bg);
 
     outb(0x03CE, 0x01); 
     outb(0x03CF, 0x0F);
 
     outb(INDEX_REGISTER, 0x08);
-    outb(DATA_REGISTER, b);
+    outb(DATA_REGISTER, ~b);
 
     volatile uint8_t dummy = *address;
     
-    *address = bg;
+    *address = 0xFF;
+
+    outb(INDEX_REGISTER, 0x00);
+    outb(DATA_REGISTER, fg);
+
+    outb(INDEX_REGISTER, 0x08);
+    outb(DATA_REGISTER, b);
+
+    dummy = *address;
+
+    *address = 0xFF;
 }
 
 void vga_640_480_putpixel(uint32_t x, uint32_t y, uint8_t color) { 

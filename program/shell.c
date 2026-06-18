@@ -4,7 +4,7 @@
 #include "../libs/memory.h"
 
 #define COMMAND_BUFFER_SIZE     64
-#define COMMAND_COUNT            3
+#define COMMAND_COUNT            6
 
 #define SHIFT 0x01
 #define CAPS  0x02
@@ -12,14 +12,34 @@
 #define ENTER 0x0A 
 #define BACKSPACE 0x08 
 
+typedef struct __attribute__((packed)) {
+    uint8 name[8];
+    uint8 ext[3];
+    uint16 start_sec;
+    uint16 size;
+    uint8 flags;
+} File;
+
 typedef struct Command
 {
-    uint8* name;
+    uint8* cmd_name;
     void (*handler)();
 };
 
-typedef struct Command command_list[COMMAND_COUNT];
-command_list cmd;
+void help();
+void clear(uint8 color);
+void show_license();
+void dir();
+void run();
+
+struct Command cmd[] = {
+    {"help", help},
+    {"clear", clear},
+    {"license", show_license},
+    {"dir", dir},
+    {"run", run},
+    {"exit", sys_died}
+};
 uint32 command_index = 0;
 uint8 command_buffer[COMMAND_BUFFER_SIZE];
 
@@ -41,14 +61,63 @@ void clear(uint8 color) {
 }
 
 void show_license() {
+    printf("\n");
     char *file;
     uint32 status = cat("LICENSE TXT",file);
-    
+
     if(status == 0) {
-        printf("\n%s",file);
-    }else if(status == 1) {
-        printf("%[12\nLICENSE.TXT NOT FOUND%[15");
+        printf("%s\n",file);
+    }else {
+        printf("%[12LICENSE.TXT not found%[15");
     }
+}
+
+void run() {
+    sys_run("HELLO   BIN");
+}
+
+void dir() {
+    printf("\n\n/root:\n");
+    uint8* root = malloc(8192);
+    get_root(root);
+    File file;
+    
+    while (*root)
+    {
+        int i = 0;
+        int j = 0;
+        memcpy(root, (uint8*)&file, 16);
+        while (file.name[i] != ' ')
+        {
+            putchar(file.name[i]);
+            i++;
+            j++;
+        }
+        putchar('.');
+
+        i = 0;
+
+        while (i < 3)
+        {
+            putchar(file.ext[i]);
+            i++;
+            j++;
+        }
+
+        while (j != 11)
+        {
+            putchar(' ');
+            j++;
+        }
+
+        printf("      %[03%d%[15",file.size);
+        
+        putchar('\n');
+
+        root += 16;
+    }   
+
+    free(root);
 }
 
 void execute() {
@@ -57,9 +126,9 @@ void execute() {
         command_index = 0;
         return;
     }
-    uint8 is_found = 0;
+    uint32 is_found = 0;
     for(uint32 i = 0;i < COMMAND_COUNT;i++) {
-        if(strcmp(command_buffer, cmd[i].name) == 0) {
+        if(strcmp(command_buffer, cmd[i].cmd_name) == 0) {
             cmd[i].handler();
             is_found = 1;
         }
@@ -101,15 +170,6 @@ void shell_main() {
     }
 }
 
-void AddCommand(command_list cmd, uint32 i, uint8* name, void (*handler)()) {
-    cmd[i].name = name;
-    cmd[i].handler = handler;
-}
-
 void main() {
-    AddCommand(cmd, 0, "help", help);
-    AddCommand(cmd, 1, "clear", clear);
-    AddCommand(cmd, 2, "license", show_license);
-
     shell_main();
 }

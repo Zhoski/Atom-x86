@@ -108,6 +108,7 @@ unsigned short find_free_sector(char* out) {
 }
 
 int push(char* out, char* __file) {
+    printf("afms: Push %s to %s\n", __file, out);
     FILE* file_data = fopen(__file, "r");
     if(!file_data)
         return 1;
@@ -156,6 +157,7 @@ int push(char* out, char* __file) {
 }
 
 int boot(char* out, char* boot_path) {
+    printf("afms: Create MBR from %s in %s\n", boot_path, out);
     FILE* boot_entry = fopen(boot_path, "r");
     if(!boot_entry) 
         return 1;
@@ -177,6 +179,7 @@ int boot(char* out, char* boot_path) {
 }
 
 int create(char* out) {
+    printf("afms: Create %s, size 16M\n", out);
     FILE* out_img = fopen(out, "w");
     if(!out_img) 
         return 1;

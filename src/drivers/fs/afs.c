@@ -255,3 +255,11 @@ uint8_t afs_update(const uint8_t* file_name, uint8_t* in, uint32_t bytes) {
 
     return SUCCES;
 }
+
+uint8_t afs_get_root(uint8_t *__restrict__ out) {
+    uint8_t* out_head = out;
+    for(uint32_t i = 0;i < ROOT_SECTORS;i++) {
+        disk->read_sector(ROOT_BASE + i, out_head);
+        out_head+=512;
+    }
+}

@@ -136,13 +136,13 @@ void memcpy(void* from,void* in, uint32_t size) {
 }
 
 uint8_t memread(uint8_t* from) {
-    return from[0];
+    return *from;
 }
 
 uint16_t memread_dw(uint16_t* from) {
-    return from[0];
+    return *from;
 }
 
 uint32_t memread_dd(uint32_t* from) {
-    return from[0];
+    return *from;
 }

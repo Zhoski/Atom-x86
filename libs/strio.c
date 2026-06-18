@@ -190,7 +190,6 @@ void printf(const char *format, ...) {
             break;
         case 's':
             char *s = va_arg(args, char*);
-            //if(s == 0) s = "NULL";
             asm volatile (
                 "movl $1, %%eax\n"
                 "movl $1, %%ebx\n"
@@ -202,7 +201,7 @@ void printf(const char *format, ...) {
             );
             break;
         case '[':
-            const char code[2] = {*(p+1), *(p+2)};  // Следущие два символа
+            const char code[3] = {*(p+1), *(p+2), 0};  // Следущие два символа
             for(int i = 0;i < 16;i++) {
                 if(__strcmp(code, vga_colors[i].sequence) == 0) {
                     vga_colors[i].handler();

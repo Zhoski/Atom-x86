@@ -8,6 +8,7 @@ static FileSystem AFS = {
     .create = &afs_create,
     .delete = &afs_delete,
     .update = &afs_update,
+    .get_root = &afs_get_root,
 };
 
 FileSystem* fs;

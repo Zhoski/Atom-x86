@@ -1,10 +1,11 @@
 #include "syscall.h"
 
+extern uint32_t kernel_stack_base;
+
 void syscall_handler(int eax, int ebx,int ecx, int edx) { 
     switch(eax) {
         case SYSCALL_WRITE:  
             switch(ebx) {
-                uint8_t color;
                 case WRITE_TEXT:
                     video->write_string((uint8_t*)ecx); 
                     break; 
@@ -19,13 +20,8 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
         case SYSCALL_KEYBOARD:
             switch(ebx) {
                 case RETURN_LAST_SYM:
-                    //char c = keyboard_buf_get_las_sym();
-                    char c = kb.get_last_key();
-                    asm("movl %0, %%eax\n"
-                        :
-                        : "r" ((int)c)
-                        : "%eax"
-                    );
+                    char out = kb.get_last_key();
+                    eax = out;
 
                     break;
                 default:
@@ -55,62 +51,42 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
             switch (ebx)
             {
                 case CAT_FILE:
-                    fs->read((uint8_t*)ecx, (uint8_t*)edx);
+                    eax = fs->read(ecx, edx);
                     break;
+                case GET_ROOT:
+                    fs->get_root(ecx);
+                    break;
+            }
             break;
         case SYSCALL_DIED:
             asm volatile (
-                "movl %1, %%esp\n"
-                "jmp *%0"
+                "movl %[stack_top], %%esp\n"
+                "movl %[stack_base], %%ebp\n"
+                "jmp *%[exit]"
                 :
-                : "r"(kernel_return_ptr), "r"(kernel_stack_ptr)
-                : 
+                : [exit] "r"(kernel_return_ptr), [stack_top] "r"(kernel_stack_ptr), [stack_base] "r" (kernel_stack_base)
             );    
             break;
-        default:
-            break;
         case SYSCALL_MEMORY:
-            switch(ebx) {
-                uint8_t data;
-                uint32_t target_mem;
-                case READ_MEMORY_B:
-                    data = service.memory->memread((uint8_t*)ecx);
-                    asm volatile(
-                        "movl %0, %%eax"
-                        :
-                        : "r" ((int)data)
-                        : "eax"
-                    );
-                    break;
-                case READ_MEMORY_DW:
-                    data = service.memory->memread_dw((uint8_t*)ecx);
-                    asm volatile(
-                        "movl %0, %%eax"
-                        :
-                        : "r" ((int)data)
-                        : "eax"
-                    );
-                    break;
-                case READ_MEMORY_DD:
-                    data = service.memory->memread_dd((uint8_t*)ecx);
-                    asm volatile(
-                        "movl %0, %%eax"
-                        :
-                        : "r" ((int)data)
-                        : "eax"
-                    );
-                    break;
-                case WRITE_MEMORY:
-                    data = (uint8_t*)ecx;
-                    target_mem = edx;
-                    asm volatile(
-                        "movl %[data], %[mem]"
-                        : [data] "=m" (data)
-                        : [mem]  "r"  (target_mem)
-                        : "memory"
-                    );
-                    break;
+            switch (ebx)
+            {
+            case MALLOC:
+                uint32_t p = service.memory->malloc(ecx);
+                eax = p;
+                break;
+            case FREE:
+                service.memory->free(ecx);
+                break;
             }
-        }
+            break;
+        case SYSCALL_SYSTEM:
+            switch (ebx)
+            {
+            case SYS_RUN:
+                asm("sti");
+                fs->open(ecx);
+                break;
+            }
+            break;
     } 
 }
