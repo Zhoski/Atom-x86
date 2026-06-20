@@ -240,6 +240,35 @@ void clear_screen(unsigned char color) {
     );
 }
 
+void set_cursor(const unsigned short x, const unsigned short y) {
+    uint32 pos = x;
+    pos <<= 16;
+    pos |= y;
+    
+    asm volatile (
+        "movl $3, %%eax\n"
+        "movl $4, %%ebx\n"
+        "movl %0, %%ecx\n"
+        "int $0x80"
+        :
+        : "r" (pos)
+        : "eax", "ebx", "ecx", "memory"
+    );
+}
+
+void get_cursor(unsigned int* x, unsigned int* y) { 
+    asm volatile (
+        "movl $3, %%eax\n"
+        "movl $5, %%ebx\n"
+        "movl %0, %%ecx\n"
+        "movl %1, %%edx\n"
+        "int $0x80"
+        :
+        : "r" (x), "r" (y)
+        : "eax", "ebx", "ecx", "edx", "memory"
+    );
+}
+
 uint8 get_char() {
     uint32 out; 
     asm volatile (

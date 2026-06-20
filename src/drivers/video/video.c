@@ -6,8 +6,10 @@ static VideoDriver vga_640_480 = {
     .write_string = &vga_640_480_draw_string,
     .write_char = &vga_640_480_draw_char,
     .clear_screen = &vga_640_480_clear_screen,
-    .terminal_bg_vbe_set = &terminal_bg_vbe_set,
-    .terminal_fg_vbe_set = &terminal_fg_vbe_set,
+    .terminal_bg_vbe_set = &vga_640_480_bg_vga_set,
+    .terminal_fg_vbe_set = &vga_640_480_fg_vga_set,
+    .terminal_set_cursor_position = &vga_640_480_set_cursor_position,
+    .terminal_get_cursor_position = &vga_640_480_get_cursor_position,
 };
 
 static VideoDriver vga_80_25 = {
@@ -18,7 +20,7 @@ static VideoDriver vga_80_25 = {
 
 VideoDriver* video;
 
-void init_vga(uint8_t mode) {
+void init_vga(U8 mode) {
     switch (mode)
     {
         case VGA_640_480: video = &vga_640_480; break;

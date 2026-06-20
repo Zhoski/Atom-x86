@@ -6,7 +6,7 @@
 #define FONT8x16_IMPLEMENTATION
 #include "../../font/font8x16.h"
 
-#define VGA_640_480_MEMORY (uint8_t*)0xA0000
+#define VGA_640_480_MEMORY (U8*)0xA0000
 
 #define INDEX_REGISTER          0x3CE
 #define DATA_REGISTER           0x3CF
@@ -20,23 +20,23 @@
 #define VESA_1024_768_WIDTH      1024
 #define VESA_1024_768_HEIGHT      768
 
-uint32_t screen_x_off = 0;
-uint32_t screen_y_off = 0;
+U32 screen_x_off = 0;
+U32 screen_y_off = 0;
 
-uint8_t terminal_fg_vbe = 15;   // Белый
-uint8_t terminal_bg_vbe = 0;    // Черный
+U8 terminal_fg_vbe = 15;   // Белый
+U8 terminal_bg_vbe = 0;    // Черный
 
-void vga_640_480_clear_screen(uint8_t color) {
+void vga_640_480_clear_screen(U8 color) {
     screen_x_off = 0;
     screen_y_off = 0;
 
     service.memory->memset(VGA_640_480_MEMORY, terminal_bg_vbe, 640 * 80);  
 }
 
-void vga_640_480_write_row(uint32_t x, uint32_t y, uint8_t b, uint8_t fg, uint8_t bg) {
-    uint32_t offset = ((y << 6) + (y << 4)) + (x >> 3);
+void vga_640_480_write_row(U32 x, U32 y, U8 b, U8 fg, U8 bg) {
+    U32 offset = ((y << 6) + (y << 4)) + (x >> 3);
     
-    volatile uint8_t *address = VGA_640_480_MEMORY + offset;
+    volatile U8 *address = VGA_640_480_MEMORY + offset;
 
     outb(INDEX_REGISTER, GRAPHICS_MODE);
     outb(DATA_REGISTER, 0x00);
@@ -53,7 +53,7 @@ void vga_640_480_write_row(uint32_t x, uint32_t y, uint8_t b, uint8_t fg, uint8_
     outb(INDEX_REGISTER, 0x08);
     outb(DATA_REGISTER, ~b);
 
-    volatile uint8_t dummy = *address;
+    volatile U8 dummy = *address;
     
     *address = 0xFF;
 
@@ -68,27 +68,27 @@ void vga_640_480_write_row(uint32_t x, uint32_t y, uint8_t b, uint8_t fg, uint8_
     *address = 0xFF;
 }
 
-void vga_640_480_putpixel(uint32_t x, uint32_t y, uint8_t color) { 
-    uint32_t offset = ((y << 6) + (y << 4)) + (x >> 3);
-    uint8_t bit_mask = 0x80 >> (x & 7);
+void vga_640_480_putpixel(U32 x, U32 y, U8 color) { 
+    U32 offset = ((y << 6) + (y << 4)) + (x >> 3);
+    U8 bit_mask = 0x80 >> (x & 7);
     
-    volatile uint8_t *address = VGA_640_480_MEMORY + offset;
+    volatile U8 *address = VGA_640_480_MEMORY + offset;
 
     outb(INDEX_REGISTER, GRAPHICS_MODE);
     outb(DATA_REGISTER, 0x02);
     outb(INDEX_REGISTER, BIT_MASK);
     outb(DATA_REGISTER, bit_mask);
 
-    uint8_t dummy = *address;
+    U8 dummy = *address;
     
     *address = color;
 }
 
 void vga_640_480_scroll() {
-    uint32_t offset = 80 + VGA_640_480_MEMORY;
-    uint32_t new_offset = 0 + VGA_640_480_MEMORY;
+    U32 offset = 80 + VGA_640_480_MEMORY;
+    U32 new_offset = 0 + VGA_640_480_MEMORY;
 
-    for(uint32_t i = 0; i < 480;i++) {
+    for(U32 i = 0; i < 480;i++) {
         service.memory->memcpy(offset, new_offset, 80);
         offset += 80;
         new_offset += 80;
@@ -97,37 +97,47 @@ void vga_640_480_scroll() {
     service.memory->memset(offset, terminal_bg_vbe, 80);
 }
 
-void vga_640_480_draw_char(uint8_t c) {
-    if(c == '\n') {
+void vga_640_480_draw_char(U8 c) {
+    if(c == '\n' || screen_x_off == 640) {
         screen_x_off = 0;
         screen_y_off += 16;
         if(screen_y_off == 464) {
-            for(uint32_t i = 0;i < 16;i++) {
+            for(U32 i = 0;i < 16;i++) {
                 vga_640_480_scroll();
             }
             screen_y_off -= 16;
         }
         return;
     }
-    for(uint32_t row = 0; row < 16;row++) {
-        uint8_t row_byte = font8x16[c][row];
+    for(U32 row = 0; row < 16;row++) {
+        U8 row_byte = font8x16[c][row];
         vga_640_480_write_row(screen_x_off, screen_y_off + row, row_byte, terminal_fg_vbe, terminal_bg_vbe);
     }
 
     screen_x_off+=8;
 }
 
-void vga_640_480_draw_string(const uint8_t* s) {
+void vga_640_480_draw_string(const U8* s) {
     while(*s) {
         vga_640_480_draw_char(*s);
         s++; 
     }
 }
 
-void terminal_fg_vbe_set(uint8_t color) {
+void vga_640_480_set_cursor_position(const U16 x, const U16 y) {
+    screen_x_off = x << 3;
+    screen_y_off = y << 4;
+}
+
+void vga_640_480_get_cursor_position(U16* x, U16* y)  {
+    *x = screen_x_off >> 3;
+    *y = screen_y_off >> 4;
+}
+
+void vga_640_480_fg_vga_set(U8 color) {
     terminal_fg_vbe = color;
 }
 
-void terminal_bg_vbe_set(uint8_t color) {
+void vga_640_480_bg_vga_set(U8 color) {
     terminal_bg_vbe = color;
 }

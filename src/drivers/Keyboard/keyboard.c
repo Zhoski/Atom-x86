@@ -17,7 +17,7 @@
 #define ENTER 0x0A // '\n'
 #define BACKSPACE 0x08 // '\b'
 
-const unsigned char ascii_table[128] = {
+const U8 ascii_table[128] __attribute__((aligned(4))) = {
     0,  27, '1', '2', '3', '4', '5', '6', '7', '8', 
     '9', '0', '-', '=', '\b', '\t',                 
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 
@@ -29,15 +29,11 @@ const unsigned char ascii_table[128] = {
     '5', '6', '+', '1', '2', '3', '0', '.', 127, 0, 0, 
     0, 0 
 };
-uint8_t _keyboard_buf[KEYBOARD_BUF_SIZE];
-uint8_t _keyboard_buf_insert = 1;
-uint8_t _keyboard_buf_read   = 0;
-uint8_t isShift = 0;
-uint8_t isCaps = 0;
-
-//static keyboard_interface kb_ops = {
-//    .get_last_key = keyboard_buf_get_las_sym
-//};
+U8 _keyboard_buf[KEYBOARD_BUF_SIZE];
+U8 _keyboard_buf_insert = 1;
+U8 _keyboard_buf_read   = 0;
+U8 isShift = 0;
+U8 isCaps = 0;
 
 keyboard_interface kb; 
 
@@ -45,7 +41,7 @@ void init_keyboard() {
     kb.get_last_key = &keyboard_buf_get_las_sym; 
 }
 
-void keyboard_buf_insert(uint8_t c) {
+void keyboard_buf_insert(U8 c) {
     if(_keyboard_buf_insert < KEYBOARD_BUF_SIZE) {
         _keyboard_buf[_keyboard_buf_insert++] = c;
         _keyboard_buf_read = _keyboard_buf_insert - 1;
@@ -56,9 +52,9 @@ void keyboard_buf_insert(uint8_t c) {
     }
 } 
 
-uint8_t keyboard_buf_get_las_sym() {
+U8 keyboard_buf_get_las_sym() {
     if(_keyboard_buf[_keyboard_buf_read]!=0) {
-        uint8_t temp = _keyboard_buf[_keyboard_buf_read];
+        U8 temp = _keyboard_buf[_keyboard_buf_read];
         _keyboard_buf[_keyboard_buf_read] = 0;
         return temp;
     } 
@@ -66,10 +62,10 @@ uint8_t keyboard_buf_get_las_sym() {
 }
 
 void keyboard_handler() {
-    uint8_t scancode = inb(KEYBOARD_DATA_PORT);
+    U8 scancode = inb(KEYBOARD_DATA_PORT);
     if(scancode & KEY_RELEASE_BIT ) {   
         return;
     } 
-    uint8_t c = ascii_table[scancode];
+    U8 c = ascii_table[scancode];
     keyboard_buf_insert(c); 
 }

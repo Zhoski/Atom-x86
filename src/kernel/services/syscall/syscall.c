@@ -45,6 +45,12 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                 case CLEAR_SCREEN:
                     video->clear_screen((uint8_t)edx);
                     break;
+                case SET_CURSOR:
+                    video->terminal_set_cursor_position((uint8_t)(ecx >> 16), (uint8_t)ecx);
+                    break;
+                case GET_CURSOR:
+                    video->terminal_get_cursor_position(ecx, edx);
+                    break;
             }
             break;
         case SYSCALL_DISK:

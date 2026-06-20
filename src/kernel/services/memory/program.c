@@ -50,8 +50,6 @@ void exit() {
         : "eax", "ebx", "ecx", "edx", "esi", "edi"
     );
 
-    service.memory->memset(0x396000, 0, 0x4000);
-
     video->clear_screen(1);
     fs->open("SHELL   BIN");
     for(;;) {

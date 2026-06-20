@@ -1,14 +1,15 @@
 #ifndef __MEMORY__
 #define __MEMORY__
 #include <stdint.h>
+#include "../../int.h"
 
-void memcpy(void* from,void* in, uint32_t size);
-uint8_t memread(uint8_t* from);
-uint16_t memread_dw(uint16_t* from);
-void memset(void* in, uint8_t v, uint32_t size);
-uint32_t memread_dd(uint32_t* from);
-uint8_t* malloc(uint32_t size);
-void free(uint8_t *ptr);
+void memcpy(void* __restrict__ __from,void* __restrict__ __in, U32 __c);
+U8 memread(U8* __restrict__ from);
+U16 memread_dw(U16* __restrict__ from);
+void memset(void* __restrict__ in, U8 v, U32 size);
+U32 memread_dd(U32* __restrict__ from);
+U8* malloc(U32 size);
+void free(U8* __restrict__ ptr);
 void create_heap();
 void init_memory();
 #endif
