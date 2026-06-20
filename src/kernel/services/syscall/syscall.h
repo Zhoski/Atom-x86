@@ -26,6 +26,8 @@
 #define SET_FG_COLOR            1
 #define SET_BG_COLOR            2
 #define CLEAR_SCREEN            3
+#define SET_CURSOR              4
+#define GET_CURSOR              5
 
 /* ------- MEMORY -------*/
 #define SYSCALL_MEMORY          4

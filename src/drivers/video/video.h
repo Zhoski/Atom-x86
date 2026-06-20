@@ -1,6 +1,6 @@
 #ifndef __VGA__
 #define __VGA__
-#include <stdint.h>
+#include "../../kernel/int.h"
 
 enum vga_color {
     VGA_COLOR_BLACK = 0,
@@ -28,14 +28,13 @@ enum graphics_mode {
 };
 
 typedef struct {
-    void(*write_string)(uint8_t* s);
-    void(*write_char)(uint8_t c);
-    void(*clear_screen)(uint8_t color);
-    void(*set_screen_pos)(uint32_t x, uint32_t y);
-
-    /* Только для графический режимов */
-	void(*terminal_fg_vbe_set) (uint8_t color);
-	void(*terminal_bg_vbe_set) (uint8_t color);
+    void(*write_string)(U8* s);
+    void(*write_char)(U8 c);
+    void(*clear_screen)(U8 color);
+	void(*terminal_fg_vbe_set) (U8 color);
+	void(*terminal_bg_vbe_set) (U8 color);
+	void (*terminal_set_cursor_position)(const U16 x, const U16 y);
+	void (*terminal_get_cursor_position)(U16* x, U16* y)
 }VideoDriver;
 
 extern VideoDriver* video;

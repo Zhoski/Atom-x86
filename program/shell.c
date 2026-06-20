@@ -3,7 +3,7 @@
 #include "../libs/file.h"
 #include "../libs/memory.h"
 
-#define COMMAND_BUFFER_SIZE     64
+#define COMMAND_BUFFER_SIZE    128
 #define COMMAND_COUNT            6
 
 #define SHIFT 0x01
@@ -41,7 +41,7 @@ struct Command cmd[] = {
     {"exit", sys_died}
 };
 uint32 command_index = 0;
-uint8 command_buffer[COMMAND_BUFFER_SIZE];
+uint8 *command_buffer;
 
 uint8* info =   "\nAtom interactive shell %[13v 0.1%[15\n"
                     "Copyright (c) 2026 Zhoski. Licensed under the MIT License.\n\n"
@@ -160,6 +160,15 @@ void shell_main() {
             if(c == ENTER) {
                 execute();
                 printf("\n%[10root> %[15");
+            }else if(c == BACKSPACE) {
+                uint32 x;
+                uint32 y;
+                get_cursor(&x, &y);
+                set_cursor(x - 1, y);
+                putchar(' ');
+                set_cursor(x - 1, y);
+                command_index--;
+                command_buffer[command_index] = 0;
             }else {
                 if (command_index < COMMAND_BUFFER_SIZE - 1) {
                     command_buffer[command_index++] = c;
@@ -171,5 +180,6 @@ void shell_main() {
 }
 
 void main() {
+    command_buffer = malloc(COMMAND_BUFFER_SIZE);
     shell_main();
 }
