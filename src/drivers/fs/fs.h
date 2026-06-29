@@ -4,6 +4,7 @@
 
 typedef struct
 {
+    uint8_t (*check)(const uint8_t *__restrict__ file_name);
     uint8_t (*open)(const uint8_t *__restrict__ file_name);
     uint8_t (*read)(const uint8_t *__restrict__ file_name, uint8_t *__restrict__ out);
     uint8_t (*create)(const uint8_t *__restrict__ file_name, uint16_t size);

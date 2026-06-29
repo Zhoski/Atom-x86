@@ -2,7 +2,7 @@
 
 void main() {
     clear_screen(1);
-    printf("Hello World from hello.bin!\n");
+    printf("Maksim pakostnik\n");
     printf("Press any key to return");
     uint8 c = get_char();
     while (!c)

@@ -43,6 +43,10 @@
 #define SYSCALL_DISK            5
 #define CAT_FILE                1
 #define GET_ROOT                2
+#define WRITE_FILE              3
+#define CREATE_FILE             4
+#define DELETE_FILE             5
+#define FILE_CHECK              6
 
 /*------- SYSTEM -------*/
 #define SYSCALL_SYSTEM          6
@@ -55,5 +59,5 @@
 #define SUCCES_READ             0
 #define KERNEL_BASE             0x110000
 
-void syscall_handler(int eax, int ebx,int ecx, int edx);
+void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi);
 #endif

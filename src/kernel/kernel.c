@@ -42,13 +42,10 @@ void kmain() {
     service.memory->free(disk_info);
     init_fs();    
 
-    fs->create("TEST1   TXT",255);
-    fs->create("TEST2   TXT",255);
-
     free(disk_info);
 
     asm("sti");   
-    fs->open("SHELL   BIN"); 
+    fs->open("INIT    BIN"); 
 
 	for(;;) {
         asm("hlt");

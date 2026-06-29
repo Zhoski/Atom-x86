@@ -62,7 +62,7 @@ uint8_t afs_init() {
     return SUCCES;
 }
 
-uint8_t find_file(const uint8_t *file_name) {
+uint8_t afs_check_file(const uint8_t *__restrict__ file_name) {
     uint8_t* AFS_ROOT = service.memory->malloc(8192);
     uint8_t* AFS_HEAD = AFS_ROOT;
 
@@ -100,7 +100,7 @@ uint8_t find_file(const uint8_t *file_name) {
 }
 
 uint8_t afs_open(const uint8_t *file_name) {
-    uint8_t file = find_file(file_name);
+    uint8_t file = afs_check_file(file_name);
     if(file == FILE_NOT_FOUND)
         return FILE_NOT_FOUND;
 
@@ -122,7 +122,7 @@ uint8_t afs_open(const uint8_t *file_name) {
 }
 
 uint8_t afs_read(const uint8_t *file_name, uint8_t *out) {
-    uint8_t file = find_file(file_name);
+    uint8_t file = afs_check_file(file_name);
     if(file == FILE_NOT_FOUND)
         return FILE_NOT_FOUND;
 
@@ -206,7 +206,7 @@ uint8_t afs_create(const uint8_t* file_name, uint16_t size) {
 }
 
 uint8_t afs_update(const uint8_t* file_name, uint8_t* in, uint32_t bytes) {
-    uint8_t file = find_file(file_name);
+    uint8_t file = afs_check_file(file_name);
     if(file == FILE_NOT_FOUND)
         return FILE_NOT_FOUND;
 

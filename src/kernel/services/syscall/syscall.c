@@ -2,7 +2,7 @@
 
 extern uint32_t kernel_stack_base;
 
-void syscall_handler(int eax, int ebx,int ecx, int edx) { 
+void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) { 
     switch(eax) {
         case SYSCALL_WRITE:  
             switch(ebx) {
@@ -40,7 +40,6 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
                 case SET_FG_COLOR:
                     uint8_t color = (uint8_t)edx;
                     video->terminal_fg_vbe_set(color);
-
                     break;
                 case CLEAR_SCREEN:
                     video->clear_screen((uint8_t)edx);
@@ -54,13 +53,68 @@ void syscall_handler(int eax, int ebx,int ecx, int edx) {
             }
             break;
         case SYSCALL_DISK:
+            uint32_t i = 0;
+            uint32_t j = 0;
+            uint8_t  file[12];
+
+            while (esi[j] != '\0' && esi[j] != '.')
+            {
+                file[i] = esi[j];
+                i++;
+                j++;
+            }
+
+            while (i < 8)
+            {
+                file[i++] = ' ';
+            }
+
+            while (i++ < 11)
+            {
+                file[i++] = esi[++j];
+            }
+
+            video->write_string(file);
+
             switch (ebx)
             {
                 case CAT_FILE:
-                    eax = fs->read(ecx, edx);
+                    eax = fs->read(file, edx);
+                    asm volatile(
+                        "movl %%eax, %0"
+                        :
+                        : "a" (eax)
+                    );
                     break;
                 case GET_ROOT:
                     fs->get_root(ecx);
+                    break;
+                case WRITE_FILE:
+                    eax = fs->update(file, edi, ecx);
+                    asm volatile(
+                        "movl %%eax, %0"
+                        :
+                        : "a" (eax)
+                    );
+                    break;
+                case CREATE_FILE:
+                    fs->create(file, ecx);
+                    break;
+                case DELETE_FILE:
+                    eax = fs->delete(file);
+                    asm volatile(
+                        "movl %%eax, %0"
+                        :
+                        : "a" (eax)
+                    );
+                    break;
+                case FILE_CHECK:
+                    eax = fs->check(file);
+                    asm volatile(
+                        "movl %%eax, %0"
+                        :
+                        : "a" (eax)
+                    );
                     break;
             }
             break;
