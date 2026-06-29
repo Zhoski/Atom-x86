@@ -33,6 +33,12 @@ objcopy -O binary kernel.elf binaries/kernel.bin
 
 cd program
 make
+cd init
+make
+cd ..
+cd setup
+make
+cd ..
 cd ..
 
 ./utilities/afsm -c atom.img
@@ -42,8 +48,10 @@ cd ..
 ./utilities/afsm -push atom.img binaries/shell.bin
 ./utilities/afsm -push atom.img binaries/LICENSE.txt
 ./utilities/afsm -push atom.img binaries/hello.bin
+./utilities/afsm -push atom.img binaries/init.bin
+./utilities/afsm -push atom.img binaries/setup.bin
 
-qemu-system-i386 -cpu 486 -drive format=raw,file=atom.img -m 4M -icount shift=6,sleep=off -rtc clock=vm -no-reboot -d int,cpu_reset -D qemu.log
+qemu-system-i386 -cpu 486 -drive format=raw,file=atom.img -m 4M -icount shift=6,sleep=off -rtc clock=vm
 
 rm binaries/boot.bin
 rm binaries/stage2.bin

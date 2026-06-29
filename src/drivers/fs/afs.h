@@ -10,9 +10,9 @@ typedef struct __attribute__((packed)) {
     uint8_t flags;
 } File;
 
-uint8_t find_file(const uint8_t *__restrict__ file_name);
+uint8_t afs_check_file(const uint8_t *__restrict__ file_name);
 uint8_t afs_open(const uint8_t *__restrict__ file_name);
-uint8_t afs_read(const uint8_t *__restrict__ file_name, uint8_t buffer[512]);
+uint8_t afs_read(const uint8_t *__restrict__ file_name, uint8_t *__restrict__ out);
 uint8_t afs_create(const uint8_t *__restrict__ file_name, uint16_t size);
 uint8_t afs_delete(const uint8_t *__restrict__ file_name);
 uint8_t afs_update(const uint8_t *__restrict__ file_name, uint8_t* in, uint32_t bytes);

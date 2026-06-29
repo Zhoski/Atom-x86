@@ -15,13 +15,13 @@ isr80:
     push es
     push fs
     push gs
- 
   
+    push edi
+    push esi
     push edx
     push ecx
     push ebx
     push eax
-
   
     mov ax, 0x10
     mov ds, ax
@@ -33,6 +33,8 @@ isr80:
     pop ebx
     pop ecx
     pop edx     
+    pop esi
+    pop edi
     
     pop gs
     pop fs
