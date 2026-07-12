@@ -47,6 +47,7 @@
 #define CREATE_FILE             4
 #define DELETE_FILE             5
 #define FILE_CHECK              6
+#define FILE_RUN                7
 
 /*------- SYSTEM -------*/
 #define SYSCALL_SYSTEM          6

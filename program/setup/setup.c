@@ -2,6 +2,7 @@
 #include "../../libs/strio.h"
 
 void main() {
+    clear_screen(0);
     SetBGColor(1);
     SetFGColor(15);
     printf("SETUP.BIN");
@@ -14,8 +15,8 @@ void main() {
         putchar(' ');
     }
 
-    sys_create("USER    CFG");
-    sys_write("USER    CFG", "user:Zhoski",12);
+    sys_create("user.cfg");
+    sys_write("user.cfg", "user:Zhoski",12);
     set_cursor(0,1);
     char c = 0;
 
@@ -23,7 +24,6 @@ void main() {
     {
         c = get_char();
         if(c) {
-            putchar(c);
             sys_run("SHELL   BIN");
         }
     }

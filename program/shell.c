@@ -4,7 +4,7 @@
 #include "../libs/memory.h"
 
 #define COMMAND_BUFFER_SIZE    128
-#define COMMAND_COUNT           11
+#define COMMAND_COUNT           10
 
 #define SHIFT 0x01
 #define CAPS  0x02
@@ -26,29 +26,27 @@ typedef struct Command
     void (*handler)();
 };
 
-void help();
-void clear(uint8 color);
-void show_license();
-void dir();
-void run();
-void read();
-void do_write();
-void do_create();
-void do_delete();
-void do_check();
+void cmd_help();
+void cmd_clear();
+void cmd_dir();
+void cmd_run();
+void cmd_read();
+void cmd_write();
+void cmd_create();
+void cmd_delete();
+void cmd_check();
 
 struct Command cmd[] = {
-    {"help", help},
-    {"clear", clear},
-    {"license", show_license},
-    {"dir", dir},
-    {"run", run},
+    {"help", cmd_help},
+    {"clear", cmd_clear},
+    {"dir", cmd_dir},
+    {"run", cmd_run},
     {"exit", sys_died},
-    {"read", read},
-    {"write", do_write},
-    {"c", do_create},
-    {"del", do_delete},
-    {"is",do_check},
+    {"read", cmd_read},
+    {"write", cmd_write},
+    {"c", cmd_create},
+    {"del", cmd_delete},
+    {"is",cmd_check},
 };
 uint32 command_index = 0;
 uint8 *command_buffer;
@@ -63,39 +61,30 @@ uint8* info =   "\nAtom interactive shell %[13v 0.1%[15\n"
 uint8 user[32];
 uint8 pass[32];
 
-void help() {
+void cmd_help() {
     uint8* help_msg =   "\n"
                         "%[11[BASE]%[15\n"
-                        "   clear -- clear screen\n"
-                        "   license -- show license\n"
+                        "   clear                -- clear screen\n"
                         "%[11[DISK]%[15\n"
-                        "   c -- creates file\n"
-                        "   del -- deletes file\n"
-                        "   read -- read file\n"
-                        "   write -- write in file\n"
-                        "   dir -- displays all files in a directory";
+                        "   c      [file]        -- creates file\n"
+                        "   del    [file]        -- deletes file\n"
+                        "   read   [file]        -- read file\n"
+                        "   write  [file] [data] -- write in file\n"
+                        "   dir                  -- displays all files in a directory\n"
+                        "%[11[SYSTEM]%[15\n"
+                        "   sys                  -- show system info\n"
+                        "   setdrv [type] [file] -- change driver\n"
+                        "   getdrv               -- show list cur drv";
     printf(help_msg);
 }
 
-void clear(uint8 color) {
-    clear_screen(color);
+void cmd_clear() {
+    clear_screen(0);
 
     printf(info);
 }
 
-void show_license() {
-    printf("\n");
-    char *file;
-    uint32 status = sys_read("LICENSE TXT",file);
-
-    if(status == 0) {
-        printf("%s\n",file);
-    }else {
-        printf("%[12LICENSE.TXT not found%[15");
-    }
-}
-
-void read() {
+void cmd_read() {
     printf("\n");
     char *buff;
     uint32 status = sys_read(argv[1],buff);
@@ -107,7 +96,7 @@ void read() {
     }
 }
 
-void do_check() {
+void cmd_check() {
     int ret = sys_check(argv[1]);
     if(ret) {
         printf("\n%[12%s not found%[15", argv[1]);
@@ -116,7 +105,7 @@ void do_check() {
     }
 }
 
-void do_write() {
+void cmd_write() {
     int size = 0;
     while (argv[2][size] != 0)
         size++;
@@ -127,7 +116,7 @@ void do_write() {
     }
 }
 
-void do_delete() {
+void cmd_delete() {
     int ret = sys_delete(argv[1]);
     if(ret) {
         printf("\n%[12%s not found%[15", argv[1]);
@@ -136,16 +125,19 @@ void do_delete() {
     }
 }
 
-void do_create() {
+void cmd_create() {
     sys_create(argv[1]);
     printf("\n%[10%s succes created%[15", argv[1]);
 }
 
-void run() {
-    sys_run(argv[1]);
+void cmd_run() {
+    uint32 status = sys_run(argv[1]);
+    if(status) {
+        printf("\n%[12%s not found%[15",argv[1]);
+    }
 }
 
-void dir() {
+void cmd_dir() {
     printf("\n\n/root:\n");
     uint8* root = malloc(8192);
     get_root(root);
@@ -156,32 +148,34 @@ void dir() {
         int i = 0;
         int j = 0;
         memcpy(root, (uint8*)&file, 16);
-        while (file.name[i] != ' ')
-        {
-            putchar(file.name[i]);
-            i++;
-            j++;
-        }
-        putchar('.');
+        if(file.name[i] != 0xFF) {
+            while (file.name[i] != ' ')
+            {
+                putchar(file.name[i]);
+                i++;
+                j++;
+            }
+            putchar('.');
 
-        i = 0;
+            i = 0;
 
-        while (i < 3)
-        {
-            putchar(file.ext[i]);
-            i++;
-            j++;
-        }
+            while (i < 3)
+            {
+                putchar(file.ext[i]);
+                i++;
+                j++;
+            }
 
-        while (j != 11)
-        {
-            putchar(' ');
-            j++;
-        }
+            while (j != 11)
+            {
+                putchar(' ');
+                j++;
+            }
 
-        printf("      %[03%d%[15",file.size);
+            printf("      %[03%d%[15",file.size);
         
-        putchar('\n');
+            putchar('\n');
+        }
 
         root += 16;
     }   
@@ -241,9 +235,9 @@ void execute() {
 }
 
 void shell_main() {
-    clear(0);
     SetBGColor(0);
     SetFGColor(15);
+    clear_screen(0);
     printf(info);
     printf("%[10%s/> %[15",user);
     for(uint32 i = 0;i < COMMAND_BUFFER_SIZE;i++) {
@@ -258,7 +252,7 @@ void shell_main() {
             if(c == ENTER) {
                 execute();
                 printf("\n%[10%s/> %[15",user);
-            }else if(c == BACKSPACE) {
+            }else if(c == BACKSPACE && command_index != 0) {
                 uint32 x;
                 uint32 y;
                 get_cursor(&x, &y);
@@ -269,8 +263,10 @@ void shell_main() {
                 command_buffer[command_index] = 0;
             }else {
                 if (command_index < COMMAND_BUFFER_SIZE - 1) {
-                    command_buffer[command_index++] = c;
-                    putchar(c);
+                    if(c != CAPS && c != SHIFT && c != BACKSPACE) {
+                        command_buffer[command_index++] = c;
+                        putchar(c);
+                    }
                 }
             }
         }
@@ -281,19 +277,20 @@ void main() {
     command_buffer = malloc(COMMAND_BUFFER_SIZE);
 
     uint8* user_cfg = malloc(512);
-    sys_read("USER    CFG", user_cfg);
+    sys_read("user.cfg", user_cfg);
     uint32 i = 0;
     uint32 j = 0;
-    while (user_cfg[i] != ':')
+    if(user_cfg[i]) {
+        while (user_cfg[i] != ':')
+            i++;
         i++;
-    i++;
-    while (user_cfg[i] != '\n')
-    {
-        user[j] = user_cfg[i];
-        j++;
-        i++;
+        while (user_cfg[i] != '\n')
+        {
+            user[j] = user_cfg[i];
+            j++;
+            i++;
+        }
     }
-    
 
     shell_main();
 }

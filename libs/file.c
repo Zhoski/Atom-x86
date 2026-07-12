@@ -98,15 +98,22 @@ unsigned char get_root(unsigned char *__restrict__ out) {
 }
 
 unsigned int sys_run(const unsigned char* __restrict__ file) {
+    int ret = 0;
     asm volatile(
-        "movl $6, %%eax\n"
-        "movl $1, %%ebx\n"
-        "movl %0, %%ecx\n"
+        "movl $5, %%eax\n"
+        "movl $7, %%ebx\n"
+        "movl %0, %%esi\n"
         "int $0x80"
         :
         : "r"((unsigned int)file)
-        : "eax", "ebx", "ecx", "memory"
+        : "eax", "ebx", "esi", "memory"
     );
+    asm volatile(
+        "movl %0, %%eax"
+        : "=a" (ret)
+    );
+
+    return ret;
 }
 
 unsigned int sys_died() {

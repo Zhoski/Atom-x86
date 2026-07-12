@@ -55,11 +55,15 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
         case SYSCALL_DISK:
             uint32_t i = 0;
             uint32_t j = 0;
-            uint8_t  file[12];
+            uint8_t  file[11];
 
             while (esi[j] != '\0' && esi[j] != '.')
             {
-                file[i] = esi[j];
+                if(esi[j] >= 97) {
+                    file[i] = esi[j] - 32;
+                }else {
+                    file[i] = esi[j];
+                }
                 i++;
                 j++;
             }
@@ -69,12 +73,16 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                 file[i++] = ' ';
             }
 
-            while (i++ < 11)
+            while (i < 11)
             {
-                file[i++] = esi[++j];
+                j++;
+                if(esi[j] >= 97) {
+                    file[i] = esi[j] - 32;
+                }else {
+                    file[i] = esi[j];
+                }
+                i++;
             }
-
-            video->write_string(file);
 
             switch (ebx)
             {
@@ -116,6 +124,15 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                         : "a" (eax)
                     );
                     break;
+                case FILE_RUN:
+                    asm("sti");
+                    eax = fs->open(file);
+                    asm volatile(
+                        "movl %%eax, %0"
+                        :
+                        : "a" (eax)
+                    );
+                    break;
             }
             break;
         case SYSCALL_DIED:
@@ -136,15 +153,6 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                 break;
             case FREE:
                 service.memory->free(ecx);
-                break;
-            }
-            break;
-        case SYSCALL_SYSTEM:
-            switch (ebx)
-            {
-            case SYS_RUN:
-                asm("sti");
-                fs->open(ecx);
                 break;
             }
             break;

@@ -22,13 +22,27 @@ const U8 ascii_table[128] __attribute__((aligned(4))) = {
     '9', '0', '-', '=', '\b', '\t',                 
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 
     '[', ']', '\n', 0x03, 'a', 's', 'd', 'f', 'g', 'h', 
-    'j', 'k', 'l', ';', '\'', '`', 0x01, '\\', 'z', 'x',
+    'j', 'k', 'l', ':', '\'', '`', 0x01, '\\', 'z', 'x',
     'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0x01, '*',
     0, ' ', 0x02, 0, 0, 0, 0, 0, 0, 0,                 
     0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', '4',     
     '5', '6', '+', '1', '2', '3', '0', '.', 127, 0, 0, 
     0, 0 
 };
+
+const U8 ascii_table_shift[128] __attribute__((aligned(4))) = {
+    0,  27, '!', '@', '#', '$', '%', '^', '&', '*', 
+    '(', ')', '_', '+', '\b', '\t',                 
+    'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', 
+    '{', '}', '\n', 0x03, 'A', 'S', 'D', 'F', 'G', 'H', 
+    'J', 'K', 'L', ':', '"', '~', 0x01, '|', 'Z', 'X',
+    'C', 'V', 'B', 'N', 'M', '<', '>', '?', 0x01, '*',
+    0, ' ', 0x02, 0, 0, 0, 0, 0, 0, 0,                 
+    0, 0, 0, 0, 0, 0, 0, '7', '8', '9', '-', '4',     
+    '5', '6', '+', '1', '2', '3', '0', '.', 127, 0, 0, 
+    0, 0 
+};
+
 U8 _keyboard_buf[KEYBOARD_BUF_SIZE];
 U8 _keyboard_buf_insert = 1;
 U8 _keyboard_buf_read   = 0;
@@ -64,8 +78,17 @@ U8 keyboard_buf_get_las_sym() {
 void keyboard_handler() {
     U8 scancode = inb(KEYBOARD_DATA_PORT);
     if(scancode & KEY_RELEASE_BIT ) {   
+        if(ascii_table[scancode] == SHIFT) {
+            isShift = 0;
+        }
         return;
     } 
     U8 c = ascii_table[scancode];
+    if(c == SHIFT) {
+        isShift = 1;
+    }
+    if(isShift) {
+        c = ascii_table_shift[scancode];
+    }
     keyboard_buf_insert(c); 
 }
