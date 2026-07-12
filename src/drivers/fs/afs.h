@@ -1,22 +1,23 @@
 #ifndef __AFS__
 #define __AFS__
 #include <stdint.h>
+#include "../../kernel/int.h"
 
 typedef struct __attribute__((packed)) {
-    uint8_t name[8];
-    uint8_t ext[3];
-    uint16_t start_sec;
-    uint16_t size;
-    uint8_t flags;
+    U8 name[8];
+    U8 ext[3];
+    U16 start_sec;
+    U16 size;
+    U8 flags;
 } File;
 
-uint8_t afs_check_file(const uint8_t *__restrict__ file_name);
-uint8_t afs_open(const uint8_t *__restrict__ file_name);
-uint8_t afs_read(const uint8_t *__restrict__ file_name, uint8_t *__restrict__ out);
-uint8_t afs_create(const uint8_t *__restrict__ file_name, uint16_t size);
-uint8_t afs_delete(const uint8_t *__restrict__ file_name);
-uint8_t afs_update(const uint8_t *__restrict__ file_name, uint8_t* in, uint32_t bytes);
-uint8_t afs_get_root(uint8_t *__restrict__ out);
-uint8_t afs_init();
+U8 afs_check_file(const U8 *__restrict__ file_name);
+U8 afs_open(const U8 *__restrict__ file_name);
+U8 afs_read(const U8 *__restrict__ file_name, U8 *__restrict__ out);
+U8 afs_create(const U8 *__restrict__ file_name, U16 size);
+U8 afs_delete(const U8 *__restrict__ file_name);
+U8 afs_update(const U8 *__restrict__ file_name, U8 *__restrict__ in, U32 bytes);
+U8 afs_get_root(U8 *__restrict__ out);
+U8 afs_init();
 
 #endif

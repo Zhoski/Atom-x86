@@ -8,17 +8,23 @@
 
 #define VGA_640_480_MEMORY (U8*)0xA0000
 
-#define INDEX_REGISTER          0x3CE
-#define DATA_REGISTER           0x3CF
+#define INDEX_REGISTER             0x3CE
+#define DATA_REGISTER              0x3CF
 
-#define GRAPHICS_MODE            0x05
-#define BIT_MASK                 0x08
+#define SEQUENCER_CONTROLLER       0x3C4
 
-#define VGA_640_480_WIDTH         640
-#define VGA_640_480_HEIGHT        480
+#define MAP_MASK_REGISTER           0x02
+#define SET_RESET_REGISTER          0x00
+#define ENABLE_SET_RESET_REGISTER   0x01
 
-#define VESA_1024_768_WIDTH      1024
-#define VESA_1024_768_HEIGHT      768
+#define GRAPHICS_MODE               0x05
+#define BIT_MASK                    0x08
+
+#define VGA_640_480_WIDTH           640
+#define VGA_640_480_HEIGHT          480
+
+#define VESA_1024_768_WIDTH        1024
+#define VESA_1024_768_HEIGHT        768
 
 U32 screen_x_off = 0;
 U32 screen_y_off = 0;
@@ -30,7 +36,19 @@ void vga_640_480_clear_screen(U8 color) {
     screen_x_off = 0;
     screen_y_off = 0;
 
-    service.memory->memset(VGA_640_480_MEMORY, terminal_bg_vbe, 640 * 80);  
+    outb(SEQUENCER_CONTROLLER, MAP_MASK_REGISTER);
+    outb(DATA_REGISTER, 0x0F);
+
+    outb(INDEX_REGISTER, GRAPHICS_MODE);
+    outb(DATA_REGISTER, 0x02);
+
+    outb(INDEX_REGISTER, 0x08); 
+    outb(DATA_REGISTER, 0xFF);
+
+    service.memory->memset(VGA_640_480_MEMORY, color, 640*80);
+
+    outb(INDEX_REGISTER, GRAPHICS_MODE);
+    outb(DATA_REGISTER, 0x00); 
 }
 
 void vga_640_480_write_row(U32 x, U32 y, U8 b, U8 fg, U8 bg) {

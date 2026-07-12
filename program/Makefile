@@ -16,4 +16,4 @@ strio.o: ../libs/strio.c
 	gcc -m32 -ffreestanding -fno-pic -O1 -c ../libs/strio.c -o strio.o
 
 clean :
-	rm *.o *.bin
+	rm *.o *.bin *.elf

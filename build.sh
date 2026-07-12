@@ -49,6 +49,7 @@ cd ..
 ./utilities/afsm -push atom.img binaries/LICENSE.txt
 ./utilities/afsm -push atom.img binaries/hello.bin
 ./utilities/afsm -push atom.img binaries/init.bin
+./utilities/afsm -push atom.img binaries/init.cfg
 ./utilities/afsm -push atom.img binaries/setup.bin
 
 qemu-system-i386 -cpu 486 -drive format=raw,file=atom.img -m 4M -icount shift=6,sleep=off -rtc clock=vm
@@ -61,3 +62,11 @@ rm *.o
 rm *bin
 rm binaries/*bin
 rm *elf
+
+cd program
+make clean
+cd init
+make clean
+cd ..
+cd setup
+make clean

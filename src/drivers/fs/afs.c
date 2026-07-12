@@ -12,7 +12,7 @@
 #define TRUE                 1
 #define FALSE                0
 
-#define FILE_DELETED       255
+#define FILE_DELETED      0xFF
 
 #define NO_FREE_ENTRY_FOUND  1
 #define FILE_NOT_FOUND       1
@@ -20,11 +20,11 @@
 #define SUCCES               0
 
 File _file;
-static uint16_t next_free_sector = 0;
-static uint16_t file_lba_index = 0;
+static U16 next_free_sector = 0;
+static U16 file_lba_index = 0;
 
-static inline uint8_t cmpFileName(uint8_t *file_name1, uint8_t *file_name2) {
-    uint8_t counter = 0;
+static inline U8 cmpFileName(U8 *__restrict__ file_name1, U8 *__restrict__ file_name2) {
+    U8 counter = 0;
     while(counter != 11 && *file_name1 == *file_name2) {
         counter++;
         file_name1++;
@@ -34,17 +34,17 @@ static inline uint8_t cmpFileName(uint8_t *file_name1, uint8_t *file_name2) {
     return counter == 11;
 }
 
-uint8_t afs_init() {
-    uint8_t* AFS_ROOT = service.memory->malloc(8192);
-    uint8_t* AFS_HEAD = AFS_ROOT;
+U8 afs_init() {
+    U8* AFS_ROOT = service.memory->malloc(8192);
+    U8* AFS_HEAD = AFS_ROOT;
 
-    for(uint32_t i = 0;i < ROOT_SECTORS;i++) {
-        disk->read_sector(ROOT_BASE + i, AFS_ROOT + i * 512);
+    for(U32 i = 0;i < ROOT_SECTORS;i++) {
+        disk->read_sector(ROOT_BASE + i, AFS_ROOT + (i << 9));
     }
 
     File* file = (File*)AFS_HEAD;
-    uint16_t file_max_start_sec = file->start_sec;
-    uint16_t file_size_in_sec = (file->size + 511) >> 9;
+    U16 file_max_start_sec = file->start_sec;
+    U16 file_size_in_sec = (file->size + 511) >> 9;
 
     while (*AFS_HEAD)
     {
