@@ -1,8 +1,9 @@
-#ifndef __PIC__
-#define __PIC__
+#ifndef PIC
+#define PIC
 #include <stdint.h>
+#include "../kernel/int.h"
 
-extern void pic_remap();
-extern void pic_irq_mask(uint16_t port, uint8_t mask);
+void pic_remap();
+void pic_irq_mask(U16 port, U8 mask);
 
 #endif

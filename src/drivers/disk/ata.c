@@ -21,7 +21,7 @@
 #define READ                    0x20
 #define WRITE                   0x30
 
-uint8_t init_ata(uint16_t info[256]) {
+U8 init_ata(U16 info[256]) {
     /* IDENTIFY */
     outb(0x1F6, DRIVE);
     outb(0x1F2, 0);
@@ -37,7 +37,7 @@ uint8_t init_ata(uint16_t info[256]) {
 
     outb(ATA_PRIMARY_STATUS, IDENTIFY);
 
-    uint8_t exit_status = SUCCESS;
+    U8 exit_status = SUCCESS;
    
     /* Если 0x1F7 установлен на ноль, то диска не существует */
     if(inb(ATA_PRIMARY_STATUS) == 0) {
@@ -54,7 +54,7 @@ uint8_t init_ata(uint16_t info[256]) {
         goto exit; 
     }
 
-    uint8_t status;
+    U8 status;
 
     /* Ждеми 1 в DRQ если успешно, или 1 в ERR в случаи ошибки */
     while(1) {
@@ -67,46 +67,48 @@ uint8_t init_ata(uint16_t info[256]) {
     }
     
     /* Читаем данные о диске из 0x1F0 в буффер */
-    for(uint32_t i = 0;i < BUFFER_SIZE;i++) {
+    for(U32 i = 0; i < BUFFER_SIZE; i++) {
         info[i] = inw(ATA_PRIMARY_DATA);
     } 
 
 exit:
     return exit_status;
 }
-uint8_t ata_read_sector(uint32_t lba, uint16_t word[256]) {
+
+U8 ata_read_sector(U32 lba, U16 word[256]) {
     // Установить устройство
-    uint8_t drive_head = 0xE0 | ((lba >> 24) & 0x0F);
+    U8 drive_head = 0xE0 | ((lba >> 24) & 0x0F);
 
     outb(0x1F6, drive_head);
 
     outb(0x1F2, 1);                  // Читать 1 сектор
-    outb(0x1F3, (uint8_t)lba);       // Младшая часть lba
-    outb(0x1F4, (uint8_t)(lba >> 8));  // Средняя часть lba
-    outb(0x1F5, (uint8_t)(lba >> 16)); // Старшая часть lba 
+    outb(0x1F3, (U8)lba);            // Младшая часть lba
+    outb(0x1F4, (U8)(lba >> 8));     // Средняя часть lba
+    outb(0x1F5, (U8)(lba >> 16));    // Старшая часть lba 
     outb(ATA_PRIMARY_STATUS, READ);  // Читать
     
     while ((inb(0x1F7) & (BSY | DRQ)) != DRQ);
 
-    for(uint32_t i = 0;i < 256;i++) {
+    for(U32 i = 0; i < 256; i++) {
         word[i] = inw(0x1F0);
     }
 
     while (inb(0x1F7) & BSY);
 }
-uint8_t ata_write_sector(uint32_t lba, uint16_t word[256]) {
-    uint8_t drive_head = 0xE0 | ((lba >> 24) & 0x0F);
+
+U8 ata_write_sector(U32 lba, U16 word[256]) {
+    U8 drive_head = 0xE0 | ((lba >> 24) & 0x0F);
 
     outb(0x1F6, drive_head);
     outb(0x1F2, 1);                         // Писать 1 сектор
-    outb(0x1F3, (uint8_t)lba);              // Младшая часть lba
-    outb(0x1F4, (uint8_t)(lba >> 8));       // Средняя часть lba
-    outb(0x1F5, (uint8_t)(lba >> 16));      // Старшая часть lba 
-    outb(ATA_PRIMARY_STATUS, WRITE);        // Читать
+    outb(0x1F3, (U8)lba);                   // Младшая часть lba
+    outb(0x1F4, (U8)(lba >> 8));            // Средняя часть lba
+    outb(0x1F5, (U8)(lba >> 16));           // Старшая часть lba 
+    outb(ATA_PRIMARY_STATUS, WRITE);        // Писать
 
     while ((inb(0x1F7) & (BSY | DRQ)) != DRQ);
 
-    for(uint32_t i = 0;i < 256;i++) {
+    for(U32 i = 0; i < 256; i++) {
         outw(0x1F0, word[i]);
     }
 

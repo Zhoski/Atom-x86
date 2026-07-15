@@ -4,40 +4,40 @@
 #define VGA_80_25_HEIGHT 25
 #define VGA_80_25_WIDTH  80
 
-uint16_t* vga_video = (uint16_t*)VGA_80_25_MEMORY;
-uint8_t terminal_row = 0;
-uint8_t terminal_column = 0;
-uint8_t terminal_color = 0x07;
+U16* vga_video = (U16*)VGA_80_25_MEMORY;
+U8 terminal_row = 0;
+U8 terminal_column = 0;
+U8 terminal_color = 0x07;
 
-void updateCursorPosition(uint8_t x, uint8_t y) {
-    uint16_t position = (terminal_row * 80) + terminal_column;
+void updateCursorPosition(U8 x, U8 y) {
+    U16 position = (terminal_row * 80) + terminal_column;
 
     outb(0x3D4, 0x0F);
-    outb(0x3D5, (uint8_t)(position & 0xFF)); 
+    outb(0x3D5, (U8)(position & 0xFF)); 
     outb(0x3D4, 0x0E);
-    outb(0x3D5, (uint8_t)((position >> 8) & 0xFF));
+    outb(0x3D5, (U8)((position >> 8) & 0xFF));
 }
 
-inline uint8_t vga_entry_color(uint8_t bg, uint8_t fg) {
+inline U8 vga_entry_color(U8 bg, U8 fg) {
     return fg | bg << 4;
 }
 
-void vga_set_attribute(uint8_t bg, uint8_t fg) {
+void vga_set_attribute(U8 bg, U8 fg) {
     terminal_color = vga_entry_color(bg, fg);
 }
 
-void clear_screen(uint8_t r, uint8_t g, uint8_t b) {
+void clear_screen(U8 r, U8 g, U8 b) {
     terminal_row = 0;
     terminal_column = 0;
     
-    uint16_t blank = terminal_color << 8 | ' ';
+    U16 blank = terminal_color << 8 | ' ';
 
-    for (uint16_t index = 0; index < VGA_80_25_HEIGHT * VGA_80_25_WIDTH; index++) {
+    for (U16 index = 0; index < VGA_80_25_HEIGHT * VGA_80_25_WIDTH; index++) {
         vga_video[index] = blank;
 	}
 }
 
-void vga_80_25_write_char(const uint8_t c, uint8_t color) {
+void vga_80_25_write_char(const U8 c, U8 color) {
     if(c == 0) {
         return;
     }
@@ -45,8 +45,8 @@ void vga_80_25_write_char(const uint8_t c, uint8_t color) {
         terminal_row++;
         terminal_column = 0;
     }else {
-        const uint16_t index = (terminal_row * VGA_80_25_WIDTH + terminal_column);
-	    uint16_t blank = terminal_color << 8 | c;
+        const U16 index = (terminal_row * VGA_80_25_WIDTH + terminal_column);
+	    U16 blank = terminal_color << 8 | c;
 	    vga_video[index] = blank;
 	    terminal_column++; 
     }
@@ -54,7 +54,7 @@ void vga_80_25_write_char(const uint8_t c, uint8_t color) {
     updateCursorPosition(terminal_row, terminal_column);
 }
 
-void vga_80_25_write_string(const char* s, uint8_t color) {    
+void vga_80_25_write_string(const char* s, U8 color) {    
     while(*s) {
         vga_80_25_write_char(*s,color);
         s++;

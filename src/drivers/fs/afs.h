@@ -20,4 +20,6 @@ U8 afs_update(const U8 *__restrict__ file_name, U8 *__restrict__ in, U32 bytes);
 U8 afs_get_root(U8 *__restrict__ out);
 U8 afs_init();
 
+extern File _file;
+
 #endif
