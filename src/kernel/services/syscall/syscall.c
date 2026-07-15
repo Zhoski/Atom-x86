@@ -133,6 +133,11 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                         : "a" (eax)
                     );
                     break;
+                case FOPEN:
+                {
+                
+                    break;
+                }
             }
             break;
         case SYSCALL_DIED:

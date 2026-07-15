@@ -1,6 +1,18 @@
 #ifndef FILE
 #define FILE
 
+#define FWRITE      0x00
+#define FREAD       0x01
+
+typedef struct {
+    unsigned int bytes;
+    char* base;
+    char* cur;
+} File;
+
+File* fopen(unsigned char *__restrict__ file, const unsigned int mode);
+void fclose(File* stream);
+
 unsigned int sys_check(const unsigned char* __restrict__ __file);
 unsigned int sys_read(const unsigned char* __restrict__ __file, unsigned char* __restrict__ __out);
 unsigned int sys_write(const unsigned char* __restrict__ __file, unsigned char* __restrict__ __in, unsigned int __c);

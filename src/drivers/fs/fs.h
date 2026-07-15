@@ -1,17 +1,20 @@
 #ifndef FS
 #define FS
 #include <stdint.h>
+#include "../../kernel/int.h"
+
+typedef struct File;
 
 typedef struct
 {
-    uint8_t (*check)(const uint8_t *__restrict__ file_name);
-    uint8_t (*open)(const uint8_t *__restrict__ file_name);
-    uint8_t (*read)(const uint8_t *__restrict__ file_name, uint8_t *__restrict__ out);
-    uint8_t (*create)(const uint8_t *__restrict__ file_name, uint16_t size);
-    uint8_t (*delete)(const uint8_t *__restrict__ file_name);
-    uint8_t (*update) (const uint8_t *__restrict__ file_name, uint8_t* in, uint32_t bytes);
-    uint8_t (*get_root) (uint8_t *__restrict__ out);
-    uint8_t (*init)();
+    U8 (*check)(const U8 *__restrict__ file_name);
+    U8 (*open)(const U8 *__restrict__ file_name);
+    U8 (*read)(const U8 *__restrict__ file_name, U8 *__restrict__ out);
+    U8 (*create)(const U8 *__restrict__ file_name, U16 size);
+    U8 (*delete)(const U8 *__restrict__ file_name);
+    U8 (*update) (const U8 *__restrict__ file_name, U8* in, U32 bytes);
+    U8 (*get_root) (U8 *__restrict__ out);
+    U8 (*init)();
 } FileSystem;
 
 void init_fs();

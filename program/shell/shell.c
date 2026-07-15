@@ -2,6 +2,7 @@
 #include "../libs/string.h"
 #include "../libs/file.h"
 #include "../libs/memory.h"
+#include "../libs/types.h"
 
 #define COMMAND_BUFFER_SIZE    128
 #define COMMAND_COUNT           10
@@ -13,16 +14,16 @@
 #define BACKSPACE 0x08 
 
 typedef struct __attribute__((packed)) {
-    uint8 name[8];
-    uint8 ext[3];
-    uint16 start_sec;
-    uint16 size;
-    uint8 flags;
-} File;
+    U8 name[8];
+    U8 ext[3];
+    U16 start_sec;
+    U16 size;
+    U8 flags;
+} _File;
 
 typedef struct Command
 {
-    uint8* cmd_name;
+    U8* cmd_name;
     void (*handler)();
 };
 
@@ -48,21 +49,21 @@ struct Command cmd[] = {
     {"del", cmd_delete},
     {"is",cmd_check},
 };
-uint32 command_index = 0;
-uint8 *command_buffer;
+U32 command_index = 0;
+U8 *command_buffer;
 
-uint32 *argv_buff;
-uint8** argv;
+U32 *argv_buff;
+U8** argv;
 
-uint8* info =   "\nAtom interactive shell %[13v 0.1%[15\n"
+U8* info =   "\nAtom interactive shell %[13v 0.1%[15\n"
                     "Copyright (c) 2026 Zhoski. Licensed under the MIT License.\n\n"
                     "Type %[14\"help\"%[15 or %[14\"license\"%[15 for more information.\n\n";
 
-uint8 user[32];
-uint8 pass[32];
+U8 user[32];
+U8 pass[32];
 
 void cmd_help() {
-    uint8* help_msg =   "\n"
+    U8* help_msg =   "\n"
                         "%[11[BASE]%[15\n"
                         "   clear                -- clear screen\n"
                         "%[11[DISK]%[15\n"
@@ -87,7 +88,7 @@ void cmd_clear() {
 void cmd_read() {
     printf("\n");
     char *buff;
-    uint32 status = sys_read(argv[1],buff);
+    U32 status = sys_read(argv[1],buff);
 
     if(status == 0) {
         printf("%s",buff);
@@ -131,7 +132,7 @@ void cmd_create() {
 }
 
 void cmd_run() {
-    uint32 status = sys_run(argv[1]);
+    U32 status = sys_run(argv[1]);
     if(status) {
         printf("\n%[12%s not found%[15",argv[1]);
     }
@@ -139,15 +140,15 @@ void cmd_run() {
 
 void cmd_dir() {
     printf("\n\n/root:\n");
-    uint8* root = malloc(8192);
+    U8* root = malloc(8192);
     get_root(root);
-    File file;
+    _File file;
     
     while (*root)
     {
         int i = 0;
         int j = 0;
-        memcpy(root, (uint8*)&file, 16);
+        memcpy(root, (U8*)&file, 16);
         if(file.name[i] != 0xFF) {
             while (file.name[i] != ' ')
             {
@@ -189,8 +190,8 @@ void execute() {
         command_index = 0;
         return;
     }
-    uint32 argc = 1;
-    uint32 n = 0;
+    U32 argc = 1;
+    U32 n = 0;
     while (command_buffer[n])
     {
         if(command_buffer[n] == ' ')
@@ -198,12 +199,12 @@ void execute() {
         n++;
     }
 
-    argv_buff = (uint32)malloc(argc * 4);
+    argv_buff = (U32)malloc(argc * 4);
     argv = argv_buff;
 
     n = 0;
     argc = 1;
-    uint8* cmd_head = command_buffer;
+    U8* cmd_head = command_buffer;
     argv[0] = cmd_head;
     while (*cmd_head)
     {
@@ -215,8 +216,8 @@ void execute() {
         cmd_head++;
     }
 
-    uint32 is_found = 0;
-    for(uint32 i = 0;i < COMMAND_COUNT;i++) {
+    U32 is_found = 0;
+    for(U32 i = 0;i < COMMAND_COUNT;i++) {
         if(strcmp(argv[0], cmd[i].cmd_name) == 0) {
             cmd[i].handler();
             is_found = 1;
@@ -240,11 +241,11 @@ void shell_main() {
     clear_screen(0);
     printf(info);
     printf("%[10%s/> %[15",user);
-    for(uint32 i = 0;i < COMMAND_BUFFER_SIZE;i++) {
+    for(U32 i = 0;i < COMMAND_BUFFER_SIZE;i++) {
         command_buffer[i] = 0;
     }
 
-    uint8 c = '\0';
+    U8 c = '\0';
     while (1)
     {
         c = get_char();
@@ -253,8 +254,8 @@ void shell_main() {
                 execute();
                 printf("\n%[10%s/> %[15",user);
             }else if(c == BACKSPACE && command_index != 0) {
-                uint32 x;
-                uint32 y;
+                U32 x;
+                U32 y;
                 get_cursor(&x, &y);
                 set_cursor(x - 1, y);
                 putchar(' ');
@@ -275,11 +276,11 @@ void shell_main() {
 
 void main() {
     command_buffer = malloc(COMMAND_BUFFER_SIZE);
-
-    uint8* user_cfg = malloc(512);
+    
+    U8* user_cfg = malloc(512);
     sys_read("user.cfg", user_cfg);
-    uint32 i = 0;
-    uint32 j = 0;
+    U32 i = 0;
+    U32 j = 0;
     if(user_cfg[i]) {
         while (user_cfg[i] != ':')
             i++;

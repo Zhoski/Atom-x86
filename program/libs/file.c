@@ -124,3 +124,23 @@ unsigned int sys_died() {
         : 
     );
 }
+
+File* fopen(unsigned char *__restrict__ file, const unsigned int mode) {
+    File* ret;
+    asm volatile(
+        "movl $5, %%eax\n"
+        "movl $8, %%ebx\n"
+        "movl %0, %%esi\n"
+        "int $0x80"
+        :
+        : "r"((unsigned int)file)
+        : "eax", "ebx", "esi", "memory"
+    );
+
+    asm volatile(
+        "movl %0, %%eax"
+        : "=a" (ret)
+    );
+
+    return ret;
+}

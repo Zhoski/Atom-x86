@@ -122,7 +122,7 @@ void SetBGColor(unsigned char color) {
     );
 }
 
-void printf(const char *format, ...) {
+void printf(const unsigned char *format, ...) {
     va_list args;
     va_start(args, format);
 

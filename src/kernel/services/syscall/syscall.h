@@ -48,6 +48,7 @@
 #define DELETE_FILE             5
 #define FILE_CHECK              6
 #define FILE_RUN                7
+#define FOPEN                   8
 
 /*------- SYSTEM -------*/
 #define SYSCALL_SYSTEM          6

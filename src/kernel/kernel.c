@@ -8,11 +8,13 @@
 #include "../drivers/fs/fs.h"
 #include "services/services.h"
 #include "port/io.h"
+#include "services/panic/panic.h"
 #include <stdint.h>
 
 #define BOOT_SECTOR         0
 #define BOOT_INFO_ADRESS    0x1000      // Сюда загрузчик поместит таблицу BOOT_INFO
 
+extern void isr8();
 extern void isr33();
 extern void isr80();
 extern void isr46();

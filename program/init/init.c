@@ -1,5 +1,5 @@
-#include "../../libs/file.h"
-#include "../../libs/strio.h"
+#include "../libs/file.h"
+#include "../libs/strio.h"
 
 void main() {
     if(sys_check("init.cfg")) {

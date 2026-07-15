@@ -1,23 +1,24 @@
 #ifndef __IDT__
 #define __IDT__
 #include <stdint.h>
+#include "../kernel/int.h"
 
 // Таблица IDT
 struct InterruptDescriptor32 {
-    uint16_t base_low;      // Младшая часть адреса обработчика
-    uint16_t segment;       // Сегмент селктора
-    uint8_t  reserved;      // Зарезервировано
-    uint8_t  access;         // Доступ
-    uint16_t base_hight;    // Старшая часть адреса обработчика
+    U16 base_low;      // Младшая часть адреса обработчика
+    U16 segment;       // Сегмент селктора
+    U8  reserved;      // Зарезервировано
+    U8  access;        // Доступ
+    U16 base_hight;    // Старшая часть адреса обработчика
 } __attribute__((packed));
 
 // Указатель на таблицу
 struct IDT_pointer {
-    uint16_t limit;
-    uint32_t base;
+    U16 limit;
+    U32 base;
 } __attribute__((packed));                                
 
 void idt_load();
-void idt_set(uint8_t index, uint16_t sel, uint8_t access,uint32_t handler);
+void idt_set(U8 index, U16 sel, U8 access, U32 handler);
 
 #endif 
