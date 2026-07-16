@@ -69,13 +69,5 @@ rm binaries/stage2.bin
 make clean
 rm *.o
 rm *bin
-rm binaries/*bin
+rm rootFS/*bin
 rm *elf
-
-cd program
-make clean
-cd init
-make clean
-cd ..
-cd setup
-make clean

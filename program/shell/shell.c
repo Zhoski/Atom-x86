@@ -57,7 +57,7 @@ U8** argv;
 
 U8* info =   "\nAtom interactive shell %[13v 0.1%[15\n"
                     "Copyright (c) 2026 Zhoski. Licensed under the MIT License.\n\n"
-                    "Type %[14\"help\"%[15 or %[14\"license\"%[15 for more information.\n\n";
+                    "Type %[14\"help\"%[15 to view the list of commands.\n\n";
 
 U8 user[32];
 U8 pass[32];
@@ -99,7 +99,7 @@ void cmd_read() {
 
 void cmd_check() {
     int ret = sys_check(argv[1]);
-    if(ret) {
+    if(!ret) {
         printf("\n%[12%s not found%[15", argv[1]);
     }else {
         printf("\n%[10%s found%[15", argv[1]);
@@ -119,7 +119,7 @@ void cmd_write() {
 
 void cmd_delete() {
     int ret = sys_delete(argv[1]);
-    if(ret) {
+    if(!ret) {
         printf("\n%[12%s not found%[15", argv[1]);
     }else {
         printf("\n%[10%s succes deleted%[15", argv[1]);
@@ -239,6 +239,12 @@ void shell_main() {
     SetBGColor(0);
     SetFGColor(15);
     clear_screen(0);
+
+    File* f = fopen("user.cfg", "w");
+    printf(f->base);
+    
+    fclose(f);
+
     printf(info);
     printf("%[10%s/> %[15",user);
     for(U32 i = 0;i < COMMAND_BUFFER_SIZE;i++) {

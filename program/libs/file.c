@@ -138,9 +138,36 @@ File* fopen(unsigned char *__restrict__ file, const unsigned int mode) {
     );
 
     asm volatile(
+        "movl $5, %%eax\n"
+        "movl $1, %%ebx\n"
+        "movl %[file], %%esi\n"
+        "movl %[o], %%edx\n"
+        "int $0x80"
+        :
+        : [file] "r"(file), [o] "r" (ret->base)
+        : "eax", "ebx", "esi", "edx", "memory"
+    );
+
+    asm volatile(
         "movl %0, %%eax"
         : "=a" (ret)
     );
 
     return ret;
+}
+
+void fclose(File* file) {
+    asm volatile(
+        "movl $5, %%eax\n"
+        "movl $1, %%ebx\n"
+        "movl %[file], %%esi\n"
+        "int $0x80"
+        :
+        : [file] "r"(file)
+        : "eax", "ebx", "esi", "memory"
+    );
+}
+
+void fread(File* stream, unsigned int n, unsigned char* out) {
+    
 }

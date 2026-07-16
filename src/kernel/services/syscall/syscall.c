@@ -135,7 +135,30 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                     break;
                 case FOPEN:
                 {
-                
+                    typedef struct __attribute__((packed)) {
+                        U8 name[8];
+                        U8 ext[3];
+                        U16 start_sec;
+                        U16 size;
+                        U8 flags;
+                    } File;
+
+                    typedef struct {
+                        unsigned int bytes;
+                        unsigned char* cur;
+                        unsigned char base[];
+                    } Ret;
+
+                    File* f = (File*)fs->check(file);
+
+                    Ret* ret = service.memory->malloc(sizeof(Ret) + f->size);
+                    ret->bytes = f->size;
+                    ret->cur = ret->base;
+
+                    ret->base[0] = 'T';
+
+                    return (U32)ret; 
+
                     break;
                 }
             }
@@ -157,7 +180,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                 eax = p;
                 break;
             case FREE:
-                service.memory->free(ecx);
+                service.memory->free(esi);
                 break;
             }
             break;

@@ -4,14 +4,18 @@
 #define FWRITE      0x00
 #define FREAD       0x01
 
+#define BASE        0x02
+#define END         0x03
+
 typedef struct {
     unsigned int bytes;
-    char* base;
-    char* cur;
+    unsigned char* cur;
+    unsigned char base[];
 } File;
 
 File* fopen(unsigned char *__restrict__ file, const unsigned int mode);
 void fclose(File* stream);
+void fread(File* stream, unsigned int n, unsigned char* out);
 
 unsigned int sys_check(const unsigned char* __restrict__ __file);
 unsigned int sys_read(const unsigned char* __restrict__ __file, unsigned char* __restrict__ __out);

@@ -15,8 +15,8 @@
 #define FILE_DELETED      0xFF
 
 #define NO_FREE_ENTRY_FOUND  2
-#define FILE_NOT_FOUND       1
-#define FILE_FOUND           0
+#define FILE_NOT_FOUND       0
+#define FILE_FOUND           1
 #define SUCCES               0
 
 File _file;
@@ -62,7 +62,7 @@ U8 afs_init() {
     return SUCCES;
 }
 
-U8 afs_check_file(const U8 *__restrict__ file_name) {
+U32* afs_check_file(const U8 *__restrict__ file_name) {
     U8* AFS_ROOT = service.memory->malloc(8192);
     U8* AFS_HEAD = AFS_ROOT;
 
@@ -80,11 +80,11 @@ U8 afs_check_file(const U8 *__restrict__ file_name) {
         }
 
         if(cmpFileName(AFS_HEAD, file_name)) {
-            U8* p_to_file = (U8*)&_file;
-            service.memory->memcpy(AFS_HEAD, p_to_file, RECORD_SIZE);
+            //U8* p_to_file = (U8*)&_file;
+            service.memory->memcpy(AFS_HEAD, &_file, RECORD_SIZE);
 
             service.memory->free(AFS_ROOT);
-            return FILE_FOUND;
+            return (File*)&_file;
         }
 
         AFS_HEAD += RECORD_SIZE;
