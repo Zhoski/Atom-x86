@@ -11,7 +11,7 @@ typedef struct __attribute__((packed)) {
     U8 flags;
 } File;
 
-U8 afs_check_file(const U8 *__restrict__ file_name);
+U32* afs_check_file(const U8 *__restrict__ file_name);
 U8 afs_open(const U8 *__restrict__ file_name);
 U8 afs_read(const U8 *__restrict__ file_name, U8 *__restrict__ out);
 U8 afs_create(const U8 *__restrict__ file_name, U16 size);
