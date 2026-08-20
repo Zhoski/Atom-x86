@@ -35,11 +35,59 @@ start:
 
     call kernel_load    ; Загрузка ядра 
 
+    call cpuid
+
     call kernel_launch
 
     jmp $        
 
-; ============================ Память ================================
+; ============================ CPUID =================================
+
+cpuid:
+    mov eax, 0x80000000
+    cpuid
+
+    cmp eax, 0x80000004
+    jnl .skip
+
+.not_supported:
+    mov si, cpuid_not_supported
+    call print
+    ret
+
+.skip:
+    mov edi, bootInfo
+    add edi, 6
+
+    mov eax, 0x80000002
+    cpuid
+
+    mov [edi + 0],  eax
+    mov [edi + 4],  ebx
+    mov [edi + 8],  ecx
+    mov [edi + 12], edx
+
+    mov eax, 0x80000003
+    cpuid
+
+    mov [edi + 16],  eax
+    mov [edi + 20],  ebx
+    mov [edi + 24],  ecx
+    mov [edi + 28],  edx
+
+    mov eax, 0x80000004
+    cpuid
+
+    mov [edi + 32],  eax
+    mov [edi + 36],  ebx
+    mov [edi + 40],  ecx
+    mov [edi + 44],  edx
+
+    mov byte [edi + 48], 0
+
+    ret
+
+; ============================= RAM ==================================
 get_memmap:
     pusha               ; Регистры запомнить 
 
@@ -449,6 +497,9 @@ kernel_signature_addit: db "Additionaly: Kernel file must begin with the signatu
 
 reboot_msg: db "Press any key to reboot...",0
 continue_msg: db "Press any key to continue...",0
+
+; CPU
+cpuid_not_supported: db "CPUID not supported",0
 
 ; Ошибки 
 disk_read_error:  db "Disk read error: ",0

@@ -9,7 +9,7 @@ void main() {
         }
     }else {
         char init_cfg[512];
-        sys_read("init.cfg", init_cfg);
+        sys_read("init.cfg", 512,init_cfg);
         if(!sys_check("USER    CFG")) {
             sys_run("SETUP   BIN");
         }else {

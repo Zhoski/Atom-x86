@@ -1,20 +1,12 @@
 #include "file.h"
 
-unsigned int sys_read(const unsigned char* __restrict__ file_name, unsigned char* __restrict__ out) {
+unsigned int sys_read(const unsigned char* __restrict__ file_name, unsigned int n, unsigned char* __restrict__ out) {
     int ret = 0;
     asm volatile(
-        "movl $5, %%eax\n"
-        "movl $1, %%ebx\n"
-        "movl %[file], %%esi\n"
-        "movl %[o], %%edx\n"
         "int $0x80"
-        :
-        : [file] "r"(file_name), [o] "r" (out)
-        : "eax", "ebx", "esi", "edx", "memory"
-    );
-    asm volatile(
-        "movl %0, %%eax"
         : "=a" (ret)
+        : "a" (5), "b" (1), "c" (n), "S" (file_name), "d" (out)
+        : "memory"
     );
     return ret;
 }
@@ -127,6 +119,7 @@ unsigned int sys_died() {
 
 File* fopen(unsigned char *__restrict__ file, const unsigned int mode) {
     File* ret;
+
     asm volatile(
         "movl $5, %%eax\n"
         "movl $8, %%ebx\n"
@@ -138,28 +131,24 @@ File* fopen(unsigned char *__restrict__ file, const unsigned int mode) {
     );
 
     asm volatile(
-        "movl $5, %%eax\n"
-        "movl $1, %%ebx\n"
-        "movl %[file], %%esi\n"
-        "movl %[o], %%edx\n"
-        "int $0x80"
-        :
-        : [file] "r"(file), [o] "r" (ret->base)
-        : "eax", "ebx", "esi", "edx", "memory"
-    );
-
-    asm volatile(
         "movl %0, %%eax"
         : "=a" (ret)
     );
+
+    unsigned int i = 0;
+    while (file[i])
+    {
+        ret->name[i] = file[i];
+        i++;
+    }
 
     return ret;
 }
 
 void fclose(File* file) {
     asm volatile(
-        "movl $5, %%eax\n"
-        "movl $1, %%ebx\n"
+        "movl $4, %%eax\n"
+        "movl $7, %%ebx\n"
         "movl %[file], %%esi\n"
         "int $0x80"
         :
@@ -169,5 +158,22 @@ void fclose(File* file) {
 }
 
 void fread(File* stream, unsigned int n, unsigned char* out) {
-    
+    asm volatile (
+        "movl %[from], %%esi\n"
+        "movl %[in],   %%edi\n"
+        "movl %[count],%%ecx\n"
+        "rep movsb"
+        :
+        : [from] "r" ((unsigned char*)stream->cur), [in] "r" ((unsigned char*)out), [count] "r" (n)
+        : "esi", "edi", "ecx","memory"
+    ); 
+}
+
+void fwrite(File* stream, unsigned int n, unsigned char* in) {
+    asm volatile(
+        "int $0x80"
+        :
+        : "a" (5), "b" (3), "c" (n), "S" (stream->name), "d" (in)
+        : "memory"
+    );
 }

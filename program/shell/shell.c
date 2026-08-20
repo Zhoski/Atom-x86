@@ -5,7 +5,7 @@
 #include "../libs/types.h"
 
 #define COMMAND_BUFFER_SIZE    128
-#define COMMAND_COUNT           10
+#define COMMAND_COUNT           11
 
 #define SHIFT 0x01
 #define CAPS  0x02
@@ -36,6 +36,7 @@ void cmd_write();
 void cmd_create();
 void cmd_delete();
 void cmd_check();
+void cmd_sys();
 
 struct Command cmd[] = {
     {"help", cmd_help},
@@ -43,11 +44,12 @@ struct Command cmd[] = {
     {"dir", cmd_dir},
     {"run", cmd_run},
     {"exit", sys_died},
-    {"read", cmd_read},
+    {"cat", cmd_read},
     {"write", cmd_write},
-    {"c", cmd_create},
-    {"del", cmd_delete},
+    {"touch", cmd_create},
+    {"rm", cmd_delete},
     {"is",cmd_check},
+    {"sys",cmd_sys},
 };
 U32 command_index = 0;
 U8 *command_buffer;
@@ -55,9 +57,17 @@ U8 *command_buffer;
 U32 *argv_buff;
 U8** argv;
 
-U8* info =   "\nAtom interactive shell %[13v 0.1%[15\n"
+/*U8* info =   "\nAtom interactive shell %[13v 0.1%[15\n"
                     "Copyright (c) 2026 Zhoski. Licensed under the MIT License.\n\n"
                     "Type %[14\"help\"%[15 to view the list of commands.\n\n";
+*/
+U8* info = "%[10    ___   __                      _  ______  _____\n"
+           "   /   | / /_____  ____ ___      | |/ / __ \\/ ___/\n"
+           "  / /| |/ __/ __ \\/ __ `__ \\_____|   / /_/ / __ \\ \n"
+           " / ___ / /_/ /_/ / / / / / /_____/   \\__, / /_/ / \n"
+           "/_/  |_\\__/\\____/_/ /_/ /_/     /_/|_/____/\\____/ \n\n\n%[15\n"
+           "Copyright (c) 2026 Zhoski. Licensed under the MIT License.\n"
+           "Type 'help' to get a list of commands.\n";
 
 U8 user[32];
 U8 pass[32];
@@ -67,11 +77,11 @@ void cmd_help() {
                         "%[11[BASE]%[15\n"
                         "   clear                -- clear screen\n"
                         "%[11[DISK]%[15\n"
-                        "   c      [file]        -- creates file\n"
-                        "   del    [file]        -- deletes file\n"
-                        "   read   [file]        -- read file\n"
+                        "   touch  [file]        -- creates file\n"
+                        "   rm     [file]        -- deletes file\n"
+                        "   cat    [file]        -- read file\n"
                         "   write  [file] [data] -- write in file\n"
-                        "   dir                  -- displays all files in a directory\n"
+                        "   ls                   -- displays all files in a directory\n"
                         "%[11[SYSTEM]%[15\n"
                         "   sys                  -- show system info\n"
                         "   setdrv [type] [file] -- change driver\n"
@@ -87,14 +97,19 @@ void cmd_clear() {
 
 void cmd_read() {
     printf("\n");
-    char *buff;
-    U32 status = sys_read(argv[1],buff);
-
-    if(status == 0) {
-        printf("%s",buff);
-    }else {
-        printf("%[12%s not found%[15", argv[1]);
+    File* f = fopen(argv[1], FREAD);
+    if(!f) {
+        printf("%[12Can't open [%s]%[15",argv[1]);
+        return;
     }
+    if(!f->cur) {
+        printf("[File empty]");
+    }else {
+        U8* buffer = malloc(f->bytes);
+        fread(f, f->bytes, buffer);
+        printf("%s",buffer);
+    }
+    fclose(f);
 }
 
 void cmd_check() {
@@ -108,13 +123,17 @@ void cmd_check() {
 
 void cmd_write() {
     int size = 0;
-    while (argv[2][size] != 0)
-        size++;
-    
-    int ret = sys_write(argv[1], argv[2], size);
-    if(ret) {
-        printf("\n%[12%s not found%[15", argv[1]);
+    File* f = fopen(argv[1], FWRITE);
+    if(!f) {
+        printf("%[12Can't write [%s]%[15",argv[1]);
+        return;
+    }else {
+        U32 s = 0;
+        while (argv[2][s++]);
+        
+        fwrite(f, s-1, argv[2]);
     }
+    fclose(f);
 }
 
 void cmd_delete() {
@@ -184,6 +203,26 @@ void cmd_dir() {
     free(root);
 }
 
+void cmd_sys() {
+    printf("\n");
+    U16* ram = (U16*)0x1000;
+    U8*  cpu = malloc(48);
+    memcpy(0x1006, cpu, 48);
+
+    printf("\n");
+    printf("%[10       /\\          %[15%s@Atom-X86\n", user);
+    printf("%[10      /  \\         %[15-----------------\n");
+    printf("%[10     / /\\ \\        %[10OS:%[15 Atom-X86 Demo\n"); 
+    printf("%[10    / /  \\ \\       %[10Kernel:%[15 v0.0.1-custom\n");
+    printf("%[10   / /____\\ \\      %[10CPU:%[15 %s\n", cpu); 
+    printf("%[10  /__________\\     %[10Memory:%[15 %d\n", ram); 
+    printf("%[10 /____________\\    %[10Display:%[15 VGA 640x480 16 colors\n"); 
+    printf("                   %[10Shell:%[15 Default\n");
+    printf("\n                   %[01\xDB\xDB%[02\xDB\xDB%[03\xDB\xDB%[04\xDB\xDB%[05\xDB\xDB"
+        "%[06\xDB\xDB%[07\xDB\xDB%[08\xDB\xDB%[09\xDB\xDB%[10\xDB\xDB%[11\xDB\xDB"
+        "%[12\xDB\xDB%[13\xDB\xDB%[14\xDB\xDB%[15\xDB\xDB");
+}
+
 void execute() {
     command_buffer[command_index] = '\0';
     if(!command_buffer[0]) {
@@ -240,11 +279,6 @@ void shell_main() {
     SetFGColor(15);
     clear_screen(0);
 
-    File* f = fopen("user.cfg", "w");
-    printf(f->base);
-    
-    fclose(f);
-
     printf(info);
     printf("%[10%s/> %[15",user);
     for(U32 i = 0;i < COMMAND_BUFFER_SIZE;i++) {
@@ -283,8 +317,14 @@ void shell_main() {
 void main() {
     command_buffer = malloc(COMMAND_BUFFER_SIZE);
     
-    U8* user_cfg = malloc(512);
-    sys_read("user.cfg", user_cfg);
+    File* fUser = fopen("user.cfg", FREAD);
+    if(!fUser) {
+        printf("Error\n");
+    }
+    U8* user_cfg = malloc(fUser->bytes);
+    fread(fUser, fUser->bytes, user_cfg);
+    fclose(fUser);
+
     U32 i = 0;
     U32 j = 0;
     if(user_cfg[i]) {

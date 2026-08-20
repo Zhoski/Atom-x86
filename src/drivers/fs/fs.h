@@ -9,7 +9,7 @@ typedef struct
 {
     U32* (*check)(const U8 *__restrict__ file_name);
     U8 (*open)(const U8 *__restrict__ file_name);
-    U8 (*read)(const U8 *__restrict__ file_name, U8 *__restrict__ out);
+    U8 (*read)(const U8 *__restrict__ file_name, U32 n,U8 *__restrict__ out);
     U8 (*create)(const U8 *__restrict__ file_name, U16 size);
     U8 (*delete)(const U8 *__restrict__ file_name);
     U8 (*update) (const U8 *__restrict__ file_name, U8* in, U32 bytes);

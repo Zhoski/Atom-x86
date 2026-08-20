@@ -49,6 +49,7 @@
 #define FILE_CHECK              6
 #define FILE_RUN                7
 #define FOPEN                   8
+#define FWRITE                  9
 
 /*------- SYSTEM -------*/
 #define SYSCALL_SYSTEM          6
