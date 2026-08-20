@@ -87,7 +87,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
             switch (ebx)
             {
                 case CAT_FILE:
-                    eax = fs->read(file, edx);
+                    eax = fs->read(file, ecx, edx);
                     asm volatile(
                         "movl %%eax, %0"
                         :
@@ -143,22 +143,38 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                         U8 flags;
                     } File;
 
-                    typedef struct {
+                    typedef struct __attribute__((packed)) {
+                        unsigned char name[11];
                         unsigned int bytes;
                         unsigned char* cur;
-                        unsigned char base[];
+                        unsigned char* base;
                     } Ret;
 
                     File* f = (File*)fs->check(file);
+                    if(!f) {
+                        asm volatile(
+                        "movl $0, %%eax"
+                            :
+                            :
+                            : "%eax"
+                        );
+                        break;
+                    }
 
                     Ret* ret = service.memory->malloc(sizeof(Ret) + f->size);
+                    service.memory->memset(ret, 0, sizeof(Ret) + f->size);
                     ret->bytes = f->size;
+                    ret->base = (U8*)ret + sizeof(Ret);
                     ret->cur = ret->base;
 
-                    ret->base[0] = 'T';
-
-                    return (U32)ret; 
-
+                    fs->read(file, f->size, ret->base);
+                    
+                    asm volatile(
+                        "movl %0, %%eax"
+                        :
+                        : "r" (ret)
+                        : "%eax"
+                    );
                     break;
                 }
             }

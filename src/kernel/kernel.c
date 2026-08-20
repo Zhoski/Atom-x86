@@ -46,7 +46,8 @@ void kmain() {
 
     free(disk_info);
 
-    asm("sti");   
+    asm("sti");
+
     fs->open("INIT    BIN");
 
 	for(;;) {

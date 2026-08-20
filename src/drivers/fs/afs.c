@@ -80,11 +80,10 @@ U32* afs_check_file(const U8 *__restrict__ file_name) {
         }
 
         if(cmpFileName(AFS_HEAD, file_name)) {
-            //U8* p_to_file = (U8*)&_file;
             service.memory->memcpy(AFS_HEAD, &_file, RECORD_SIZE);
 
             service.memory->free(AFS_ROOT);
-            return (File*)&_file;
+            return (U32*)&_file;
         }
 
         AFS_HEAD += RECORD_SIZE;
@@ -121,23 +120,29 @@ U8 afs_open(const U8 *file_name) {
     program_execute(entry, stack);
 }
 
-U8 afs_read(const U8 *__restrict__ file_name, U8 *__restrict__  out) {
-    U8 file = afs_check_file(file_name);
-    if(file == FILE_NOT_FOUND)
+U8 afs_read(const U8 *__restrict__ file_name, U32 n ,U8 *__restrict__  out) {
+    if(!afs_check_file(file_name)) {
         return FILE_NOT_FOUND;
+    }
 
-    U32 size_in_sec = (_file.size + 511) >> 9;
+    U32 size_in_sec = (n + 511) >> 9;
 
     U8 *file_buffer = service.memory->malloc(512);
     U8 *head_out = out;
 
-    for(U32 i = 0;i < size_in_sec;i++) {
-        disk->read_sector(_file.start_sec + i, file_buffer);
-        service.memory->memcpy(file_buffer, head_out, 512);
-        head_out += 512;
-    }
+    U32 bytes_left = n;
 
-    out[_file.size] = '\0';
+    U32 i = 0;
+
+    for(;i < size_in_sec;i++) {
+        disk->read_sector(_file.start_sec + i, file_buffer);
+
+        U32 chunk = (bytes_left > 512) ? 512 : bytes_left;
+
+        service.memory->memcpy(file_buffer, head_out, chunk);
+        head_out += chunk;
+        bytes_left -= chunk;
+    }
 
     service.memory->free(file_buffer);
 
@@ -221,17 +226,17 @@ U8 afs_update(const U8 *__restrict__ file_name, U8 *__restrict__ in, U32 bytes) 
     U32 size_in_sec_data = bytes >> 9;
     U8* head = in;
     U32 sector = 0;
-    U32 t_bytes = bytes;
+    U32 bytes_left = bytes;
 
     for(;sector < size_in_sec_data;sector++) {
         service.memory->memcpy(head, t_buff, 512);
         disk->write_sector(_file.start_sec + sector, t_buff);
         head += 512;
-        t_bytes -= 512;
+        bytes_left -= 512;
     }
 
     service.memory->memset(t_buff, 0, 512);
-    service.memory->memcpy(head, t_buff, t_bytes);
+    service.memory->memcpy(head, t_buff, bytes_left);
 
     disk->write_sector(_file.start_sec + sector, t_buff);
 
