@@ -171,9 +171,14 @@ void fread(File* stream, unsigned int n, unsigned char* out) {
 
 void fwrite(File* stream, unsigned int n, unsigned char* in) {
     asm volatile(
+        "movl $5, %%eax\n"
+        "movl $3, %%ebx\n"
+        "movl %[c], %%ecx\n"
+        "movl %[file], %%esi\n"
+        "movl %[in], %%edi\n"
         "int $0x80"
         :
-        : "a" (5), "b" (3), "c" (n), "S" (stream->name), "d" (in)
-        : "memory"
+        : [c] "m" (n), [file] "m" ((int)stream), [in] "m" ((int)in)
+        : "eax", "ebx", "ecx", "esi", "edi", "memory"
     );
 }

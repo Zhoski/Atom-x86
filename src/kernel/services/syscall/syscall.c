@@ -97,7 +97,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                 case GET_ROOT:
                     fs->get_root(ecx);
                     break;
-                case WRITE_FILE:
+                case WRITE_FILE: {
                     eax = fs->update(file, edi, ecx);
                     asm volatile(
                         "movl %%eax, %0"
@@ -105,6 +105,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                         : "a" (eax)
                     );
                     break;
+                }
                 case CREATE_FILE:
                     fs->create(file, ecx);
                     break;
