@@ -67,7 +67,7 @@ void file_open() {
                 }
             }else {
                 draw_header();
-                File* file = fopen(fname, FREAD);
+                File* file = fopen("license.txt", FREAD);
                 if(!file) {
                     printf("File [%s] not found", fname);
                     return;
@@ -79,6 +79,7 @@ void file_open() {
                 memcpy(file->base, buffer, file->bytes);
                 printf(buffer);
                 fclose(file);
+                break;
             }
         }
     }
