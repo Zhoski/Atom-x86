@@ -48,6 +48,10 @@ cd setup
 make
 make clean
 cd ..
+cd NotePad
+make
+make clean
+cd ..
 cd ..
 
 ./utilities/afsm -c atom.img
@@ -60,6 +64,7 @@ cd ..
 ./utilities/afsm -push atom.img rootFS/init.bin
 ./utilities/afsm -push atom.img rootFS/init.cfg
 ./utilities/afsm -push atom.img rootFS/setup.bin
+./utilities/afsm -push atom.img rootFS/notepad.bin
 
 qemu-system-i386 -drive format=raw,file=atom.img -m 4M -icount shift=6,sleep=off -rtc clock=vm -no-reboot 
 

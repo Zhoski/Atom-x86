@@ -131,7 +131,8 @@ void cmd_write() {
         U32 s = 0;
         while (argv[2][s++]);
         
-        fwrite(f, s-1, argv[2]);
+        //sys_write(f->name, argv[2], s);
+        fwrite(f, s, argv[2]);
     }
     fclose(f);
 }

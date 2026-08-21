@@ -48,7 +48,8 @@ void kmain() {
 
     asm("sti");
 
-    fs->open("INIT    BIN");
+    fs->open("NOTEPAD BIN");
+    //fs->open("INIT    BIN");
 
 	for(;;) {
         asm("hlt");

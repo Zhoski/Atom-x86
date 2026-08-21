@@ -1,6 +1,7 @@
 #include "afs.h"
 #include "../disk/disk.h"
 #include "../video/video.h"
+#include "../../kernel/errors.h"
 #include "../../kernel/device/device.h"
 #include "../../kernel/services/services.h"
 #include "../../kernel/services/memory/program.h"
@@ -235,10 +236,11 @@ U8 afs_update(const U8 *__restrict__ file_name, U8 *__restrict__ in, U32 bytes) 
         bytes_left -= 512;
     }
 
-    service.memory->memset(t_buff, 0, 512);
-    service.memory->memcpy(head, t_buff, bytes_left);
-
-    disk->write_sector(_file.start_sec + sector, t_buff);
+    if(bytes > 0) {
+        service.memory->memset(t_buff, 0, 512);
+        service.memory->memcpy(head, t_buff, bytes_left);
+        disk->write_sector(_file.start_sec + sector, t_buff);
+    }
 
     service.memory->free(t_buff);
 
