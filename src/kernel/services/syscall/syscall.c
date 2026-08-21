@@ -1,4 +1,11 @@
-#include "syscall.h"
+#include <kernel/syscall.h>
+#include <kernel/memory.h>
+#include <kernel/device.h>
+#include <kernel/services.h>
+#include <drivers/video/video.h>
+#include <fs/fs.h>
+#include <cpu/registers.h>
+#include <kernel/program.h>
 
 extern uint32_t kernel_stack_base;
 

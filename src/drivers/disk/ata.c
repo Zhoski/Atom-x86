@@ -1,6 +1,5 @@
-#include "ata.h"
-#include "../video/video.h"
-#include "../../kernel/port/io.h"
+#include <drivers/disk/ata.h>
+#include <cpu/io.h>
 
 #define BSY                     0x80
 #define ERR                      0x1

@@ -1,6 +1,5 @@
-#include "../services.h"
-#include "../../../drivers/fs/fs.h"
-#include "../../../drivers/video/video.h"
+#include <kernel/services.h>
+#include <fs/fs.h>
 
 uint32_t kernel_stack_ptr;
 uint32_t kernel_stack_base;
@@ -50,7 +49,6 @@ void exit() {
         : "eax", "ebx", "ecx", "edx", "esi", "edi"
     );
 
-    video->clear_screen(1);
     fs->open("SHELL   BIN");
     for(;;) {
         asm("hlt");

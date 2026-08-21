@@ -1,4 +1,4 @@
-#include "vga_80_25.h"
+#include <drivers/video/vga_80_25.h>
 
 #define VGA_80_25_MEMORY 0xB8000
 #define VGA_80_25_HEIGHT 25

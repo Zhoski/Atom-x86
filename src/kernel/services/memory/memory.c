@@ -1,6 +1,5 @@
-#include "memory.h"
-#include "../services.h"
-#include <stdint.h>
+#include <kernel/memory.h>
+#include <kernel/services.h>
 
 /* ---------- Куча ---------- */
 #define HEAP_BASE           0x200000                // 2Мб

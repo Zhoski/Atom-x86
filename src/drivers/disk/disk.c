@@ -1,5 +1,5 @@
-#include "disk.h"
-#include "ata.h"
+#include <drivers/disk/disk.h>
+#include <drivers/disk/ata.h>
 
 #define DISK_NOT_FOUND      1
 #define SUCCES_INIT_DISK    0
