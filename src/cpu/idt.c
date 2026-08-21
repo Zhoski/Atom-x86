@@ -1,4 +1,4 @@
-#include "idt.h"
+#include <cpu/idt.h>
 
 struct InterruptDescriptor32 IDT[256]; // Таблица на 256 прерываний
 

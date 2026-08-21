@@ -1,6 +1,6 @@
-#include "PIC.h"
-#include "../kernel/port/io.h"
-#include <stdint.h>
+#include <cpu/pic.h>
+#include <cpu/io.h>
+#include <lib/int.h>
 
 // Master PIC
 #define PIC1_COMMAND     0x20

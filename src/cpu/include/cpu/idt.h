@@ -1,7 +1,6 @@
 #ifndef __IDT__
 #define __IDT__
-#include <stdint.h>
-#include "../kernel/int.h"
+#include <lib/int.h>
 
 // Таблица IDT
 struct InterruptDescriptor32 {

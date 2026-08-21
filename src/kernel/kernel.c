@@ -1,15 +1,14 @@
-#include "../drivers/video/video.h"
-#include "../drivers/Keyboard/keyboard.h"
-#include "../drivers/disk/disk.h"
-#include "../cpu/idt.h"
-#include "../cpu/PIC.h"
-#include "services/memory/program.h"
-#include "services/syscall/syscall.h"
-#include "../drivers/fs/fs.h"
-#include "services/services.h"
-#include "port/io.h"
-#include "services/panic/panic.h"
-#include <stdint.h>
+#include <drivers/video/video.h>
+#include <drivers/keyboard/keyboard.h>
+#include <drivers/disk/disk.h>
+#include <cpu/idt.h>
+#include <cpu/pic.h>
+#include <cpu/io.h>
+#include <fs/fs.h>
+#include <kernel/program.h>
+#include <kernel/syscall.h>
+#include <kernel/services.h>
+#include <kernel/panic.h>
 
 #define BOOT_SECTOR         0
 #define BOOT_INFO_ADRESS    0x1000      // Сюда загрузчик поместит таблицу BOOT_INFO

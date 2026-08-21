@@ -1,5 +1,5 @@
-#include "fs.h"
-#include "afs.h"
+#include <fs/fs.h>
+#include <fs/afs.h>
 
 static FileSystem AFS = {
     .init = &afs_init,

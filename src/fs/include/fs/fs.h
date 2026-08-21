@@ -1,7 +1,6 @@
 #ifndef FS
 #define FS
-#include <stdint.h>
-#include "../../kernel/int.h"
+#include <lib/int.h>
 
 typedef struct File;
 

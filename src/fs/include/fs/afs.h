@@ -1,7 +1,6 @@
 #ifndef __AFS__
 #define __AFS__
-#include <stdint.h>
-#include "../../kernel/int.h"
+#include <lib/int.h>
 
 typedef struct __attribute__((packed)) {
     U8 name[8];

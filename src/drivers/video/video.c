@@ -1,6 +1,6 @@
-#include "video.h"
-#include "vga_640_480.h"
-#include "vga_80_25.h"
+#include <drivers/video/video.h>
+#include <drivers/video/vga_640_480.h>
+#include <drivers/video/vga_80_25.h>
 
 static VideoDriver vga_640_480 = {
     .write_string = &vga_640_480_draw_string,

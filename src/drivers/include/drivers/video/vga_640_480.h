@@ -1,6 +1,6 @@
 #ifndef __VGA_640_480__
 #define __VGA_640_480__
-#include "../../kernel/int.h"
+#include <lib/int.h>
 
 void vga_640_480_clear_screen(U8 color);
 void vga_640_480_putpixel(U32 x, U32 y, U8 color);

@@ -2,7 +2,7 @@
 #define __DISK__
 
 #include <stdint.h>
-#include "../../kernel/int.h"
+#include <lib/int.h>
 
 typedef struct
 {

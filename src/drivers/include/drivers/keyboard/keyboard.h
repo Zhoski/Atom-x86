@@ -1,6 +1,6 @@
 #ifndef __KEYBOARD__
 #define __KEYBOARD__
-#include "../../kernel/int.h"
+#include <lib/int.h>
 extern const U8 ascii_table[128];
 extern const U8 ascii_table_shift[128];
 

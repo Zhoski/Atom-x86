@@ -1,7 +1,6 @@
-#include "../../kernel/port/io.h"
-#include "../../kernel/device/device.h"
-#include "keyboard.h"
-#include "../video/video.h"
+#include <cpu/io.h>
+#include <kernel/device.h>
+#include <drivers/keyboard/keyboard.h>
 
 #define KEYBOARD_BUF_SIZE       32
 

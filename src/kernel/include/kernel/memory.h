@@ -1,7 +1,6 @@
 #ifndef __MEMORY__
 #define __MEMORY__
-#include <stdint.h>
-#include "../../int.h"
+#include <lib/int.h>
 
 void memcpy(void* __restrict__ __from,void* __restrict__ __in, U32 __c);
 U8 memread(U8* __restrict__ from);

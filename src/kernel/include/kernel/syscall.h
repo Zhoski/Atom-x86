@@ -1,13 +1,5 @@
 #ifndef __SYSCALL__
 #define __SYSCALL__
-#include "../memory/memory_map.h"
-#include "../memory/memory.h"
-#include "../../device/device.h"
-#include "../../services/services.h"
-#include "../../../drivers/video/video.h"
-#include "../../../drivers/fs/fs.h"
-#include "../../../cpu/registers.h"
-#include "../memory/program.h"
 
 /*-------- Вывод --------*/
 #define SYSCALL_WRITE           1

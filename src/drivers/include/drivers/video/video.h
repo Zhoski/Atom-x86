@@ -1,6 +1,6 @@
-#ifndef __VGA__
-#define __VGA__
-#include "../../kernel/int.h"
+#ifndef VGA_H
+#define VGA_H
+#include <lib/int.h>
 
 enum vga_color {
     VGA_COLOR_BLACK = 0,

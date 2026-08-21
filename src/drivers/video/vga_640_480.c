@@ -1,7 +1,7 @@
-#include "vga_640_480.h"
-#include "../../kernel/port/io.h"
-#include "../../kernel/device/device.h"
-#include "../../kernel/services/services.h"
+#include <drivers/video/vga_640_480.h>
+#include <cpu/io.h>
+#include <kernel/device.h>
+#include <kernel/services.h>
 
 #define FONT8x16_IMPLEMENTATION
 #include "../../font/font8x16.h"
@@ -20,11 +20,11 @@
 #define GRAPHICS_MODE               0x05
 #define BIT_MASK                    0x08
 
-#define VGA_640_480_WIDTH           640
-#define VGA_640_480_HEIGHT          480
+#define VGA_640_480_WIDTH            640
+#define VGA_640_480_HEIGHT           480
 
-#define VESA_1024_768_WIDTH        1024
-#define VESA_1024_768_HEIGHT        768
+#define VESA_1024_768_WIDTH         1024
+#define VESA_1024_768_HEIGHT         768
 
 U32 screen_x_off = 0;
 U32 screen_y_off = 0;

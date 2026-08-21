@@ -1,8 +1,7 @@
 #ifndef __ATA__
 #define __ATA__
 
-#include <stdint.h>
-#include "../../kernel/int.h"
+#include <lib/int.h>
 
 void ata_disk_handler();
 U8 init_ata(U16 info[256]);

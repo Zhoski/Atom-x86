@@ -1,10 +1,9 @@
-#include "afs.h"
-#include "../disk/disk.h"
-#include "../video/video.h"
-#include "../../kernel/errors.h"
-#include "../../kernel/device/device.h"
-#include "../../kernel/services/services.h"
-#include "../../kernel/services/memory/program.h"
+#include <fs/afs.h>
+#include <drivers/disk/disk.h>
+#include <kernel/errors.h>
+#include <kernel/device.h>
+#include <kernel/services.h>
+#include <kernel/program.h>
 
 #define RECORD_SIZE         16      // byte
 #define ROOT_SECTORS        16

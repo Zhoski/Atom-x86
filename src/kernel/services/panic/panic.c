@@ -1,4 +1,4 @@
-#include "panic.h"
+#include <kernel/panic.h>
 
 void kernel_panic() {
     asm("cli");
