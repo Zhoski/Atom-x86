@@ -1,13 +1,13 @@
-#include "../libs/strio.h"
-#include "../libs/string.h"
-#include "../libs/file.h"
-#include "../libs/memory.h"
-#include "../libs/types.h"
+#include <slib/strio.h>
+#include <slib/string.h>
+#include <slib/file.h>
+#include <slib/memory.h>
+#include <slib/types.h>
 
-#define SHIFT 0x01
-#define CAPS  0x02
-#define CTRL  0x03
-#define ENTER 0x0A 
+#define SHIFT     0x01
+#define CAPS      0x02
+#define CTRL      0x03
+#define ENTER     0x0A 
 #define BACKSPACE 0x08 
 #define ESC       0x1B
 

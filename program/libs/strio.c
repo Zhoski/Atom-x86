@@ -1,4 +1,4 @@
-#include "strio.h"
+#include <slib/strio.h>
 #include <stdarg.h>
 
 void sequence_black() {

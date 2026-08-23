@@ -1,8 +1,8 @@
-#include "../libs/strio.h"
-#include "../libs/string.h"
-#include "../libs/file.h"
-#include "../libs/memory.h"
-#include "../libs/types.h"
+#include <slib/strio.h>
+#include <slib/string.h>
+#include <slib/file.h>
+#include <slib/memory.h>
+#include <slib/types.h>
 
 #define COMMAND_BUFFER_SIZE    128
 #define COMMAND_COUNT           11

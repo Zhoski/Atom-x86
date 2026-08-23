@@ -1,6 +1,6 @@
-#include "../libs/file.h"
-#include "../libs/strio.h"
-#include "../libs/types.h"
+#include <slib/strio.h>
+#include <slib/file.h>
+#include <slib/types.h>
 
 void main() {
     clear_screen(0);

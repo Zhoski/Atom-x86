@@ -1,4 +1,4 @@
-#include "string.h"
+#include <slib/string.h>
 
 int strlen(const char s[]) {
     unsigned int i = 0;

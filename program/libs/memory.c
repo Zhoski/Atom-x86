@@ -1,4 +1,4 @@
-#include "memory.h"
+#include <slib/memory.h>
 
 unsigned char memread(unsigned char *__restrict__ from) {
     return from[0];
