@@ -1,5 +1,5 @@
-#ifndef __LIBC__
-#define __LIBC__
+#ifndef STRIO_H
+#define STRIO_H
 
 typedef unsigned char   uint8;
 typedef unsigned short uint16;

@@ -3,13 +3,14 @@
     {
       "name": "linux-gcc-x64",
       "includePath": [
-    "${workspaceFolder}/**",
-    "${workspaceFolder}/cpu/include",
-    "${workspaceFolder}/drivers/include",
-    "${workspaceFolder}/kernel/include",
-    "${workspaceFolder}/lib/include",
-    "${workspaceFolder}/fs/include"
-    ],
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/cpu/include",
+        "${workspaceFolder}/drivers/include",
+        "${workspaceFolder}/kernel/include",
+        "${workspaceFolder}/lib/include",
+        "${workspaceFolder}/fs/include",
+        "${workspaceFolder}/libs/include/slib"
+      ],
       "compilerPath": "/usr/bin/gcc",
       "cStandard": "${default}",
       "cppStandard": "${default}",
