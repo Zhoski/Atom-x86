@@ -22,7 +22,8 @@ services service;
 
 void kmain() {
     idt_load();                     // Загрузить IDT
-                                    
+       
+    idt_set(0x08, 0x08, 0x8E, (uint32_t)isr8); 
     idt_set(0x21, 0x08, 0x8E, (uint32_t)isr33); 
     idt_set(0x2E, 0x08, 0x8E, (uint32_t)isr46);
     idt_set(0x80, 0x08, 0x8E, (uint32_t)isr80);
@@ -49,6 +50,7 @@ void kmain() {
 
     //fs->open("NOTEPAD BIN");
     fs->open("INIT    BIN");
+    //asm("int $0x8");
 
 	for(;;) {
         asm("hlt");
