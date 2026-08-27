@@ -84,7 +84,7 @@ cd setup
 make
 make clean
 cd ..
-cd NotePad
+cd notepad
 make
 make clean
 cd ..

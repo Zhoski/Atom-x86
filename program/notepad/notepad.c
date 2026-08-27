@@ -14,6 +14,7 @@
 #define BUFFER_SIZE 4 * 1024
 
 U8* buffer;
+U8 cur_file[11];
 U32 buffer_index = 0;
 
 void draw_header() {
@@ -32,7 +33,7 @@ void draw_header() {
     set_cursor(0, 0);
     SetFGColor(15);
     SetBGColor(1);
-    printf("NotePad v1.0");
+    printf("NotePad v1.0    A:/%s",cur_file);
 
     set_cursor(0, 29);
     printf("F1 - open   F2 - save   ESC - exit");
@@ -52,8 +53,10 @@ void file_open() {
     printf("\xBA ____________________________ \xBA");
     set_cursor(24,15);
     printf("\xC8\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC");
-    U8* fname[11];
     U32 findex = 0;
+
+    memset(cur_file, 0, 11);
+
     set_cursor(26,14);
     while (1)
     {
@@ -62,14 +65,14 @@ void file_open() {
             if(c != ENTER && findex < 11) {
                 if(c != CAPS && c != SHIFT) {
                     putchar(c);
-                    fname[findex] = c;
+                    cur_file[findex] = c;
                     findex++;
                 }
             }else {
                 draw_header();
-                File* file = fopen("license.txt", FREAD);
+                File* file = fopen(cur_file, FREAD);
                 if(!file) {
-                    printf("File [%s] not found", fname);
+                    printf("File [%s] not found", cur_file);
                     return;
                 }
 
@@ -78,6 +81,49 @@ void file_open() {
 
                 memcpy(file->base, buffer, file->bytes);
                 printf(buffer);
+                fclose(file);
+                break;
+            }
+        }
+    }
+}
+
+void file_save() {
+    set_cursor(30, 11);
+
+    set_cursor(24,12);
+    printf("\xC9\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBB");
+    set_cursor(24,13);
+    printf("\xBA        Enter file name       \xBA");
+    set_cursor(24,14);
+    printf("\xBA ____________________________ \xBA");
+    set_cursor(24,15);
+    printf("\xC8\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xBC");
+    U32 findex = 0;
+
+    memset(cur_file, 0, 11);
+
+    set_cursor(26,14);
+    while (1)
+    {
+        U8* c = get_char();
+        if(c) {
+            if(c != ENTER && findex < 11) {
+                if(c != CAPS && c != SHIFT) {
+                    putchar(c);
+                    cur_file[findex] = c;
+                    findex++;
+                }
+            }else {
+                draw_header();
+
+                File* file = fopen(cur_file, FREAD);
+                if(!file) {
+                    sys_create(cur_file);
+                    file = fopen(cur_file, FREAD);
+                }
+                fwrite(cur_file, buffer_index, buffer);
+                printf("%s",buffer);
                 fclose(file);
                 break;
             }
@@ -115,6 +161,9 @@ void loop() {
             else if(c == 0x11) {
                 file_open();
             }
+            else if(c == 0x12) {
+                file_save();
+            }
             else if(c == ESC) {
                 free(buffer);
                 sys_died();
@@ -131,6 +180,7 @@ void loop() {
 void main() {
     buffer = malloc(BUFFER_SIZE);
     memset(buffer, 0, BUFFER_SIZE);
+    memset(cur_file, 0, 11);
     draw_header();
 
     loop();
