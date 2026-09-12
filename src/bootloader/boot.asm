@@ -3,7 +3,7 @@
 ;  Copyright (C) 2026 [Zhoski]. All rights reserved.
 ;
 ;  File: boot.asm
-;  Description: AtomFS LBA block parser & Stage 2 loader
+;  Description: It locates stage2 on the disk and hands over control to it.
 ; =====================================================================
 
 
@@ -11,7 +11,7 @@ bits 16
 org 0x7C00
 
 start:
-    ; Сегменты
+    ; Установка сегментов и стека
     xor ax, ax
     mov ds, ax
     mov ss, ax
@@ -19,7 +19,7 @@ start:
     
     mov [drive], dl
 
-    ; Видеорежим
+    ; Установка видео режима vga 80x25
     mov ah, 0x0
     mov al, 0x3
     int 0x10
@@ -31,6 +31,7 @@ start:
 
     jmp $
 
+; Вывод строки
 print_string:
     pusha
 loop:
@@ -54,7 +55,7 @@ REBOOT:
 
     int 0x19
 
-; Грузим 16 секторов начиная со 2-го по адресу 0x0000:0x0500
+; Загрузка корня фс на адрес 0x0000:0x0500
 LOAD_ROOT_TO_MEM:
     pusha
 
@@ -72,18 +73,22 @@ LOAD_ROOT_TO_MEM:
     jmp $
 
 
+; Открытие файла
 OPEN_FILE:
     call LOAD_ROOT_TO_MEM
 
-    ; ES:BX на начало таблицы в памяти
+    ; ES:BX на 0x0000:0x0500 
+    ; Для чтения содержимого корня фс
     xor ax, ax
     mov es, ax
     mov bx, [LoadRootAddres]
     
     mov dx, 512     ; Максимальное количество файлов
 
+    ; Ищем stage2.bin
     mov si, stage2_file
 
+; Цикл поиска файла
 .FIND_FILE_LOOP:
     test dx, dx
     jz .FILE_NOT_FOUND
@@ -102,11 +107,13 @@ OPEN_FILE:
 
     jmp .FIND_FILE_LOOP
 
+; Если не нашли уход в ребут
 .FILE_NOT_FOUND:
     mov si, file_not_found
     call print_string
     call REBOOT
 
+; Если нашли грузим stage2.bin на 0x0000:0x8000
 .FOUND:
     mov ax, [es:bx + 13]
     mov cx, 512
@@ -119,6 +126,9 @@ OPEN_FILE:
     inc ax
 
 .skip
+
+    ; Меняем lba под загрузку stage2.bin
+
     mov dx, [es:bx + 11]
 
     mov word [lba],    0x0010
@@ -133,10 +143,12 @@ OPEN_FILE:
     mov dl, [drive]
     int 0x13
 
+    ; Передача управления stage2.bin
     jmp 0x0000:0x8000
 
     jmp $
 
+; Изначально тут рут директория фс
 lba:
     db 0x10
     db 0x00
@@ -145,11 +157,11 @@ lba:
     dw 0x0000
     dq 2          
 
-RootStartSector: db 2
-RootSectors:     db 16 
-DataStartSector: db 18
+RootStartSector: db 2       ; Начиная с этого сектора лежат описание файлов
+RootSectors:     db 16      ; Сколько секторов выделено под описание файлов
+DataStartSector: db 18      ; Начиная с этого сектора лежит содержимое файлов
 
-LoadRootAddres:  dw 0x500
+LoadRootAddres:  dw 0x500   ; На этот адрес загружаются сектора с описанием файлов
 
 drive: db 0
 

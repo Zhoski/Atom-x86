@@ -12,7 +12,7 @@ org 0x8000
 
 start:
     cli
-    ; Установка сегментных регистров
+    ; Установка сегментных регистров и стека
     mov ax, 0x0000
     mov ds, ax
     mov es, ax
@@ -31,19 +31,20 @@ start:
     mov si, bootMsg
     call print
     
-    call get_memmap
+    call get_memmap     ; Получаем карту памяти                       
 
     call kernel_load    ; Загрузка ядра 
 
-    call cpuid
+    call cpuid          ; Получаем модель процессора
 
-    call kernel_launch
+    call kernel_launch  ; Запуск ядра
 
     jmp $        
 
 ; ============================ CPUID =================================
 
 cpuid:
+    ; Проверка на поддержку CPUID процессором
     mov eax, 0x80000000
     cpuid
 
@@ -56,6 +57,8 @@ cpuid:
     ret
 
 .skip:
+    ; Записываем модель процессора на адрес bootInfo + 6
+
     mov edi, bootInfo
     add edi, 6
 
@@ -89,7 +92,7 @@ cpuid:
 
 ; ============================= RAM ==================================
 get_memmap:
-    pusha               ; Регистры запомнить 
+    pusha            
 
     mov si, ok_msg
     call print
@@ -97,11 +100,16 @@ get_memmap:
     mov si, get_memmap_msg
     call print
     
+    ; Установка es:di на адрес куда будет загружена карта памяти
+
     mov es, [memmap_segment]    ; 0x0000
     mov di, [memmap_buffer]     ; 0x0500
-    xor ebx, ebx            ; ebx обнулить
+    
+    xor ebx, ebx               
 
 .next_entry:
+    ; Получаем блок памяти
+
     mov eax, 0xE820
     mov edx, 0x534D4150
     mov ecx, 24        
@@ -135,10 +143,12 @@ get_memmap:
     call print
 
 .get_usable_ram:
-    ; Читать из 0x0000:0x0500
+    ; Парсим карту памяти
+
+    ; Читаем из 0x0000:0x0500
     mov bx, [memmap_buffer]
     mov es, [memmap_segment]
-    xor si, si          ; Счетчик
+    xor si, si                  ; Счетчик
 
 .ram_loop:
     cmp si, [memmap_block_count]
@@ -251,8 +261,8 @@ disk_read:
     popa
     ret
 
-; Загрузка диска из оперативки
-; Вход es:bx al, cl
+; Записываем на диск данные из оперативки
+; Вход es:bx - адрес в оперативке 
 disk_write:
     pusha
     
@@ -267,7 +277,7 @@ disk_write:
 
 .disk_write_error
     mov si, disk_write_error
-    ;call print
+    call print
     
     popa
     ret
@@ -352,10 +362,13 @@ LOAD_ROOT_TO_MEM:
     jmp $
 
 
+; Записываем в lba информацию о файле
+; Вход: si - имя файла
 OPEN_FILE:
     call LOAD_ROOT_TO_MEM
 
-    ; ES:BX на начало таблицы в памяти
+    ; ES:BX на 0x0000:0x0500 
+    ; Для чтения содержимого корня фс
     xor ax, ax
     mov es, ax
     mov bx, [LoadRootAddres]

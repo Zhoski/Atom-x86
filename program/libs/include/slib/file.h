@@ -22,7 +22,7 @@ void fwrite(File* stream, unsigned int n, unsigned char* in);
 unsigned int sys_check(const unsigned char* __restrict__ __file);
 unsigned int sys_read(const unsigned char* __restrict__ __file, unsigned int n, unsigned char* __restrict__ __out);
 unsigned int sys_write(const unsigned char* __restrict__ __file, unsigned char* __restrict__ __in, unsigned int __c);
-unsigned char sys_create(const unsigned char* __restrict__ __file);
+unsigned char sys_create(const unsigned char* __restrict__ __file, const unsigned int s);
 unsigned char sys_delete(const unsigned char* __restrict__ __file);
 unsigned int sys_run(const unsigned char* __restrict__ file);
 unsigned int sys_died();
