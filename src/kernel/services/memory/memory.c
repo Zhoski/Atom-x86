@@ -103,7 +103,7 @@ void free(U8* __restrict__ ptr) {
         next += *(U32*)next + sizeof(Heap);
     }
 
-    ptr = NULL;      // Уничтожение указателя
+    ptr = NULL;
 }
 
 void init_memory() {

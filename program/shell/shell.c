@@ -5,7 +5,7 @@
 #include <slib/types.h>
 
 #define COMMAND_BUFFER_SIZE    128
-#define COMMAND_COUNT           11
+#define COMMAND_COUNT           10
 
 #define SHIFT 0x01
 #define CAPS  0x02
@@ -24,25 +24,23 @@ typedef struct __attribute__((packed)) {
 typedef struct Command
 {
     U8* cmd_name;
-    void (*handler)();
+    U32 (*handler)();
 };
 
-void cmd_help();
-void cmd_clear();
-void cmd_dir();
-void cmd_run();
-void cmd_read();
-void cmd_write();
-void cmd_create();
-void cmd_delete();
-void cmd_check();
-void cmd_sys();
+U32 cmd_help();
+U32 cmd_clear();
+U32 cmd_dir();
+U32 cmd_read();
+U32 cmd_write();
+U32 cmd_create();
+U32 cmd_delete();
+U32 cmd_check();
+U32 cmd_sys();
 
 struct Command cmd[] = {
     {"help", cmd_help},
     {"clear", cmd_clear},
     {"dir", cmd_dir},
-    {"run", cmd_run},
     {"exit", sys_died},
     {"cat", cmd_read},
     {"write", cmd_write},
@@ -57,10 +55,6 @@ U8 *command_buffer;
 U32 *argv_buff;
 U8** argv;
 
-/*U8* info =   "\nAtom interactive shell %[13v 0.1%[15\n"
-                    "Copyright (c) 2026 Zhoski. Licensed under the MIT License.\n\n"
-                    "Type %[14\"help\"%[15 to view the list of commands.\n\n";
-*/
 U8* info = "%[10    ___   __                      _  ______  _____\n"
            "   /   | / /_____  ____ ___      | |/ / __ \\/ ___/\n"
            "  / /| |/ __/ __ \\/ __ `__ \\_____|   / /_/ / __ \\ \n"
@@ -72,7 +66,7 @@ U8* info = "%[10    ___   __                      _  ______  _____\n"
 U8 user[32];
 U8 pass[32];
 
-void cmd_help() {
+U32 cmd_help() {
     U8* help_msg =   "\n"
                         "%[11[BASE]%[15\n"
                         "   clear                -- clear screen\n"
@@ -89,13 +83,13 @@ void cmd_help() {
     printf(help_msg);
 }
 
-void cmd_clear() {
+U32 cmd_clear() {
     clear_screen(0);
 
     printf(info);
 }
 
-void cmd_read() {
+U32 cmd_read() {
     printf("\n");
     File* f = fopen(argv[1], FREAD);
     if(!f) {
@@ -112,7 +106,7 @@ void cmd_read() {
     fclose(f);
 }
 
-void cmd_check() {
+U32 cmd_check() {
     int ret = sys_check(argv[1]);
     if(!ret) {
         printf("\n%[12%s not found%[15", argv[1]);
@@ -121,7 +115,7 @@ void cmd_check() {
     }
 }
 
-void cmd_write() {
+U32 cmd_write() {
     int size = 0;
     File* f = fopen(argv[1], FWRITE);
     if(!f) {
@@ -137,7 +131,7 @@ void cmd_write() {
     fclose(f);
 }
 
-void cmd_delete() {
+U32 cmd_delete() {
     int ret = sys_delete(argv[1]);
     if(!ret) {
         printf("\n%[12%s not found%[15", argv[1]);
@@ -146,19 +140,12 @@ void cmd_delete() {
     }
 }
 
-void cmd_create() {
-    sys_create(argv[1]);
+U32 cmd_create() {
+    sys_create(argv[1], 512);
     printf("\n%[10%s succes created%[15", argv[1]);
 }
 
-void cmd_run() {
-    U32 status = sys_run(argv[1]);
-    if(status) {
-        printf("\n%[12%s not found%[15",argv[1]);
-    }
-}
-
-void cmd_dir() {
+U32 cmd_dir() {
     printf("\n\n/root:\n");
     U8* root = malloc(8192);
     get_root(root);
@@ -204,7 +191,7 @@ void cmd_dir() {
     free(root);
 }
 
-void cmd_sys() {
+U32 cmd_sys() {
     printf("\n");
     U16* ram = (U16*)0x1000;
     U8*  cpu = malloc(48);
@@ -267,7 +254,10 @@ void execute() {
     memset(command_buffer[0], 0, COMMAND_BUFFER_SIZE);
 
     if(!is_found) {
-        printf("\n%[12Atom: Unknown command%[15");
+        U32 err = sys_run(argv[0]);
+        if(!err) {
+            printf("\n%[12Atom: Unknown command%[15");
+        }
     }
 
     free(argv_buff);
@@ -281,7 +271,7 @@ void shell_main() {
     clear_screen(0);
 
     printf(info);
-    printf("%[10%s/> %[15",user);
+    printf("%[10%s@/> %[15",user);
     for(U32 i = 0;i < COMMAND_BUFFER_SIZE;i++) {
         command_buffer[i] = 0;
     }

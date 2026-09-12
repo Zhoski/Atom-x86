@@ -48,14 +48,15 @@ unsigned int sys_write(const unsigned char* __restrict__ file_name, unsigned cha
     );
 }
 
-unsigned char sys_create(const unsigned char* __restrict__ file_name) {
+unsigned char sys_create(const unsigned char* __restrict__ file_name, const unsigned int s) {
     asm volatile(
         "movl $5, %%eax\n"
         "movl $4, %%ebx\n"
+        "movl %[s], %%ecx\n"
         "movl %[file], %%esi\n"
         "int $0x80"
         :
-        : [file] "m" ((int)file_name)
+        : [file] "m" ((int)file_name), [s] "m" (s)
         : "eax", "ebx", "ecx", "esi", "edi", "memory"
     );
 }

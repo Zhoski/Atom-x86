@@ -7,7 +7,7 @@ void main() {
 
     char username[32] = {0};
 
-    sys_create("user.cfg");
+    sys_create("user.cfg", 512);
 
     printf("SETUP.BIN");
 
