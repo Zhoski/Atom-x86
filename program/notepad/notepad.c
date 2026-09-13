@@ -83,7 +83,6 @@ void file_open() {
     File* f = fopen(cur_file, FREAD);
     if(!f) {
         printf("%[12File [%s] not found%[15", cur_file);
-        return;
     }
 
     memset(buffer, 0, BUFFER_SIZE);
@@ -94,7 +93,9 @@ void file_open() {
 
     fclose(f);
 
-    printf("%s",buffer);
+    for(U32 i = 0;i < f->bytes;i++) {
+        putchar(buffer[i]);
+    }
 }
 
 void file_save() {
@@ -115,6 +116,7 @@ void file_save() {
     }
 
     fwrite(f, buffer_index, buffer);
+
     fclose(f);
 }
 

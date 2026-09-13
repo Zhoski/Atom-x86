@@ -101,6 +101,7 @@ U32 cmd_read() {
     }else {
         U8* buffer = malloc(f->bytes);
         fread(f, f->bytes, buffer);
+        buffer[f->bytes] = '\0';
         printf("%s",buffer);
     }
     fclose(f);

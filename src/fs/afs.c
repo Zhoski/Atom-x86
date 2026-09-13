@@ -5,7 +5,7 @@
 #include <kernel/services.h>
 #include <kernel/program.h>
 
-#define RECORD_SIZE         16      // byte
+#define RECORD_SIZE         16     
 #define ROOT_SECTORS        16
 #define ROOT_BASE            2
 

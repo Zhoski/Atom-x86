@@ -1,6 +1,8 @@
 #include <drivers/video/video.h>
+#include <drivers/timer/timer.h>
 #include <drivers/keyboard/keyboard.h>
 #include <drivers/disk/disk.h>
+#include <cpu/cpu.h>
 #include <cpu/idt.h>
 #include <cpu/pic.h>
 #include <cpu/io.h>
@@ -14,6 +16,7 @@
 #define BOOT_INFO_ADRESS    0x1000      // Сюда загрузчик поместит таблицу BOOT_INFO
 
 extern void isr8();
+extern void isr32();
 extern void isr33();
 extern void isr80();
 extern void isr46();
@@ -24,12 +27,13 @@ void kmain() {
     idt_load();                     // Загрузить IDT
        
     idt_set(0x08, 0x08, 0x8E, (uint32_t)isr8); 
+    idt_set(0x20, 0x08, 0x8E, (uint32_t)isr32); 
     idt_set(0x21, 0x08, 0x8E, (uint32_t)isr33); 
     idt_set(0x2E, 0x08, 0x8E, (uint32_t)isr46);
     idt_set(0x80, 0x08, 0x8E, (uint32_t)isr80);
 
     pic_remap();                    // Установка PIC
-    pic_irq_mask(0x21, 0b11111001); // Включить IRQ
+    pic_irq_mask(0x21, 0b11111000); // Включить IRQ
     pic_irq_mask(0xA1, 0b10111111); // PATA включить
 
     init_memory();                  // Инициализация памяти
@@ -46,11 +50,11 @@ void kmain() {
 
     free(disk_info);
 
+    init_timer(100);
+
     asm("sti");
 
-    //fs->open("NOTEPAD BIN");
     fs->open("INIT    BIN");
-    //asm("int $0x8");
 
 	for(;;) {
         asm("hlt");
