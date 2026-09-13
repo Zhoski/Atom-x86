@@ -28,7 +28,7 @@ gcc -m32 -ffreestanding -c src/drivers/timer/timer.c -w -o timer.o \
 
 
 # ==============================================================================
-# ПРОЦЕССОР И НИЗКИЙ УРОВЕНЬ
+# ПРОЦЕССОР И ПРЕРЫВАНИЯ
 # ==============================================================================
 gcc -m32 -ffreestanding -c src/cpu/idt.c -w -o idt.o \
     -I./src/cpu/include -I./src/drivers/include -I./src/kernel/include -I./src/lib/include -I./src/fs/include

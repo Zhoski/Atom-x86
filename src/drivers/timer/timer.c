@@ -1,6 +1,6 @@
 #include <drivers/timer/timer.h>
+#include <cpu/cpu.h>
 #include <cpu/io.h>
-#include <drivers/video/video.h>
 
 U32 tick = 0;
 
@@ -21,7 +21,7 @@ void ksleep(U32 delay) {
 
     while (tick < target)
     {
-        asm volatile("hlt");
+        halt();
     }
 }
 
