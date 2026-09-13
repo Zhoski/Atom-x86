@@ -9,8 +9,6 @@ void main() {
 
     sys_create("user.cfg", 512);
 
-    printf("SETUP.BIN");
-
     set_cursor(30, 11);
     printf("Enter your username");
 

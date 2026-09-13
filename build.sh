@@ -23,6 +23,10 @@ gcc -m32 -ffreestanding -c src/drivers/disk/ata.c -w -o ata.o \
 gcc -m32 -ffreestanding -c src/drivers/disk/disk.c -w -o disk.o \
     -I./src/cpu/include -I./src/drivers/include -I./src/kernel/include -I./src/lib/include -I./src/fs/include
 
+gcc -m32 -ffreestanding -c src/drivers/timer/timer.c -w -o timer.o \
+    -I./src/cpu/include -I./src/drivers/include -I./src/kernel/include -I./src/lib/include -I./src/fs/include
+
+
 # ==============================================================================
 # ПРОЦЕССОР И НИЗКИЙ УРОВЕНЬ
 # ==============================================================================
@@ -33,6 +37,7 @@ gcc -m32 -ffreestanding -c src/cpu/pic.c -w -o pic.o \
     -I./src/cpu/include -I./src/drivers/include -I./src/kernel/include -I./src/lib/include -I./src/fs/include
 
 nasm -f elf32 src/interrupts/isr8.asm -o isr8.o
+nasm -f elf32 src/interrupts/isr32.asm -o isr32.o
 nasm -f elf32 src/interrupts/isr33.asm -o isr33.o
 nasm -f elf32 src/interrupts/isr46.asm -o isr46.o
 nasm -f elf32 src/interrupts/isr80.asm -o isr80.o
@@ -67,7 +72,9 @@ gcc -m32 -ffreestanding -c src/fs/afs.c -w -o afs.o \
 # ==============================================================================
 # ЛИНКОВКА 
 # ==============================================================================
-ld -m elf_i386 -T linker.ld kernel.o services.o vga_640_480.o vga_80_25.o video.o keyboard.o ata.o disk.o idt.o pic.o isr8.o isr33.o isr46.o isr80.o panic.o memory.o syscall.o afs.o fs.o program.o -w -o kernel.elf
+ld -m elf_i386 -T linker.ld kernel.o services.o vga_640_480.o vga_80_25.o video.o keyboard.o \
+                 ata.o disk.o timer.o idt.o pic.o isr8.o isr32.o isr33.o isr46.o isr80.o panic.o memory.o \
+                 syscall.o afs.o fs.o program.o -w -o kernel.elf
 
 objcopy -O binary kernel.elf rootFS/kernel.bin
 
