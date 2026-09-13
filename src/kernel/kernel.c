@@ -52,11 +52,11 @@ void kmain() {
 
     init_timer(100);
 
-    asm("sti");
+    sti();
 
     fs->open("INIT    BIN");
 
 	for(;;) {
-        asm("hlt");
+        halt();
     }
 }

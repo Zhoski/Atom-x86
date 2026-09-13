@@ -87,13 +87,18 @@ void file_open() {
 
     memset(buffer, 0, BUFFER_SIZE);
     
-    fread(f, f->bytes, buffer);
+    U32 true_size = 0;
 
-    buffer_index = f->bytes;
+    for(U32 i = 0;i < f->bytes;i++) {
+        if(f->base[i]) true_size++;
+    }
+
+    buffer_index = true_size;
+    fread(f, true_size, buffer);
 
     fclose(f);
 
-    for(U32 i = 0;i < f->bytes;i++) {
+    for(U32 i = 0;i < true_size;i++) {
         putchar(buffer[i]);
     }
 }
@@ -130,17 +135,25 @@ void loop() {
                     U32 x;
                     U32 y;
                     get_cursor(&x, &y);
-                    if(x > 0) {
+                    if(buffer[buffer_index] == ENTER) {
+                        putchar(' ');
                         set_cursor(x - 1, y);
                         putchar(' ');
                         set_cursor(x - 1, y);
                     }else {
-                        U32 new_x = 79;
-                        U32 new_y = y - 1;
+                        if(x > 0) {
+                            putchar(' ');
+                            set_cursor(x - 1, y);
+                            putchar(' ');
+                            set_cursor(x - 1, y);
+                        }else {
+                            U32 new_x = 79;
+                            U32 new_y = y - 1;
 
-                        set_cursor(new_x, new_y);
-                        putchar(' ');
-                        set_cursor(new_x, new_y);
+                            set_cursor(new_x, new_y);
+                            putchar(' ');
+                            set_cursor(new_x, new_y);
+                        }
                     }
                     buffer_index--;
                     buffer[buffer_index] = 0;
@@ -157,12 +170,23 @@ void loop() {
                 free(buffer);
                 sys_died();
             }
+            else if(c == ENTER) {
+                putchar(' ');
+                putchar('\n');
+            }
             else if(c != CAPS && c != SHIFT) {
                 buffer[buffer_index] = c;
                 buffer_index++;
                 putchar(c);
             }
         }
+        SetFGColor(7);
+        putchar('\xDB');
+        U16 x, y;
+
+        get_cursor(&x, &y);
+        set_cursor(x-1,y);
+        SetFGColor(15);
     }
 }
 
