@@ -39,11 +39,11 @@ void kmain() {
     sti();
 
     init_memory();                  // Инициализация памяти
-    /*service.memory->create_heap();  // Создание кучи
+    service.memory->create_heap();  // Создание кучи
    
     init_keyboard();                // Инициализация клавиатуры              
 
-    init_vga(VGA_640_480);          // Инициализация vga                       
+    /*init_vga(VGA_640_480);          // Инициализация vga                       
 
     uint16_t* disk_info = service.memory->malloc(512);
     disk_init(disk_info);
