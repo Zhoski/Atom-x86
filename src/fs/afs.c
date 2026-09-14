@@ -53,9 +53,15 @@ U8 afs_init() {
     File* file = (File*)AFS_HEAD;
     U16 file_max_start_sec = file->start_sec;
     U16 file_size_in_sec = (file->size + 511) >> 9;
+    int f = 0;
 
     while (*AFS_HEAD && AFS_HEAD < AFS_ROOT_MAX)
     {   
+        if(!f) {
+            video->write_string("Start Parsing\n");
+            f = 1;
+        }
+
         if(file_max_start_sec < file->start_sec) {
             file_max_start_sec = file->start_sec;
             file_size_in_sec = (file->size + 511) >> 9;
