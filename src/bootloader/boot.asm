@@ -46,14 +46,14 @@ exit:
     popa
     ret
 
-REBOOT:
-    mov si, reboot_msg
-    call print_string
-
-    mov ah, 0x00
-    int 0x16
-
-    int 0x19
+;REBOOT:
+;    mov si, reboot_msg
+;    call print_string
+;
+;    mov ah, 0x00
+;    int 0x16
+;
+;    int 0x19
 
 ; Загрузка корня фс на адрес 0x0000:0x0500
 LOAD_ROOT_TO_MEM:
@@ -111,7 +111,7 @@ OPEN_FILE:
 .FILE_NOT_FOUND:
     mov si, file_not_found
     call print_string
-    call REBOOT
+    ;call REBOOT
 
 ; Если нашли грузим stage2.bin на 0x0000:0x8000
 .FOUND:
