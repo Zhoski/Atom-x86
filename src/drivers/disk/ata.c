@@ -45,7 +45,10 @@ U8 init_ata(U16 info[256]) {
     }
 
     /* Ждем пока BSY установится на ноль */
-    while((inb(ATA_PRIMARY_STATUS) & BSY));
+    volatile U32 timeout = 500000;
+    while((inb(ATA_PRIMARY_STATUS) & BSY) && --timeout > 0) {
+        asm volatile("outb %%al, $0x80" : : "a"(0)); 
+    }
 
     /* Если 0x1F4 и 0x1F5 равны нулю, то диск не поддерживает PATA */
     if(inb(0x1F4) != 0 && inb(0x1F5) != 0) {
@@ -55,14 +58,13 @@ U8 init_ata(U16 info[256]) {
 
     U8 status;
 
-    /* Ждеми 1 в DRQ если успешно, или 1 в ERR в случаи ошибки */
-    while(1) {
+    /* Ждем 1 в DRQ если успешно, или 1 в ERR в случаи ошибки */
+    timeout = 500000;
+    while(--timeout > 0) {
         status = inb(ATA_PRIMARY_STATUS);
         if(status & DRQ) break;
-        if(status & ERR) {
-            exit_status = DISK_ERROR;
-            goto exit;
-        }
+        if(status & ERR) { exit_status = DISK_ERROR; goto exit; }
+        asm volatile("outb %%al, $0x80" : : "a"(0));
     }
     
     /* Читаем данные о диске из 0x1F0 в буффер */
