@@ -45,7 +45,7 @@ U8 afs_init() {
     U8* AFS_HEAD = AFS_ROOT;
 
     for(U32 i = 0;i < ROOT_SECTORS;i++) {
-        disk->read_sector(ROOT_BASE + i, AFS_ROOT + (i << 9));
+        disk->read_sector(ROOT_BASE + i, (U16*)(AFS_ROOT + (i << 9)));
     }
 
     File* file = (File*)AFS_HEAD;
