@@ -28,7 +28,7 @@ start:
 
     call cpuid          ; Получаем модель процессора
 
-    ;call kernel_launch  ; Запуск ядра
+    call kernel_launch  ; Запуск ядра
 
     jmp $        
 
@@ -526,6 +526,7 @@ tab:    db " ",0
 parren_close: db " ]",13,10,0
 
 bios_error_msg: db "Bios error",13,10,0
+pm: db "Switch to Protect Mode",13,10,0
 bootMsg: db "================================ ATOM-BOOT v0.1 ================================",13,10,0
 
 ; Массив для информации о системе
@@ -655,6 +656,12 @@ kernel_launch:
     mov al, 0x12
     int 0x10 
 
+    mov si, info_msg
+    call print
+
+    mov si, pm
+    call print
+
 .skip:
 
 ; Переключение в защищенный режим
@@ -669,18 +676,23 @@ switch_to_PM:
 
 bits 32
 PMentry: 
+
+    mov edi, 0xA0000
+    mov byte [edi], 0xFF
+
+    jmp $
+
     mov ax, 0x10
     mov ds, ax
     mov ss, ax
     mov fs, ax
     mov es, ax
     mov gs, ax
-    mov esp, 0x90000
+    mov esp, 0x7C00
 
     mov esi, 0x10000   
     mov edi, 0x100000   
     mov ecx, 16384     
     rep movsd  
     
-    ;call kmain
-    jmp 0x8:0x100000
+    ;jmp 0x8:0x100000
