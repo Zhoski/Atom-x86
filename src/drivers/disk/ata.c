@@ -81,7 +81,7 @@ exit:
 
 U8 ata_read_sector(U32 lba, U16 word[256]) {
     // Установить устройство
-    U8 drive_head = 0xE0 | ((lba >> 24) & 0x0F);
+    U8 drive_head = 0xF0 | ((lba >> 24) & 0x0F);
 
     outb(0x1F6, drive_head);
 
@@ -109,7 +109,7 @@ U8 ata_read_sector(U32 lba, U16 word[256]) {
 }
 
 U8 ata_write_sector(U32 lba, U16 word[256]) {
-    U8 drive_head = 0xE0 | ((lba >> 24) & 0x0F);
+    U8 drive_head = 0xF0 | ((lba >> 24) & 0x0F);
 
     outb(0x1F6, drive_head);
     outb(0x1F2, 1);                         // Писать 1 сектор
