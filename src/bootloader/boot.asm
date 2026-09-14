@@ -115,6 +115,9 @@ OPEN_FILE:
 
 ; Если нашли грузим stage2.bin на 0x0000:0x8000
 .FOUND:
+    mov si, file_found
+    call print_string
+
     mov ax, [es:bx + 13]
     mov cx, 512
     xor dx, dx
@@ -144,7 +147,7 @@ OPEN_FILE:
     int 0x13
 
     ; Передача управления stage2.bin
-    jmp 0x0000:0x8000
+    ;jmp 0x0000:0x8000
 
     jmp $
 
