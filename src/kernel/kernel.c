@@ -55,7 +55,7 @@ void kmain() {
 
     sti();
 
-    video->write_string("KERNEL");
+    video->write_string("TEST");
 
     fs->open("INIT    BIN");
 
