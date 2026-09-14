@@ -36,8 +36,6 @@ void kmain() {
     pic_irq_mask(0x21, 0b11111000); // Включить IRQ
     pic_irq_mask(0xA1, 0b10111111); // PATA включить
 
-    sti();
-
     init_memory();                  // Инициализация памяти
     service.memory->create_heap();  // Создание кучи
    
@@ -53,13 +51,13 @@ void kmain() {
     video->write_string("FS INIT\n");
     init_fs();    
 
-    /*free(disk_info);
+    //free(disk_info);
 
     init_timer(100);
 
     sti();
 
-    fs->open("INIT    BIN");*/
+    //fs->open("INIT    BIN");
 
     *((volatile unsigned char*)0xA0000) = 0xFF;
     video->write_string("KERNEL");
