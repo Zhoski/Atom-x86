@@ -30,6 +30,8 @@ start:
 
     mov si, bootMsg
     call print
+
+    jmp $
     
     call get_memmap     ; Получаем карту памяти                       
 
