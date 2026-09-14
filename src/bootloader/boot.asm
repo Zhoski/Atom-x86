@@ -172,7 +172,7 @@ drive: db 0
 atom_boot: db "ATOM-x86 BOOT SECTOR",13,10,0
 stage2_file: db "STAGE2  BIN",0
 file_not_found: db "STAGE2.BIN not found on disk",13,10,0
-file_found: db "File found",13,10,0
+file_found: db "STAGE2.BIN load",13,10,0
 reboot_msg: db "Press any key to reboot...",0
 disk_read_error: db "Disk read error",13,10,0
 
