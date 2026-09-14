@@ -693,4 +693,6 @@ PMentry:
     mov edi, 0xA0000
     mov byte [edi], 0xFF
 
+    jmp $
+
     ;jmp 0x8:0x100000
