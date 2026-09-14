@@ -1,5 +1,6 @@
 #include <fs/afs.h>
 #include <drivers/disk/disk.h>
+#include <drivers/video/video.h>
 #include <kernel/errors.h>
 #include <kernel/device.h>
 #include <kernel/services.h>
@@ -35,6 +36,7 @@ static inline U8 cmpFileName(U8 *__restrict__ file_name1, U8 *__restrict__ file_
 }
 
 U8 afs_init() {
+    video->write_string("--- DISK ---\n");
     U8* AFS_ROOT = service.memory->malloc(8192);
     U8* AFS_ROOT_MAX = AFS_ROOT + 8192 - RECORD_SIZE;
 
@@ -55,6 +57,8 @@ U8 afs_init() {
     while (*AFS_HEAD && AFS_HEAD < AFS_ROOT_MAX)
     {
         if(file_max_start_sec < file->start_sec) {
+            video->write_string(AFS_HEAD);
+            video->write_char('\n');
             file_max_start_sec = file->start_sec;
             file_size_in_sec = (file->size + 511) >> 9;
         }
