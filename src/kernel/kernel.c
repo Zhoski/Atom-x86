@@ -45,9 +45,9 @@ void kmain() {
 
     init_vga(VGA_640_480);          // Инициализация vga                       
 
-    /*uint16_t* disk_info = service.memory->malloc(512);
+    uint16_t* disk_info = service.memory->malloc(512);
     disk_init(disk_info);
-    service.memory->free(disk_info);
+    /*service.memory->free(disk_info);
     init_fs();    
 
     free(disk_info);
