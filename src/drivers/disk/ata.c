@@ -16,6 +16,7 @@
 #define DISK_NOT_FOUND             1
 #define DISK_DONT_SUPPORT_PATA     2
 #define DISK_ERROR                 3
+#define DISK_TIMEOUT               4
 
 #define READ                    0x20
 #define WRITE                   0x30
@@ -49,6 +50,7 @@ U8 init_ata(U16 info[256]) {
     while((inb(ATA_PRIMARY_STATUS) & BSY) && --timeout > 0) {
         asm volatile("outb %%al, $0x80" : : "a"(0)); 
     }
+    if(timeout <= 0) return DISK_TIMEOUT;
 
     /* Если 0x1F4 и 0x1F5 равны нулю, то диск не поддерживает PATA */
     if(inb(0x1F4) != 0 && inb(0x1F5) != 0) {
@@ -66,6 +68,7 @@ U8 init_ata(U16 info[256]) {
         if(status & ERR) { exit_status = DISK_ERROR; goto exit; }
         asm volatile("outb %%al, $0x80" : : "a"(0));
     }
+    if(timeout <= 0) return DISK_TIMEOUT;
     
     /* Читаем данные о диске из 0x1F0 в буффер */
     for(U32 i = 0; i < BUFFER_SIZE; i++) {
@@ -92,12 +95,17 @@ U8 ata_read_sector(U32 lba, U16 word[256]) {
     while (((inb(0x1F7) & (BSY | DRQ)) != DRQ) && --timeout > 0) {
         asm volatile("outb %%al, $0x80" : : "a"(0));
     }
+    if(timeout <= 0) return DISK_TIMEOUT;
 
     for(U32 i = 0; i < 256; i++) {
         word[i] = inw(0x1F0);
     }
 
-    while (inb(0x1F7) & BSY);
+    timeout = 500000;
+    while ((inb(0x1F7) & BSY) && --timeout > 0) {
+        asm volatile("outb %%al, $0x80" : : "a"(0));
+    }
+    if(timeout <= 0) return DISK_TIMEOUT;
 }
 
 U8 ata_write_sector(U32 lba, U16 word[256]) {
@@ -114,12 +122,17 @@ U8 ata_write_sector(U32 lba, U16 word[256]) {
     while (((inb(0x1F7) & (BSY | DRQ)) != DRQ) && --timeout > 0) {
         asm volatile("outb %%al, $0x80" : : "a"(0));
     }
+    if(timeout <= 0) return DISK_TIMEOUT;
 
     for(U32 i = 0; i < 256; i++) {
         outw(0x1F0, word[i]);
     }
 
-    while (inb(0x1F7) & BSY);
+    timeout = 500000;
+    while ((inb(0x1F7) & BSY) && --timeout > 0) {
+        asm volatile("outb %%al, $0x80" : : "a"(0));
+    }
+    if(timeout <= 0) return DISK_TIMEOUT;
 }
 
 void ata_disk_handler() {
