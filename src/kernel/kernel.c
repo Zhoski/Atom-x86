@@ -24,6 +24,13 @@ extern void isr46();
 services service;
 
 void kmain() {
+
+    while (1)
+    {
+        /* code */
+    }
+    
+
     idt_load();                     // Загрузить IDT
        
     idt_set(0x08, 0x08, 0x8E, (uint32_t)isr8); 
