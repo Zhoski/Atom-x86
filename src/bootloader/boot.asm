@@ -152,6 +152,7 @@ OPEN_FILE:
     jmp $
 
 ; Изначально тут рут директория фс
+align 4
 lba:
     db 0x10
     db 0x00
