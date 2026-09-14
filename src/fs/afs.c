@@ -41,7 +41,7 @@ U8 afs_init() {
     U8* AFS_ROOT_MAX = AFS_ROOT + 8192 - RECORD_SIZE;
 
     for(U32 i = 0;i < 8192;i++) {
-        AFS_ROOT[i] = 0;
+        AFS_ROOT[i] = 1;
     }
 
     U8* AFS_HEAD = AFS_ROOT;
