@@ -54,17 +54,24 @@ U8 afs_init() {
     U16 file_max_start_sec = file->start_sec;
     U16 file_size_in_sec = (file->size + 511) >> 9;
 
-    while (AFS_HEAD < AFS_ROOT_MAX)
+    while (*AFS_HEAD && AFS_HEAD < AFS_ROOT_MAX)
     {   
         if(file_max_start_sec < file->start_sec) {
-            video->write_string(AFS_HEAD);
-            video->write_char('\n');
             file_max_start_sec = file->start_sec;
             file_size_in_sec = (file->size + 511) >> 9;
         }
 
         AFS_HEAD += RECORD_SIZE;
         file = (File*)AFS_HEAD;
+
+        for(int i = 0;i < 11;i++) {
+            if(file->name[i] == 0) {
+                video->write_char(' ');
+            }else {
+                video->write_char(file->name[i]);
+            }
+        }
+        video->write_char('\n');
     }
 
     service.memory->free(AFS_ROOT);
@@ -89,7 +96,7 @@ U32* afs_check_file(const U8 *__restrict__ file_name) {
 
     file_lba_index = 0;
 
-    while (AFS_HEAD < AFS_ROOT_MAX)
+    while (*AFS_HEAD && AFS_HEAD < AFS_ROOT_MAX)
     {
         if(*AFS_HEAD == FILE_DELETED) {
             AFS_HEAD += RECORD_SIZE;

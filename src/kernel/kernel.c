@@ -55,9 +55,9 @@ void kmain() {
 
     sti();
 
-    video->write_string("TEST");
+    video->write_string("\n\nTEST");
 
-    fs->open("INIT    BIN");
+    //fs->open("INIT    BIN");
 
 	for(;;) {
         halt();
