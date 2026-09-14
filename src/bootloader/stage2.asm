@@ -37,7 +37,7 @@ start:
 
     call cpuid          ; Получаем модель процессора
 
-    call kernel_launch  ; Запуск ядра
+    ;call kernel_launch  ; Запуск ядра
 
     jmp $        
 
