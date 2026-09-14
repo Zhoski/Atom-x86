@@ -135,25 +135,17 @@ void loop() {
                     U32 x;
                     U32 y;
                     get_cursor(&x, &y);
-                    if(buffer[buffer_index] == ENTER) {
+                    if(x > 0) {
                         putchar(' ');
                         set_cursor(x - 1, y);
                         putchar(' ');
                         set_cursor(x - 1, y);
                     }else {
-                        if(x > 0) {
-                            putchar(' ');
-                            set_cursor(x - 1, y);
-                            putchar(' ');
-                            set_cursor(x - 1, y);
-                        }else {
-                            U32 new_x = 79;
-                            U32 new_y = y - 1;
-
-                            set_cursor(new_x, new_y);
-                            putchar(' ');
-                            set_cursor(new_x, new_y);
-                        }
+                        U32 new_x = 79;
+                        U32 new_y = y - 1;
+                        set_cursor(new_x, new_y);
+                        putchar(' ');
+                        set_cursor(new_x, new_y);
                     }
                     buffer_index--;
                     buffer[buffer_index] = 0;
@@ -180,13 +172,6 @@ void loop() {
                 putchar(c);
             }
         }
-        SetFGColor(7);
-        putchar('\xDB');
-        U16 x, y;
-
-        get_cursor(&x, &y);
-        set_cursor(x-1,y);
-        SetFGColor(15);
     }
 }
 

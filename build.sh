@@ -109,7 +109,7 @@ cd ..
 ./utilities/afsm -push atom.img rootFS/setup.bin
 ./utilities/afsm -push atom.img rootFS/notepad.bin
 
-qemu-system-i386 -drive format=raw,file=atom.img -m 4M -icount shift=6,sleep=off -rtc clock=vm -no-reboot 
+qemu-system-i386 -drive format=raw,file=atom.img -m 16M -icount shift=6,sleep=off -rtc clock=vm -no-reboot 
 
 rm binaries/boot.bin
 rm binaries/stage2.bin
