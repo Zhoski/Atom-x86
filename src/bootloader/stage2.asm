@@ -30,6 +30,8 @@ start:
 
     mov si, bootMsg
     call print
+
+    jmp $
     
     call get_memmap     ; Получаем карту памяти                       
 
@@ -37,7 +39,7 @@ start:
 
     call cpuid          ; Получаем модель процессора
 
-    ;call kernel_launch  ; Запуск ядра
+    call kernel_launch  ; Запуск ядра
 
     jmp $        
 
