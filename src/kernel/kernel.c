@@ -24,7 +24,7 @@ extern void isr46();
 services service;
 
 void kmain() {
-    /*idt_load();                     // Загрузить IDT
+    idt_load();                     // Загрузить IDT
        
     idt_set(0x08, 0x08, 0x8E, (uint32_t)isr8); 
     idt_set(0x20, 0x08, 0x8E, (uint32_t)isr32); 
@@ -32,7 +32,7 @@ void kmain() {
     idt_set(0x2E, 0x08, 0x8E, (uint32_t)isr46);
     idt_set(0x80, 0x08, 0x8E, (uint32_t)isr80);
 
-    pic_remap();                    // Установка PIC
+    /*pic_remap();                    // Установка PIC
     pic_irq_mask(0x21, 0b11111000); // Включить IRQ
     pic_irq_mask(0xA1, 0b10111111); // PATA включить
 
