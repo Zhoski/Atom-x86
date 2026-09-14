@@ -690,4 +690,7 @@ PMentry:
     mov ecx, 16384     
     rep movsd  
     
-    jmp 0x8:0x100000
+    mov edi, 0xA0000
+    mov byte [edi], 0xFF
+
+    ;jmp 0x8:0x100000
