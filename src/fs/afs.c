@@ -55,7 +55,7 @@ U8 afs_init() {
     U16 file_size_in_sec = (file->size + 511) >> 9;
 
     while (*AFS_HEAD && AFS_HEAD < AFS_ROOT_MAX)
-    {
+    {   
         if(file_max_start_sec < file->start_sec) {
             video->write_string(AFS_HEAD);
             video->write_char('\n');
@@ -87,6 +87,12 @@ U32* afs_check_file(const U8 *__restrict__ file_name) {
         if(*AFS_HEAD == FILE_DELETED) {
             AFS_HEAD += RECORD_SIZE;
             continue;
+        }
+
+        for(U32 i = 0;i < 11;i++) {
+            if(AFS_HEAD[i] == 0) {
+                AFS_HEAD[i] = ' ';
+            }
         }
 
         if(cmpFileName(AFS_HEAD, file_name)) {
