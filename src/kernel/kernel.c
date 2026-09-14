@@ -47,7 +47,7 @@ void kmain() {
 
     uint16_t* disk_info = service.memory->malloc(512);
     disk_init(disk_info);
-    
+
     video->write_string("FS INIT\n");
     init_fs();    
 
@@ -57,7 +57,7 @@ void kmain() {
 
     video->write_string("KERNEL");
 
-    //fs->open("INIT    BIN");
+    fs->open("INIT    BIN");
 
 	for(;;) {
         halt();

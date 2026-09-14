@@ -158,7 +158,7 @@ U32 cmd_dir() {
         int j = 0;
         memcpy(root, (U8*)&file, 16);
         if(file.name[i] != 0xFF) {
-            while (file.name[i] != ' ')
+            while (file.name[i] != ' ' && file.name[i] != 0)
             {
                 putchar(file.name[i]);
                 i++;
