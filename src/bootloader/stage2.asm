@@ -36,7 +36,7 @@ start:
 
     call cpuid          ; Получаем модель процессора
 
-   ; call kernel_launch  ; Запуск ядра
+    call kernel_launch  ; Запуск ядра
 
     jmp $        
 
@@ -620,8 +620,6 @@ kernel_load:
     mov si, kernel_not_found_error
     call print
 
-    jmp REBOOT
-
 .kernel_signature:
     mov si, fail_msg
     call print
@@ -637,8 +635,6 @@ kernel_load:
 
     mov si, kernel_signature_error
     call print
-
-    call REBOOT
 
     jmp $
 
