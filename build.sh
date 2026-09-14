@@ -97,19 +97,19 @@ make clean
 cd ..
 cd ..
 
-./utilities/afsm -c test9.img
-./utilities/afsm -boot test9.img boot.bin
-./utilities/afsm -push test9.img rootFS/stage2.bin
-./utilities/afsm -push test9.img rootFS/kernel.bin
-./utilities/afsm -push test9.img rootFS/shell.bin
-./utilities/afsm -push test9.img rootFS/LICENSE.txt
-./utilities/afsm -push test9.img rootFS/hello.bin
-./utilities/afsm -push test9.img rootFS/init.bin
-./utilities/afsm -push test9.img rootFS/init.cfg
-./utilities/afsm -push test9.img rootFS/setup.bin
-./utilities/afsm -push test9.img rootFS/notepad.bin
+./utilities/afsm -c test10.img
+./utilities/afsm -boot test10.img boot.bin
+./utilities/afsm -push test10.img rootFS/stage2.bin
+./utilities/afsm -push test10.img rootFS/kernel.bin
+./utilities/afsm -push test10.img rootFS/shell.bin
+./utilities/afsm -push test10.img rootFS/LICENSE.txt
+./utilities/afsm -push test10.img rootFS/hello.bin
+./utilities/afsm -push test10.img rootFS/init.bin
+./utilities/afsm -push test10.img rootFS/init.cfg
+./utilities/afsm -push test10.img rootFS/setup.bin
+./utilities/afsm -push test10.img rootFS/notepad.bin
 
-qemu-system-i386 -drive format=raw,file=test9.img -m 16M -icount shift=6,sleep=off -rtc clock=vm -no-reboot 
+qemu-system-i386 -drive format=raw,file=test10.img -m 16M -icount shift=6,sleep=off -rtc clock=vm -no-reboot 
 
 rm binaries/boot.bin
 rm binaries/stage2.bin
