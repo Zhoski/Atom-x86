@@ -677,11 +677,6 @@ switch_to_PM:
 bits 32
 PMentry: 
 
-    mov edi, 0xA0000
-    mov byte [edi], 0xFF
-
-    jmp $
-
     mov ax, 0x10
     mov ds, ax
     mov ss, ax
@@ -695,4 +690,4 @@ PMentry:
     mov ecx, 16384     
     rep movsd  
     
-    ;jmp 0x8:0x100000
+    jmp 0x8:0x100000
