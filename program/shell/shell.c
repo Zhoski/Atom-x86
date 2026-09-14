@@ -204,7 +204,7 @@ U32 cmd_sys() {
     printf("%[10     / /\\ \\        %[10OS:%[15 Atom-X86 Demo\n"); 
     printf("%[10    / /  \\ \\       %[10Kernel:%[15 v0.0.1-custom\n");
     printf("%[10   / /____\\ \\      %[10CPU:%[15 %s\n", cpu); 
-    printf("%[10  /__________\\     %[10Memory:%[15 %d\n", ram); 
+    printf("%[10  /__________\\     %[10Memory:%[15 %dk\n", *ram); 
     printf("%[10 /____________\\    %[10Display:%[15 VGA 640x480 16 colors\n"); 
     printf("                   %[10Shell:%[15 Default\n");
     printf("\n                   %[01\xDB\xDB%[02\xDB\xDB%[03\xDB\xDB%[04\xDB\xDB%[05\xDB\xDB"

@@ -27,7 +27,7 @@ start:
     mov si, atom_boot
     call print_string
 
-    call OPEN_FILE
+    ;call OPEN_FILE
 
     jmp $
 
