@@ -19,9 +19,8 @@ start:
     mov ss, ax
     mov sp, 0x7C00      ; Стек под загрузчик
 
-    in al, 0x92
-    or al, 2
-    out 0x92, al        ; A20 line включить 
+    mov ax, 0x2401
+    int 0x15
 
     ; Установка видеорежима VGA TEXT 80x25 16 цветов
     mov ah, 0x00         
