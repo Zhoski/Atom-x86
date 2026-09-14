@@ -54,7 +54,9 @@ void kmain() {
 
     sti();
 
-    fs->open("INIT    BIN");
+    //fs->open("INIT    BIN");
+
+    video->write_string("KERLEN LOAD");
 
 	for(;;) {
         halt();
