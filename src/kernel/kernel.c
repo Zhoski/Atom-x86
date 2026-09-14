@@ -24,7 +24,7 @@ extern void isr46();
 services service;
 
 void kmain() {
-    idt_load();                     // Загрузить IDT
+    /*idt_load();                     // Загрузить IDT
        
     idt_set(0x08, 0x08, 0x8E, (uint32_t)isr8); 
     idt_set(0x20, 0x08, 0x8E, (uint32_t)isr32); 
@@ -54,7 +54,9 @@ void kmain() {
 
     sti();
 
-    fs->open("INIT    BIN");
+    fs->open("INIT    BIN");*/
+
+    *((volatile unsigned char*)0xA0000) = 0xFF;
 
 	for(;;) {
         halt();
