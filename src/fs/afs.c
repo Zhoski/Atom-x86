@@ -36,6 +36,12 @@ static inline U8 cmpFileName(U8 *__restrict__ file_name1, U8 *__restrict__ file_
 
 U8 afs_init() {
     U8* AFS_ROOT = service.memory->malloc(8192);
+    U8* AFS_ROOT_MAX = AFS_ROOT + 8192 - RECORD_SIZE;
+
+    for(U32 i = 0;i < 8192;i++) {
+        AFS_ROOT[i] = 0;
+    }
+
     U8* AFS_HEAD = AFS_ROOT;
 
     for(U32 i = 0;i < ROOT_SECTORS;i++) {
@@ -46,7 +52,7 @@ U8 afs_init() {
     U16 file_max_start_sec = file->start_sec;
     U16 file_size_in_sec = (file->size + 511) >> 9;
 
-    while (*AFS_HEAD)
+    while (*AFS_HEAD && AFS_HEAD < AFS_ROOT_MAX)
     {
         if(file_max_start_sec < file->start_sec) {
             file_max_start_sec = file->start_sec;
