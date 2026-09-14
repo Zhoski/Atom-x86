@@ -88,7 +88,10 @@ U8 ata_read_sector(U32 lba, U16 word[256]) {
     outb(0x1F5, (U8)(lba >> 16));    // Старшая часть lba 
     outb(ATA_PRIMARY_STATUS, READ);  // Читать
     
-    while ((inb(0x1F7) & (BSY | DRQ)) != DRQ);
+    volatile U32 timeout = 500000;
+    while (((inb(0x1F7) & (BSY | DRQ)) != DRQ) && --timeout > 0) {
+        asm volatile("outb %%al, $0x80" : : "a"(0));
+    }
 
     for(U32 i = 0; i < 256; i++) {
         word[i] = inw(0x1F0);
@@ -107,7 +110,10 @@ U8 ata_write_sector(U32 lba, U16 word[256]) {
     outb(0x1F5, (U8)(lba >> 16));           // Старшая часть lba 
     outb(ATA_PRIMARY_STATUS, WRITE);        // Писать
 
-    while ((inb(0x1F7) & (BSY | DRQ)) != DRQ);
+    volatile U32 timeout = 500000;
+    while (((inb(0x1F7) & (BSY | DRQ)) != DRQ) && --timeout > 0) {
+        asm volatile("outb %%al, $0x80" : : "a"(0));
+    }
 
     for(U32 i = 0; i < 256; i++) {
         outw(0x1F0, word[i]);
