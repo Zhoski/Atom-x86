@@ -48,7 +48,7 @@ void kmain() {
     uint16_t* disk_info = service.memory->malloc(512);
     disk_init(disk_info);
     //service.memory->free(disk_info);
-    init_fs();    
+    //init_fs();    
 
     /*free(disk_info);
 
