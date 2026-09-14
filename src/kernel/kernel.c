@@ -38,8 +38,8 @@ void kmain() {
 
     sti();
 
-    /*init_memory();                  // Инициализация памяти
-    service.memory->create_heap();  // Создание кучи
+    init_memory();                  // Инициализация памяти
+    /*service.memory->create_heap();  // Создание кучи
    
     init_keyboard();                // Инициализация клавиатуры              
 
