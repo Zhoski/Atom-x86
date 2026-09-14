@@ -57,10 +57,7 @@ void kmain() {
 
     sti();
 
-    //fs->open("INIT    BIN");
-
-    *((volatile unsigned char*)0xA0000) = 0xFF;
-    video->write_string("KERNEL");
+    fs->open("INIT    BIN");
 
 	for(;;) {
         halt();
