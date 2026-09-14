@@ -56,7 +56,12 @@ void kmain() {
 
     //fs->open("INIT    BIN");
 
-    video->write_string("KERLEN LOAD");
+    outb(0x61, inb(0x61) | 0x03);
+    while (1)
+    {
+        /* code */
+    }
+    
 
 	for(;;) {
         halt();
