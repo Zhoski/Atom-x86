@@ -24,13 +24,6 @@ extern void isr46();
 services service;
 
 void kmain() {
-
-    while (1)
-    {
-        /* code */
-    }
-    
-
     idt_load();                     // Загрузить IDT
        
     idt_set(0x08, 0x08, 0x8E, (uint32_t)isr8); 
@@ -62,13 +55,8 @@ void kmain() {
     sti();
 
     //fs->open("INIT    BIN");
-
-    outb(0x61, inb(0x61) | 0x03);
-    while (1)
-    {
-        /* code */
-    }
     
+    video->write_string("KERNEL WORK");
 
 	for(;;) {
         halt();

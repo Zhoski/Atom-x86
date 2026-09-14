@@ -681,6 +681,11 @@ switch_to_PM:
 
 bits 32
 PMentry: 
+
+    mov edi, 0xA0000
+    mov byte [edi], 0xFF
+    jmp $
+
     mov ax, 0x10
     mov ds, ax
     mov ss, ax
