@@ -21,14 +21,6 @@ start:
 
     mov ax, 0x2401
     int 0x15
-
-    ; Установка видеорежима VGA TEXT 80x25 16 цветов
-    mov ah, 0x00         
-    mov al, 0x03
-    int 0x10  
-
-    mov si, bootMsg
-    call print
     
     call get_memmap     ; Получаем карту памяти                       
 
@@ -36,7 +28,7 @@ start:
 
     call cpuid          ; Получаем модель процессора
 
-    call kernel_launch  ; Запуск ядра
+    ;call kernel_launch  ; Запуск ядра
 
     jmp $        
 
