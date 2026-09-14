@@ -147,7 +147,7 @@ OPEN_FILE:
     int 0x13
 
     ; Передача управления stage2.bin
-    ;jmp 0x0000:0x8000
+    jmp 0x0000:0x8000
 
     jmp $
 
