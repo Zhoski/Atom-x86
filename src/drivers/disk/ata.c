@@ -46,7 +46,7 @@ U8 init_ata(U16 info[256]) {
     }
 
     /* Ждем пока BSY установится на ноль */
-    volatile U32 timeout = 500000;
+    volatile U32 timeout = 10000;
     while((inb(ATA_PRIMARY_STATUS) & BSY) && --timeout > 0) {
         asm volatile("outb %%al, $0x80" : : "a"(0)); 
     }
@@ -61,7 +61,7 @@ U8 init_ata(U16 info[256]) {
     U8 status;
 
     /* Ждем 1 в DRQ если успешно, или 1 в ERR в случаи ошибки */
-    timeout = 500000;
+    timeout = 10000;
     while(--timeout > 0) {
         status = inb(ATA_PRIMARY_STATUS);
         if(status & DRQ) break;
@@ -91,7 +91,7 @@ U8 ata_read_sector(U32 lba, U16 word[256]) {
     outb(0x1F5, (U8)(lba >> 16));    // Старшая часть lba 
     outb(ATA_PRIMARY_STATUS, READ);  // Читать
     
-    volatile U32 timeout = 500000;
+    volatile U32 timeout = 10000;
     while (((inb(0x1F7) & (BSY | DRQ)) != DRQ) && --timeout > 0) {
         asm volatile("outb %%al, $0x80" : : "a"(0));
     }
@@ -101,7 +101,7 @@ U8 ata_read_sector(U32 lba, U16 word[256]) {
         word[i] = inw(0x1F0);
     }
 
-    timeout = 500000;
+    timeout = 10000;
     while ((inb(0x1F7) & BSY) && --timeout > 0) {
         asm volatile("outb %%al, $0x80" : : "a"(0));
     }
@@ -118,7 +118,7 @@ U8 ata_write_sector(U32 lba, U16 word[256]) {
     outb(0x1F5, (U8)(lba >> 16));           // Старшая часть lba 
     outb(ATA_PRIMARY_STATUS, WRITE);        // Писать
 
-    volatile U32 timeout = 500000;
+    volatile U32 timeout = 10000;
     while (((inb(0x1F7) & (BSY | DRQ)) != DRQ) && --timeout > 0) {
         asm volatile("outb %%al, $0x80" : : "a"(0));
     }
@@ -128,7 +128,7 @@ U8 ata_write_sector(U32 lba, U16 word[256]) {
         outw(0x1F0, word[i]);
     }
 
-    timeout = 500000;
+    timeout = 10000;
     while ((inb(0x1F7) & BSY) && --timeout > 0) {
         asm volatile("outb %%al, $0x80" : : "a"(0));
     }
