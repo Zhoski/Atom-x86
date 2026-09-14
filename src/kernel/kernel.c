@@ -43,9 +43,9 @@ void kmain() {
    
     init_keyboard();                // Инициализация клавиатуры              
 
-    /*init_vga(VGA_640_480);          // Инициализация vga                       
+    init_vga(VGA_640_480);          // Инициализация vga                       
 
-    uint16_t* disk_info = service.memory->malloc(512);
+    /*uint16_t* disk_info = service.memory->malloc(512);
     disk_init(disk_info);
     service.memory->free(disk_info);
     init_fs();    
@@ -59,6 +59,7 @@ void kmain() {
     fs->open("INIT    BIN");*/
 
     *((volatile unsigned char*)0xA0000) = 0xFF;
+    video->write_string("KERNEL");
 
 	for(;;) {
         halt();
