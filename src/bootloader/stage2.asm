@@ -36,7 +36,7 @@ start:
 
     call cpuid          ; Получаем модель процессора
 
-    ;call kernel_launch  ; Запуск ядра
+    call kernel_launch  ; Запуск ядра
 
     jmp $        
 
@@ -587,13 +587,13 @@ kernel_load:
     jnz .kernel_not_found
 
     mov word [LBA_FILE+4], 0x0000
-    mov word [LBA_FILE+6], 0x1000
+    mov word [LBA_FILE+6], 0x2000
 
     mov si, LBA_FILE
     call disk_read
 
     mov bx, 0x0000
-    mov ax, 0x1000
+    mov ax, 0x2000
     mov es, ax
 
     mov ax, word [es:bx]
@@ -689,7 +689,7 @@ PMentry:
     mov gs, ax
     mov esp, 0x90000
 
-    mov esi, 0x10000   
+    mov esi, 0x20000   
     mov edi, 0x100000   
     mov ecx, 16384     
     rep movsd  
