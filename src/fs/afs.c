@@ -54,7 +54,7 @@ U8 afs_init() {
     U16 file_max_start_sec = file->start_sec;
     U16 file_size_in_sec = (file->size + 511) >> 9;
 
-    while (*AFS_HEAD && AFS_HEAD < AFS_ROOT_MAX)
+    while (AFS_HEAD < AFS_ROOT_MAX)
     {   
         if(file_max_start_sec < file->start_sec) {
             video->write_string(AFS_HEAD);
@@ -74,6 +74,13 @@ U8 afs_init() {
 
 U32* afs_check_file(const U8 *__restrict__ file_name) {
     U8* AFS_ROOT = service.memory->malloc(8192);
+
+    for(U32 i = 0;i < 8192;i++) {
+        AFS_ROOT[i] = 0;
+    }
+
+    U8* AFS_ROOT_MAX = AFS_ROOT + 8192 - RECORD_SIZE;
+
     U8* AFS_HEAD = AFS_ROOT;
 
     for(U32 i = 0;i < ROOT_SECTORS;i++) {
@@ -82,17 +89,11 @@ U32* afs_check_file(const U8 *__restrict__ file_name) {
 
     file_lba_index = 0;
 
-    while (*AFS_HEAD)
+    while (AFS_HEAD < AFS_ROOT_MAX)
     {
         if(*AFS_HEAD == FILE_DELETED) {
             AFS_HEAD += RECORD_SIZE;
             continue;
-        }
-
-        for(U32 i = 0;i < 11;i++) {
-            if(AFS_HEAD[i] == 0) {
-                AFS_HEAD[i] = ' ';
-            }
         }
 
         if(cmpFileName(AFS_HEAD, file_name)) {
