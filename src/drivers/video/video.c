@@ -16,6 +16,10 @@ static VideoDriver vga_80_25 = {
     .write_string = &vga_80_25_write_string,
     .write_char = &vga_80_25_write_char,
     .clear_screen = &vga_80_25_clear_screen,
+    .terminal_bg_vbe_set = 0,
+    .terminal_fg_vbe_set = 0,
+    .terminal_set_cursor_position = 0,
+    .terminal_get_cursor_position = 0,
 };
 
 VideoDriver* video;
