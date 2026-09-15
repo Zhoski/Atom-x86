@@ -26,6 +26,9 @@ gcc -m32 -ffreestanding -c src/drivers/disk/disk.c -w -o disk.o \
 gcc -m32 -ffreestanding -c src/drivers/timer/timer.c -w -o timer.o \
     -I./src/cpu/include -I./src/drivers/include -I./src/kernel/include -I./src/lib/include -I./src/fs/include
 
+gcc -m32 -ffreestanding -c src/drivers/pci/pci.c -w -o pci.o \
+    -I./src/cpu/include -I./src/drivers/include -I./src/kernel/include -I./src/lib/include -I./src/fs/include
+
 
 # ==============================================================================
 # ПРОЦЕССОР И ПРЕРЫВАНИЯ
@@ -73,7 +76,7 @@ gcc -m32 -ffreestanding -c src/fs/afs.c -w -o afs.o \
 # ЛИНКОВКА 
 # ==============================================================================
 ld -m elf_i386 -T linker.ld kernel.o services.o vga_640_480.o vga_80_25.o video.o keyboard.o \
-                 ata.o disk.o timer.o idt.o pic.o isr8.o isr32.o isr33.o isr46.o isr80.o panic.o memory.o \
+                 ata.o disk.o timer.o pci.o idt.o pic.o isr8.o isr32.o isr33.o isr46.o isr80.o panic.o memory.o \
                  syscall.o afs.o fs.o program.o -w -o kernel.elf
 
 objcopy -O binary kernel.elf rootFS/kernel.bin
@@ -97,19 +100,19 @@ make clean
 cd ..
 cd ..
 
-./utilities/afsm -c atom3.img
-./utilities/afsm -boot atom3.img boot.bin
-./utilities/afsm -push atom3.img rootFS/stage2.bin
-./utilities/afsm -push atom3.img rootFS/kernel.bin
-./utilities/afsm -push atom3.img rootFS/shell.bin
-./utilities/afsm -push atom3.img rootFS/LICENSE.txt
-./utilities/afsm -push atom3.img rootFS/hello.bin
-./utilities/afsm -push atom3.img rootFS/init.bin
-./utilities/afsm -push atom3.img rootFS/init.cfg
-./utilities/afsm -push atom3.img rootFS/setup.bin
-./utilities/afsm -push atom3.img rootFS/notepad.bin
+./utilities/afsm -c atom4.img
+./utilities/afsm -boot atom4.img boot.bin
+./utilities/afsm -push atom4.img rootFS/stage2.bin
+./utilities/afsm -push atom4.img rootFS/kernel.bin
+./utilities/afsm -push atom4.img rootFS/shell.bin
+./utilities/afsm -push atom4.img rootFS/LICENSE.txt
+./utilities/afsm -push atom4.img rootFS/hello.bin
+./utilities/afsm -push atom4.img rootFS/init.bin
+./utilities/afsm -push atom4.img rootFS/init.cfg
+./utilities/afsm -push atom4.img rootFS/setup.bin
+./utilities/afsm -push atom4.img rootFS/notepad.bin
 
-qemu-system-i386 -drive format=raw,file=atom3.img -m 16M -icount shift=6,sleep=off -rtc clock=vm -no-reboot
+qemu-system-i386 -drive format=raw,file=atom4.img -m 16M -icount shift=6,sleep=off -rtc clock=vm -no-reboot
 
 rm binaries/boot.bin
 rm binaries/stage2.bin

@@ -2,6 +2,7 @@
 #include <drivers/timer/timer.h>
 #include <drivers/keyboard/keyboard.h>
 #include <drivers/disk/disk.h>
+#include <drivers/pci/pci.h>
 #include <cpu/cpu.h>
 #include <cpu/idt.h>
 #include <cpu/pic.h>
@@ -36,6 +37,8 @@ void kmain() {
     pic_irq_mask(0x21, 0b11111000); // Включить IRQ
     pic_irq_mask(0xA1, 0b10111111); // PATA включить
 
+    pci_scan_bus0();
+
     init_memory();                  // Инициализация памяти
     service.memory->create_heap();  // Создание кучи
    
@@ -46,7 +49,18 @@ void kmain() {
     uint16_t* disk_info = service.memory->malloc(512);
     uint32_t disk_status = disk_init(disk_info);
 
-    if(!disk_status == SUCCES_INIT_DISK) {
+    if(disk_status == SUCCES_INIT_DISK) {
+        video->write_string("[  ");
+        video->terminal_fg_vbe_set(10);
+        video->write_string("OK");
+        video->terminal_fg_vbe_set(15);
+        video->write_string("  ] Ata driver init\n[ INFO ] Disk: ");
+        for(uint32_t idx = 27;idx < 46;idx++) {
+            video->write_char((U8*)(((disk_info[idx] >> 8)) & 0xFF));
+            video->write_char((U8*)(disk_info[idx] & 0xFF));
+        }
+        video->write_char('\n');
+    }else {
         if(disk_status == DISK_NOT_FOUND) {
             video->write_string("[ ");
             video->terminal_fg_vbe_set(12);
@@ -73,17 +87,6 @@ void kmain() {
             video->terminal_fg_vbe_set(15);
             video->write_string(" ] Ata driver init: Disk Timeout\n");
         }
-    }else {
-        video->write_string("[  ");
-        video->terminal_fg_vbe_set(10);
-        video->write_string("OK");
-        video->terminal_fg_vbe_set(15);
-        video->write_string("  ] Ata driver init\n[ INFO ] Disk: ");
-        for(uint32_t idx = 27;idx < 46;idx++) {
-            video->write_char((U8*)(((disk_info[idx] >> 8)) & 0xFF));
-            video->write_char((U8*)(disk_info[idx] & 0xFF));
-        }
-        video->write_char('\n');
     }
 
     U32 fs_status = init_fs();    
