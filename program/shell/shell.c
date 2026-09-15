@@ -196,7 +196,7 @@ U32 cmd_sys() {
     printf("\n");
     U16* ram = (U16*)0x1000;
     U8*  cpu = malloc(48);
-    memcpy(0x1006, cpu, 48);
+    memcpy(0x1008, cpu, 48);
 
     printf("\n");
     printf("%[10       /\\          %[15%s@Atom-X86\n", user);
