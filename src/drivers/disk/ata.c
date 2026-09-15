@@ -4,11 +4,12 @@
 #define BSY                     0x80
 #define ERR                      0x1
 #define DRQ                      0x8
-#define DRIVE                   0xA0
+#define DRIVE                   0xE0 
 #define IDENTIFY                0xEC
 
 #define ATA_PRIMARY_DATA       0x1F0
 #define ATA_PRIMARY_STATUS     0x1F7
+#define ATA_PRIMARY_ALT_STATUS 0x3F6
 
 #define BUFFER_SIZE              256
 
@@ -24,10 +25,6 @@
 U32 init_ata(U16 info[256]) {
     /* IDENTIFY */
     outb(0x1F6, DRIVE);
-    outb(0x1F2, 0);
-    outb(0x1F3, 0); 
-    outb(0x1F4, 0);
-    outb(0x1F5, 0);
     
     /* Задержка 400 нс */
     inb(ATA_PRIMARY_STATUS);
@@ -40,14 +37,14 @@ U32 init_ata(U16 info[256]) {
     U8 exit_status = SUCCESS;
    
     /* Если 0x1F7 установлен на ноль, то диска не существует */
-    if(inb(ATA_PRIMARY_STATUS) == 0) {
+    if(inb(ATA_PRIMARY_STATUS) == 0xFF) {
         exit_status = DISK_NOT_FOUND;
         goto exit; 
     }
 
     /* Ждем пока BSY установится на ноль */
-    volatile U32 timeout = 10000;
-    while((inb(ATA_PRIMARY_STATUS) & BSY) && --timeout > 0) {
+    volatile U32 timeout = 5000000 ;
+    while((inb(ATA_PRIMARY_ALT_STATUS) & BSY) && --timeout > 0) {
         asm volatile("outb %%al, $0x80" : : "a"(0)); 
     }
     if(timeout <= 0) return DISK_TIMEOUT;
@@ -61,9 +58,9 @@ U32 init_ata(U16 info[256]) {
     U8 status;
 
     /* Ждем 1 в DRQ если успешно, или 1 в ERR в случаи ошибки */
-    timeout = 10000;
+    timeout = 5000000 ;
     while(--timeout > 0) {
-        status = inb(ATA_PRIMARY_STATUS);
+        status = inb(ATA_PRIMARY_ALT_STATUS);
         if(status & DRQ) break;
         if(status & ERR) { exit_status = DISK_ERROR; goto exit; }
         asm volatile("outb %%al, $0x80" : : "a"(0));
@@ -91,8 +88,8 @@ U8 ata_read_sector(U32 lba, U16 word[256]) {
     outb(0x1F5, (U8)(lba >> 16));    // Старшая часть lba 
     outb(ATA_PRIMARY_STATUS, READ);  // Читать
     
-    volatile U32 timeout = 10000;
-    while (((inb(0x1F7) & (BSY | DRQ)) != DRQ) && --timeout > 0) {
+    volatile U32 timeout = 5000000;
+    while (((inb(ATA_PRIMARY_ALT_STATUS) & (BSY | DRQ)) != DRQ) && --timeout > 0) {
         asm volatile("outb %%al, $0x80" : : "a"(0));
     }
     if(timeout <= 0) return DISK_TIMEOUT;
@@ -101,8 +98,8 @@ U8 ata_read_sector(U32 lba, U16 word[256]) {
         word[i] = inw(0x1F0);
     }
 
-    timeout = 10000;
-    while ((inb(0x1F7) & BSY) && --timeout > 0) {
+    timeout = 5000000;
+    while ((inb(ATA_PRIMARY_ALT_STATUS) & BSY) && --timeout > 0) {
         asm volatile("outb %%al, $0x80" : : "a"(0));
     }
     if(timeout <= 0) return DISK_TIMEOUT;
@@ -120,8 +117,8 @@ U8 ata_write_sector(U32 lba, U16 word[256]) {
     outb(0x1F5, (U8)(lba >> 16));           // Старшая часть lba 
     outb(ATA_PRIMARY_STATUS, WRITE);        // Писать
 
-    volatile U32 timeout = 10000;
-    while (((inb(0x1F7) & (BSY | DRQ)) != DRQ) && --timeout > 0) {
+    volatile U32 timeout = 5000000;
+    while (((inb(ATA_PRIMARY_ALT_STATUS) & (BSY | DRQ)) != DRQ) && --timeout > 0) {
         asm volatile("outb %%al, $0x80" : : "a"(0));
     }
     if(timeout <= 0) return DISK_TIMEOUT;
@@ -130,8 +127,8 @@ U8 ata_write_sector(U32 lba, U16 word[256]) {
         outw(0x1F0, word[i]);
     }
 
-    timeout = 10000;
-    while ((inb(0x1F7) & BSY) && --timeout > 0) {
+    timeout = 5000000;
+    while ((inb(ATA_PRIMARY_ALT_STATUS) & BSY) && --timeout > 0) {
         asm volatile("outb %%al, $0x80" : : "a"(0));
     }
     if(timeout <= 0) return DISK_TIMEOUT;
