@@ -16,7 +16,7 @@ typedef struct
     U8 (*init)();
 } FileSystem;
 
-void init_fs();
+U32 init_fs();
 
 extern FileSystem* fs;
 
