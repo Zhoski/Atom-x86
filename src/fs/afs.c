@@ -35,8 +35,7 @@ static inline U8 cmpFileName(U8 *__restrict__ file_name1, U8 *__restrict__ file_
     return counter == 11;
 }
 
-U8 afs_init() {
-    video->write_string("--- DISK ---\n");
+U32 afs_init() {
     U8* AFS_ROOT = service.memory->malloc(8192);
     U8* AFS_ROOT_MAX = AFS_ROOT + 8192 - RECORD_SIZE;
 
@@ -47,21 +46,18 @@ U8 afs_init() {
     U8* AFS_HEAD = AFS_ROOT;
 
     for(U32 i = 0;i < ROOT_SECTORS;i++) {
-        disk->read_sector(ROOT_BASE + i, (U16*)(AFS_ROOT + (i << 9)));
+        U32 disk_status = disk->read_sector(ROOT_BASE + i, (U16*)(AFS_ROOT + (i << 9)));
+        if(disk_status != SUCCES_INIT_DISK) {
+            return disk_status;
+        }
     }
 
     File* file = (File*)AFS_HEAD;
     U16 file_max_start_sec = file->start_sec;
     U16 file_size_in_sec = (file->size + 511) >> 9;
-    int f = 0;
 
     while (*AFS_HEAD && AFS_HEAD < AFS_ROOT_MAX)
     {   
-        if(!f) {
-            video->write_string("Start Parsing\n");
-            f = 1;
-        }
-
         if(file_max_start_sec < file->start_sec) {
             file_max_start_sec = file->start_sec;
             file_size_in_sec = (file->size + 511) >> 9;
@@ -69,15 +65,6 @@ U8 afs_init() {
 
         AFS_HEAD += RECORD_SIZE;
         file = (File*)AFS_HEAD;
-
-        for(int i = 0;i < 11;i++) {
-            if(file->name[i] == 0) {
-                video->write_char(' ');
-            }else {
-                video->write_char(file->name[i]);
-            }
-        }
-        video->write_char('\n');
     }
 
     service.memory->free(AFS_ROOT);

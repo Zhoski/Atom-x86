@@ -21,7 +21,7 @@
 #define READ                    0x20
 #define WRITE                   0x30
 
-U8 init_ata(U16 info[256]) {
+U32 init_ata(U16 info[256]) {
     /* IDENTIFY */
     outb(0x1F6, DRIVE);
     outb(0x1F2, 0);
@@ -81,7 +81,7 @@ exit:
 
 U8 ata_read_sector(U32 lba, U16 word[256]) {
     // Установить устройство
-    U8 drive_head = 0xF0 | ((lba >> 24) & 0x0F);
+    U8 drive_head = 0xE0 | ((lba >> 24) & 0x0F);
 
     outb(0x1F6, drive_head);
 
@@ -106,10 +106,12 @@ U8 ata_read_sector(U32 lba, U16 word[256]) {
         asm volatile("outb %%al, $0x80" : : "a"(0));
     }
     if(timeout <= 0) return DISK_TIMEOUT;
+
+    return SUCCESS;
 }
 
 U8 ata_write_sector(U32 lba, U16 word[256]) {
-    U8 drive_head = 0xF0 | ((lba >> 24) & 0x0F);
+    U8 drive_head = 0xE0 | ((lba >> 24) & 0x0F);
 
     outb(0x1F6, drive_head);
     outb(0x1F2, 1);                         // Писать 1 сектор

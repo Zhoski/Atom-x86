@@ -14,7 +14,7 @@ static FileSystem AFS = {
 
 FileSystem* fs;
 
-void init_fs() {
+U32 init_fs() {
     fs = &AFS;
     fs->init();
 }
