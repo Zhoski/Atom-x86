@@ -29,11 +29,18 @@ U32 disk_bar0 = 0;
 U32 init_ata(U16 info[256]) {
     for(U32 device = 0; device < 128; device++) {
         if(pci_devices[device].class == 0x01 && pci_devices[device].subclass == 0x01) {
+            video->write_string("Disk Found: ");
             if(pci_devices[device].bar0 == 0 || pci_devices[device].bar0 <= 1) {
                 disk_bar0 = 0x1F0;
+                video->write_string("Legacy\n");
             }else {
                 disk_bar0 = pci_devices[device].bar0;
+                video->write_string("Native\n");
             }
+            break;
+        }
+        else if(pci_devices[device].class == 0x01 && pci_devices[device].subclass == 0x06) {
+            video->write_string("Sata Controller Detect\n");
             break;
         }
     }

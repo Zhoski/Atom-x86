@@ -37,6 +37,8 @@ void kmain() {
     pic_irq_mask(0x21, 0b11111000); // Включить IRQ
     pic_irq_mask(0xA1, 0b10111111); // PATA включить
 
+    sti();
+
     pci_scan_bus0();
 
     init_memory();                  // Инициализация памяти
@@ -106,8 +108,6 @@ void kmain() {
     }
 
     init_timer(100);
-
-    sti();
 
     U8* cpuid = service.memory->malloc(48);
     service.memory->memcpy(0x1008, cpuid, 48);
