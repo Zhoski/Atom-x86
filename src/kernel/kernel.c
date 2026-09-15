@@ -48,30 +48,30 @@ void kmain() {
 
     if(!disk_status == SUCCES_INIT_DISK) {
         if(disk_status == DISK_NOT_FOUND) {
-            video->write_string("[  ");
+            video->write_string("[ ");
             video->terminal_fg_vbe_set(12);
             video->write_string("ERROR");
             video->terminal_fg_vbe_set(15);
-            video->write_string("  ] Ata driver ini: Disk Not Found\n");
+            video->write_string(" ] Ata driver ini: Disk Not Found\n");
         }
         else if(disk_status == DISK_DONT_SUPPORT_PATA) {
-            video->write_string("[  ");
+            video->write_string("[ ");
             video->terminal_fg_vbe_set(12);
             video->write_string("ERROR");
             video->terminal_fg_vbe_set(15);
-            video->write_string("  ] Ata driver init: Disk Dont Support PATA\n");
+            video->write_string(" ] Ata driver init: Disk Dont Support PATA\n");
         }else if(disk_status == DISK_ERROR) {
-            video->write_string("[  ");
+            video->write_string("[ ");
             video->terminal_fg_vbe_set(12);
             video->write_string("ERROR");
             video->terminal_fg_vbe_set(15);
-            video->write_string("  ] Ata driver init: Disk Error\n");
+            video->write_string(" ] Ata driver init: Disk Error\n");
         }else if(disk_status == DISK_TIMEOUT) {
-            video->write_string("[  ");
+            video->write_string("[ ");
             video->terminal_fg_vbe_set(12);
             video->write_string("ERROR");
             video->terminal_fg_vbe_set(15);
-            video->write_string("  ] Ata driver init: Disk Timeout\n");
+            video->write_string(" ] Ata driver init: Disk Timeout\n");
         }
     }else {
         video->write_string("[  ");
@@ -107,9 +107,10 @@ void kmain() {
     sti();
 
     U8* cpuid = service.memory->malloc(48);
-    service.memory->memcpy(0x1006, cpuid, 48);
+    service.memory->memcpy(0x1008, cpuid, 48);
     video->write_string("[ INFO ] CPU: ");
     video->write_string(cpuid);
+    video->write_char("\n");
 
     //fs->open("INIT    BIN");
 

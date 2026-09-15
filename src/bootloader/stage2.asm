@@ -28,6 +28,12 @@ start:
 
     call cpuid          ; Получаем модель процессора
 
+    mov si, continue_msg
+    call print
+
+    mov ah, 0x0
+    int 0x16
+
     call kernel_launch  ; Запуск ядра
 
     jmp $        
@@ -51,7 +57,7 @@ cpuid:
     ; Записываем модель процессора на адрес bootInfo + 6
 
     mov edi, bootInfo
-    add edi, 6
+    add edi, 8
 
     mov eax, 0x80000002
     cpuid
@@ -185,10 +191,10 @@ get_memmap:
 
     ; Записываем в bootInfo где искать карту памяти для ядра
     mov ax, [memmap_segment]                   
-    mov [es:bx+2], ax
+    mov [es:bx+4], ax
     
     mov ax, [memmap_buffer]
-    mov [es:bx+4], ax
+    mov [es:bx+6], ax
 
     popa
     ret
