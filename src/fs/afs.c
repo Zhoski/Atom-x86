@@ -36,6 +36,10 @@ static inline U8 cmpFileName(U8 *__restrict__ file_name1, U8 *__restrict__ file_
 }
 
 U32 afs_init() {
+    if(!disk) {
+        return DISK_NOT_FOUND;
+    }
+
     U8* AFS_ROOT = service.memory->malloc(8192);
     U8* AFS_ROOT_MAX = AFS_ROOT + 8192 - RECORD_SIZE;
 

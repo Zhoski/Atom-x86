@@ -56,7 +56,7 @@ void kmain() {
         video->terminal_fg_vbe_set(10);
         video->write_string("OK");
         video->terminal_fg_vbe_set(15);
-        video->write_string("  ] Ata driver init\n[ INFO ] Disk: ");
+        video->write_string("  ] ATA driver initialized successfully\n[ INFO ] Disk Model: ");
         for(uint32_t idx = 27;idx < 46;idx++) {
             video->write_char((U8*)(((disk_info[idx] >> 8)) & 0xFF));
             video->write_char((U8*)(disk_info[idx] & 0xFF));
@@ -68,26 +68,26 @@ void kmain() {
             video->terminal_fg_vbe_set(12);
             video->write_string("FAIL");
             video->terminal_fg_vbe_set(15);
-            video->write_string(" ] Ata driver ini: Disk Not Found\n");
+            video->write_string(" ] ATA driver ini: Disk not found\n");
         }
         else if(disk_status == DISK_DONT_SUPPORT_PATA) {
             video->write_string("[ ");
             video->terminal_fg_vbe_set(12);
             video->write_string("FAIL");
             video->terminal_fg_vbe_set(15);
-            video->write_string(" ] Ata driver init: Disk Dont Support PATA\n");
+            video->write_string(" ] ATA driver init: Unsupported device type\n");
         }else if(disk_status == DISK_ERROR) {
             video->write_string("[ ");
             video->terminal_fg_vbe_set(12);
             video->write_string("FAIL");
             video->terminal_fg_vbe_set(15);
-            video->write_string(" ] Ata driver init: Disk Error\n");
+            video->write_string(" ] ATA driver init: Disk I/O error\n");
         }else if(disk_status == DISK_TIMEOUT) {
             video->write_string("[ ");
             video->terminal_fg_vbe_set(12);
             video->write_string("FAIL");
             video->terminal_fg_vbe_set(15);
-            video->write_string(" ] Ata driver init: Disk Timeout\n");
+            video->write_string(" ] ATA driver init: Disk timeout\n");
         }
     }
 
@@ -98,13 +98,19 @@ void kmain() {
         video->terminal_fg_vbe_set(10);
         video->write_string("OK");
         video->terminal_fg_vbe_set(15);
-        video->write_string("  ] FS driver init\n");
+        video->write_string("  ] FS initialized successfully\n");
     }else if(fs_status == DISK_TIMEOUT) {
         video->write_string("[ ");
         video->terminal_fg_vbe_set(12);
         video->write_string("FAIL");
         video->terminal_fg_vbe_set(15);
-        video->write_string(" ] FS driver init: Disk TimeOut\n");
+        video->write_string(" ] FS init: Disk timeout\n");
+    }else if(fs_status == DISK_NOT_FOUND) {
+        video->write_string("[ ");
+        video->terminal_fg_vbe_set(12);
+        video->write_string("FAIL");
+        video->terminal_fg_vbe_set(15);
+        video->write_string(" ] FS init: Disk not found\n");
     }
 
     init_timer(100);
