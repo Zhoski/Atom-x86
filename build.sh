@@ -100,19 +100,19 @@ make clean
 cd ..
 cd ..
 
-./utilities/afsm -c atom5.img
-./utilities/afsm -boot atom5.img boot.bin
-./utilities/afsm -push atom5.img rootFS/stage2.bin
-./utilities/afsm -push atom5.img rootFS/kernel.bin
-./utilities/afsm -push atom5.img rootFS/shell.bin
-./utilities/afsm -push atom5.img rootFS/LICENSE.txt
-./utilities/afsm -push atom5.img rootFS/hello.bin
-./utilities/afsm -push atom5.img rootFS/init.bin
-./utilities/afsm -push atom5.img rootFS/init.cfg
-./utilities/afsm -push atom5.img rootFS/setup.bin
-./utilities/afsm -push aatom5.img rootFS/notepad.bin
+./utilities/afsm -c atom6.img
+./utilities/afsm -boot atom6.img boot.bin
+./utilities/afsm -push atom6.img rootFS/stage2.bin
+./utilities/afsm -push atom6.img rootFS/kernel.bin
+./utilities/afsm -push atom6.img rootFS/shell.bin
+./utilities/afsm -push atom6.img rootFS/LICENSE.txt
+./utilities/afsm -push atom6.img rootFS/hello.bin
+./utilities/afsm -push atom6.img rootFS/init.bin
+./utilities/afsm -push atom6.img rootFS/init.cfg
+./utilities/afsm -push atom6.img rootFS/setup.bin
+./utilities/afsm -push aatom6atom5.img rootFS/notepad.bin
 
-qemu-system-i386 -drive format=raw,file=atom5.img -m 16M -icount shift=6,sleep=off -rtc clock=vm -no-reboot
+qemu-system-i386 -drive format=raw,file=atom6.img -m 16M -icount shift=6,sleep=off -rtc clock=vm -no-reboot
 
 rm binaries/boot.bin
 rm binaries/stage2.bin
