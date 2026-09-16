@@ -31,6 +31,8 @@ void pci_scan_bus0() {
                 pci_devices[cur_device].subclass = (U8)((data >> 16) & 0xFF);
                 data = pci_read(0x00, slot, function, 0x10);
                 pci_devices[cur_device].bar0 = (U32)(data & ~0xFFFFFFFE);
+                data = pci_read(0x00, slot, function, 0x24);
+                pci_devices[cur_device].bar5 = (U32)(data & ~0xF);
 
                 cur_device++;
             }

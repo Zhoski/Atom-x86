@@ -10,6 +10,7 @@ static VideoDriver vga_640_480 = {
     .terminal_fg_vbe_set = &vga_640_480_fg_vga_set,
     .terminal_set_cursor_position = &vga_640_480_set_cursor_position,
     .terminal_get_cursor_position = &vga_640_480_get_cursor_position,
+    .write_int = &vga_640_480_draw_int,
 };
 
 static VideoDriver vga_80_25 = {
@@ -20,6 +21,7 @@ static VideoDriver vga_80_25 = {
     .terminal_fg_vbe_set = 0,
     .terminal_set_cursor_position = 0,
     .terminal_get_cursor_position = 0,
+    .write_int = 0,
 };
 
 VideoDriver* video;
