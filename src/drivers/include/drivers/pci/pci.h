@@ -7,6 +7,7 @@ typedef struct pci_device {
     U8 class;
     U8 subclass;
     U32 bar0;
+    U32 bar5;
 };
 
 U32 pci_read(U8 bus, U8 slot, U8 function, U8 offset);

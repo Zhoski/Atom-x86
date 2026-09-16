@@ -30,6 +30,7 @@ enum graphics_mode {
 typedef struct {
     void(*write_string)(U8* s);
     void(*write_char)(U8 c);
+	void(*write_int)(U32 x);
     void(*clear_screen)(U8 color);
 	void(*terminal_fg_vbe_set) (U8 color);
 	void(*terminal_bg_vbe_set) (U8 color);

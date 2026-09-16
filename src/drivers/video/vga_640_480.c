@@ -142,6 +142,41 @@ void vga_640_480_draw_string(const U8* s) {
     }
 }
 
+void vga_640_480_draw_int(U32 x) {
+    U32 i = 0;
+    U32 isNegative = 0;
+
+    U8 buffer[10];
+
+    if (x < 0) {
+        isNegative = 1;
+        x = -x;
+    }
+
+    do {
+        buffer[i++] = (x % 10) + '0';
+        x /= 10;
+    } while (x > 0);
+
+    if (isNegative) {
+        buffer[i++] = '-';
+    }
+
+    buffer[i] = '\0';
+
+    U32 start = 0;
+    U32 end = i - 1;
+    while (start < end) {
+        U8 temp = buffer[start];
+        buffer[start] = buffer[end];
+        buffer[end] = temp;
+        start++;
+        end--;
+    }
+
+    vga_640_480_draw_string(buffer);
+}
+
 void vga_640_480_set_cursor_position(const U16 x, const U16 y) {
     screen_x_off = x << 3;
     screen_y_off = y << 4;

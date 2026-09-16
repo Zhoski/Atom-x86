@@ -91,7 +91,7 @@ void kmain() {
         }
     }
 
-    U32 fs_status = init_fs();    
+    /*U32 fs_status = init_fs();    
 
     if(fs_status == 0) {
         video->write_string("[  ");
@@ -113,7 +113,7 @@ void kmain() {
         video->write_string(" ] FS init: Disk not found\n");
     }
 
-    init_timer(100);
+    init_timer(100);*/
 
     U8* cpuid = service.memory->malloc(48);
     service.memory->memcpy(0x1008, cpuid, 48);
