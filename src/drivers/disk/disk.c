@@ -11,6 +11,7 @@ static Disk ATA_PIO = {
 Disk* disk;
 
 uint8_t disk_init(uint16_t disk_info[256]) {
+    disk = 0;
     for(U32 device = 0; device < 128; device++) {
         if(pci_devices[device].class == 0x01 && pci_devices[device].subclass == 0x01) {
             disk = &ATA_PIO;
@@ -25,6 +26,7 @@ uint8_t disk_init(uint16_t disk_info[256]) {
             return DISK_DONT_SUPPORT_PATA;
         }
     }
+
     if(!disk->init) {
         return DISK_NOT_FOUND;
     }else {
