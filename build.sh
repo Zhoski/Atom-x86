@@ -110,7 +110,7 @@ cd ..
 ./utilities/afsm -push atom5.img rootFS/init.bin
 ./utilities/afsm -push atom5.img rootFS/init.cfg
 ./utilities/afsm -push atom5.img rootFS/setup.bin
-./utilities/afsm -push aatom5tom4.img rootFS/notepad.bin
+./utilities/afsm -push aatom5.img rootFS/notepad.bin
 
 qemu-system-i386 -drive format=raw,file=atom5.img -m 16M -icount shift=6,sleep=off -rtc clock=vm -no-reboot
 
