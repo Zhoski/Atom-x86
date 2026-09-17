@@ -45,7 +45,39 @@ U32 init_sata(U16 info[256]) {
 
     video->write_string("Port status: ");
 
-    U8 port_status = (U8)(port_regs->ssts & 0xF);
+    port_regs->cmd &= ~0x01;
+
+    while(port_regs->cmd & 0x8000);
+
+    port_regs->cmd &= ~0x10;
+
+    while(port_regs->cmd & 0x4000);
+
+    service.memory->memset(CLB_MEM_BASE, 0, 1024);
+    service.memory->memset(FIS_MEM_BASE, 0, 256);
+
+    port_regs->clb = CLB_MEM_BASE;
+    port_regs->clbu = 0;
+
+    port_regs->fb = FIS_MEM_BASE;
+    port_regs->fbu = 0;
+
+    port_regs->sctl &= 0xFFFFFFF0;
+    port_regs->sctl += 0x01; 
+
+    for(U32 tick = 0; tick < 50000; tick++) {
+        asm volatile("nop");
+    }
+
+    port_regs->sctl &= 0xFFFFFFF0;
+
+    for(U32 tick = 0; tick < 50000; tick++) {
+        asm volatile("nop");
+    }
+
+    port_regs->cmd |= 0x10000017;
+
+    U32 port_status = port_regs->ssts & 0xF;
 
     if(port_status == 0x03) {
         video->write_string("Device detected, connection established\n");
@@ -55,10 +87,13 @@ U32 init_sata(U16 info[256]) {
         video->write_string("Device not detected\n");
     }
 
-    service.memory->memset(FIS_MEM_BASE, 0, 256);
-    service.memory->memset(CLB_MEM_BASE, 0, ncs * 32);
+    U32 interface_status = port_regs->ssts & 0x00000F00;
 
-   
+    if(interface_status == 0x00000100) {
+        video->write_string("Interface: activity\n");
+    }else {
+        video->write_string("Interface: sleep\n");
+    }
 
     return 2;
 }
