@@ -116,10 +116,11 @@ cd ..
 ./utilities/afsm -push atom6.img rootFS/setup.bin
 ./utilities/afsm -push aatom6atom5.img rootFS/notepad.bin
 
-qemu-system-x86_64 -device ahci,id=ahci0 \
-                   -drive if=none,file=atom6.img,id=drive-sata0 \
-                   -device ide-hd,bus=ahci0.0,drive=drive-sata0 \
-                   -m 16M -icount shift=6,sleep=off -rtc clock=vm -no-reboot
+qemu-system-x86_64 -m 16M -no-reboot \
+                   -device ich9-ahci,id=ahci \
+                   -drive file=atom6.img,if=none,id=disk \
+                   -device ide-hd,bus=ahci.0,drive=disk
+
 
 rm binaries/boot.bin
 rm binaries/stage2.bin

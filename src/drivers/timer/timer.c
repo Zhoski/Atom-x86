@@ -2,7 +2,7 @@
 #include <cpu/cpu.h>
 #include <cpu/io.h>
 
-U32 tick = 0;
+volatile U32 tick = 0;
 
 void init_timer(U32 freequence) {
     U32 divisior = 1193182 / freequence;
