@@ -23,6 +23,18 @@ struct HBA_fis_layout* fis_layout;
 
 U8 buffer[512] __attribute__((aligned(4)));
 
+U8* ahci_port_status(U32 port) {
+    U32 status = hba_mem->port[port].ssts & 0x0F;
+
+    switch (status)
+    {
+        case 0x00: return "No device detected";
+        case 0x01: return "Device detected, but Phy communication not established";
+        case 0x03: return "Device found and link established (Ready)";
+        default:   return "Unknown or transition state";
+    }
+}
+
 // Сброс порта
 void ahci_port_reset(U32 port) {
     // cmd.st сбросить
@@ -61,7 +73,7 @@ void ahci_scan_port() {
             video->write_int(i);
             video->write_string("   Type: ");
             if(hba_mem->port[i].sig == SATA_SIG_ATA) {
-                video->write_string("ATA DEVICE\n");
+                video->write_string("SATA DEVICE\n");
                 memset(CLB_MEM_BASE, 0, 1024);
                 memset(FIS_MEM_BASE, 0, 256);
 
@@ -90,6 +102,12 @@ void ahci_scan_port() {
 
                 cmd_header->ctba = CMD_MEM_BASE & ~0x7F;
                 cmd_header->ctbau = 0;
+
+                hba_mem->port[0].cmd |= 0x10; 
+
+                while (hba_mem->port[0].tfd & (0x80 | 0x08)); 
+
+                hba_mem->port[0].cmd |= 0x01;
             }
             else if(hba_mem->port[i].sig == SATA_SIG_ATAPI) {
                 video->write_string("ATAPI DEVICE\n");
@@ -108,6 +126,11 @@ void ahci_scan_port() {
 }
 
 void anci_identify_device(U32 ncs) {
+    U8* port_status = ahci_port_status(0);
+
+    video->write_string(port_status);
+    video->write_char('\n');
+
     U32 free_slot = 0;
     U32 cur_slot = 0;
     U32 cur_slot_detect = 0;
@@ -152,29 +175,23 @@ void anci_identify_device(U32 ncs) {
 
     cmd_header->prdbc = 0;
 
-    while (hba_mem->port[0].tfd & (0x80 | 0x08));
-
-    hba_mem->port[0].cmd |= 0x10; 
-
-    while (hba_mem->port[0].tfd & (0x80 | 0x08)); 
-
-    hba_mem->port[0].cmd |= 0x01;
-
     hba_mem->port[0].ci = 1;
 
-    if(hba_mem->port[0].tfd & 0x01) {
-        video->write_string("Disk tfd error: ");
-        video->write_int((hba_mem->port[0].tfd >> 8) & ~0xFFFF00);
-        video->write_char('\n');
-    }
+    while (hba_mem->port[0].ci & 0x01) {
+        if(hba_mem->port[0].tfd & 0x01) {
+            video->write_string("Disk tfd error: ");
+            video->write_int((hba_mem->port[0].tfd >> 8) & ~0xFFFF00);
+            video->write_char('\n');
+            break;
+        }
 
-    if(hba_mem->port[0].serr) {
-        video->write_string("Disk serr error: ");
-        video->write_int(hba_mem->port[0].serr);
-        video->write_char('\n');
+        if(hba_mem->port[0].serr) {
+            video->write_string("Disk serr error: ");
+            video->write_int(hba_mem->port[0].serr);
+            video->write_char('\n');
+            break;
+        }
     }
-
-    while (hba_mem->port[0].ci & 0x01);
     
     U16* identify_buffer = 0x40000;
 
@@ -192,7 +209,7 @@ void anci_identify_device(U32 ncs) {
 }
 
 U32 init_sata(U16 info[256]) {
-    video->write_string("AHCI Driver v0.0.1\n");
+    video->write_string("AHCI Driver v0.0.2\n");
 
     hba_mem = (struct HBA_mem*)ahci_mem_base;
     cmd_header = (struct HBA_cmd_header*)CLB_MEM_BASE;
