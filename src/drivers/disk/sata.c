@@ -35,6 +35,26 @@ U8* ahci_port_status(U32 port) {
     }
 }
 
+void ahci_dma_port_disable(U32 port) {
+    hba_mem->port[port].cmd &= ~0x10;
+
+    while (hba_mem->port[0].cmd & 0x4000);
+
+    hba_mem->port[port].cmd &= ~0x01;
+
+    while (hba_mem->port[0].cmd & 0x8000);
+}
+
+void ahci_dma_port_enable(U32 port) {
+    hba_mem->port[port].cmd |= 0x10;
+
+    while (!(hba_mem->port[0].cmd & 0x4000));
+
+    hba_mem->port[port].cmd |= 0x01;
+
+    while (!(hba_mem->port[0].cmd & 0x8000));
+}
+
 // Сброс порта
 void ahci_port_reset(U32 port) {
     // cmd.st сбросить
@@ -102,6 +122,12 @@ void ahci_scan_port() {
 
                 cmd_header->ctba = CMD_MEM_BASE & ~0x7F;
                 cmd_header->ctbau = 0;
+
+                hba_mem->port[0].cmd |= 0x10; 
+
+                while (hba_mem->port[0].tfd & (0x80 | 0x08)); 
+
+                hba_mem->port[0].cmd |= 0x01;
             }
             else if(hba_mem->port[i].sig == SATA_SIG_ATAPI) {
                 video->write_string("ATAPI DEVICE\n");
@@ -149,14 +175,9 @@ void anci_identify_device(U32 ncs) {
     cmd_header->prdtl = 1;
     
     // Размер команды 5 двойных слов
-    cmd_header->w0 &= ~0x1F;
-    cmd_header->w0 |= 0x05;
+    cmd_header->w0 = 5;
 
-    cmd_header->w0 &= ~0x20;    // бит A сбросить
-
-    cmd_header->w0 &= ~0x40;    // бит W сбросить для чтения
-
-    cmd_table->prdt_entry.dba = 0x40000;    // Сюда придут данные о диске
+    cmd_table->prdt_entry.dba = 0x400000;    // Сюда придут данные о диске
     cmd_table->prdt_entry.dbau = 0;
 
     cmd_table->prdt_entry.dbc = 511;        // Читаем 512 байт
@@ -171,11 +192,9 @@ void anci_identify_device(U32 ncs) {
 
     hba_mem->port[0].is = 0xFFFFFFFF; 
 
-    hba_mem->port[0].cmd |= 0x10; 
-
     while (hba_mem->port[0].tfd & (0x80 | 0x08)); 
 
-    hba_mem->port[0].cmd |= 0x01;
+    ahci_dma_port_enable(0);
 
     hba_mem->port[0].ci = 1;
 
@@ -208,7 +227,7 @@ void anci_identify_device(U32 ncs) {
         ksleep(5);
     }
     
-    U16* identify_buffer = 0x40000;
+    U16* identify_buffer = 0x400000;
 
     video->write_string("Disk: ");
 
@@ -224,7 +243,7 @@ void anci_identify_device(U32 ncs) {
 }
 
 U32 init_sata(U16 info[256]) {
-    video->write_string("AHCI Driver v0.0.4\n");
+    video->write_string("AHCI Driver v0.0.6\n");
 
     hba_mem = (struct HBA_mem*)ahci_mem_base;
     cmd_header = (struct HBA_cmd_header*)CLB_MEM_BASE;
