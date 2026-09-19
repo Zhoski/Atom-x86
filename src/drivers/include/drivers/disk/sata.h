@@ -53,9 +53,49 @@ struct HBA_mem {
     struct HBA_port_mem port[32]; 
 } __attribute__((packed));
 
-typedef struct sata_disk {
+typedef struct HBA_cmd_header {
+    U16 prdtl;
+    U16 w0;
+    U32 prdbc;
+    U32 ctba;
+    U32 ctbau;
+
+    U8  rsv[16];
+
+} __attribute__((packed));
+
+typedef struct HBA_prdt_entry {
+    U32  dba;
+    U32 dbau;
+    U32 rsv0;
+
+    U32 dbc:22;     
+    U32 rsv1:9; 
+    U32 i:1;
+
+} __attribute__((packed));
+
+typedef struct HBA_cmd_table {
+    U8       cfis[64];
+    U8       acmd[16];
+    U8        rsv[48];
+
+    struct HBA_prdt_entry prdt_entry;
     
-};
+} __attribute__((packed));
+
+typedef struct HBA_fis_layout {
+    U8 dsfis[28];
+    U8   rsv0[4];
+    U8 psfis[20];
+    U8  rsv1[12];
+    U8  rfis[20];
+    U8   rsv2[4];
+    U8 sdbfis[8];
+    U8  ufis[64];
+    U8  rsv3[96];
+
+} __attribute__((packed));
 
 U32 init_sata(U16 info[256]);
 U8 sata_read_sector(U32 lba, U16 word[256]);
