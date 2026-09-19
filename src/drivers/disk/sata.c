@@ -197,6 +197,15 @@ U32 init_sata(U16 info[256]) {
     video->write_int(ncs);
     video->write_char('\n');
 
+    video->write_string("Bios Handoff: ");
+    U32 boh = hba_mem->cap2 & 0x01;
+
+    if(boh) {
+        video->write_string("Yes\n");
+    }else {
+        video->write_string("No\n");
+    }
+
     ahci_scan_port();
 
     cmd_header->ctba = CMD_MEM_BASE;
