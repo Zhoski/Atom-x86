@@ -159,10 +159,21 @@ void anci_identify_device(U32 ncs) {
 
     while (hba_mem->port[0].tfd & (0x80 | 0x08));
 
-    __asm__ volatile("mfence" ::: "memory");
     hba_mem->port[0].ci = 1;
 
-    while (*(volatile U32*)(ahci_mem_base + 0x100 + 0x38) & 0x01);
+    if(hba_mem->port[0].tfd & 0x01) {
+        video->write_string("Disk tfd error: ");
+        video->write_int((hba_mem->port[0].tfd >> 8) & ~0xFFFF00);
+        video->write_char('\n');
+    }
+
+    if(hba_mem->port[0].serr) {
+        video->write_string("Disk serr error: ");
+        video->write_int(hba_mem->port[0].serr);
+        video->write_char('\n');
+    }
+
+    while (hba_mem->port[0].ci & 0x01);
     
     U16* identify_buffer = 0x40000;
 
