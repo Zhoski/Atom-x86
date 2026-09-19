@@ -177,7 +177,17 @@ void anci_identify_device(U32 ncs) {
 
     hba_mem->port[0].ci = 1;
 
+    U32 step = 0;
+
     while (hba_mem->port[0].ci & 0x01) {
+        video->write_string("Step: ");
+        video->write_int(step);
+        video->write_string("\nPxIS: ");
+        video->write_int(hba_mem->port[0].is);
+        video->write_string("\nPRDBC: ");
+        video->write_int(cmd_header->prdbc);
+        video->write_char('\n');
+
         if(hba_mem->port[0].tfd & 0x01) {
             video->write_string("Disk tfd error: ");
             video->write_int((hba_mem->port[0].tfd >> 8) & ~0xFFFF00);
@@ -191,6 +201,9 @@ void anci_identify_device(U32 ncs) {
             video->write_char('\n');
             break;
         }
+
+        step++;
+        ksleep(5);
     }
     
     U16* identify_buffer = 0x40000;
@@ -209,7 +222,7 @@ void anci_identify_device(U32 ncs) {
 }
 
 U32 init_sata(U16 info[256]) {
-    video->write_string("AHCI Driver v0.0.2\n");
+    video->write_string("AHCI Driver v0.0.3\n");
 
     hba_mem = (struct HBA_mem*)ahci_mem_base;
     cmd_header = (struct HBA_cmd_header*)CLB_MEM_BASE;
