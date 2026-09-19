@@ -157,14 +157,12 @@ void anci_identify_device(U32 ncs) {
 
     cmd_header->prdbc = 0;
 
-    video->write_string("Start waiting disk\n");
-
     while (hba_mem->port[0].tfd & (0x80 | 0x08));
 
+    __asm__ volatile("mfence" ::: "memory");
     hba_mem->port[0].ci = 1;
 
-    video->write_string("Start waiting disk 2\n");
-    while (hba_mem->port[0].ci & 0x01);
+    while (*(volatile U32*)(ahci_mem_base + 0x100 + 0x38) & 0x01);
     
     U16* identify_buffer = 0x40000;
 
