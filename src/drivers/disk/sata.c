@@ -102,12 +102,6 @@ void ahci_scan_port() {
 
                 cmd_header->ctba = CMD_MEM_BASE & ~0x7F;
                 cmd_header->ctbau = 0;
-
-                hba_mem->port[0].cmd |= 0x10; 
-
-                while (hba_mem->port[0].tfd & (0x80 | 0x08)); 
-
-                hba_mem->port[0].cmd |= 0x01;
             }
             else if(hba_mem->port[i].sig == SATA_SIG_ATAPI) {
                 video->write_string("ATAPI DEVICE\n");
@@ -175,6 +169,14 @@ void anci_identify_device(U32 ncs) {
 
     cmd_header->prdbc = 0;
 
+    hba_mem->port[0].is = 0xFFFFFFFF; 
+
+    hba_mem->port[0].cmd |= 0x10; 
+
+    while (hba_mem->port[0].tfd & (0x80 | 0x08)); 
+
+    hba_mem->port[0].cmd |= 0x01;
+
     hba_mem->port[0].ci = 1;
 
     U32 step = 0;
@@ -222,7 +224,7 @@ void anci_identify_device(U32 ncs) {
 }
 
 U32 init_sata(U16 info[256]) {
-    video->write_string("AHCI Driver v0.0.3\n");
+    video->write_string("AHCI Driver v0.0.4\n");
 
     hba_mem = (struct HBA_mem*)ahci_mem_base;
     cmd_header = (struct HBA_cmd_header*)CLB_MEM_BASE;
