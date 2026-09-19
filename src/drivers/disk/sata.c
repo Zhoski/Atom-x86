@@ -88,11 +88,8 @@ void ahci_scan_port() {
                 hba_mem->port[i].fb = FIS_MEM_BASE;
                 hba_mem->port[i].fbu = 0;
 
-                hba_mem->port[i].cmd |= 0x10; 
-
-                while (hba_mem->port[i].tfd & (0x80 | 0x08)); 
-
-                hba_mem->port[i].cmd |= 0x01;
+                cmd_header->ctba = CMD_MEM_BASE & ~0x7F;
+                cmd_header->ctbau = 0;
             }
             else if(hba_mem->port[i].sig == SATA_SIG_ATAPI) {
                 video->write_string("ATAPI DEVICE\n");
@@ -116,7 +113,7 @@ void anci_identify_device(U32 ncs) {
     U32 cur_slot_detect = 0;
 
     for(U32 slot = 0; slot < ncs; slot++) {
-        if(!(hba_mem->port[0].ci & (1 << slot))) {
+        if (!(hba_mem->port[0].ci & (1 << slot)) && !(hba_mem->port[0].sact & (1 << slot))) {
             if(!cur_slot_detect) {
                 cur_slot_detect = 1;
                 cur_slot = slot;
@@ -157,9 +154,13 @@ void anci_identify_device(U32 ncs) {
 
     while (hba_mem->port[0].tfd & (0x80 | 0x08));
 
-    hba_mem->port[0].ci = 1;
+    hba_mem->port[0].cmd |= 0x10; 
 
-    video->write_string("Check...\n");
+    while (hba_mem->port[0].tfd & (0x80 | 0x08)); 
+
+    hba_mem->port[0].cmd |= 0x01;
+
+    hba_mem->port[0].ci = 1;
 
     if(hba_mem->port[0].tfd & 0x01) {
         video->write_string("Disk tfd error: ");
@@ -191,10 +192,12 @@ void anci_identify_device(U32 ncs) {
 }
 
 U32 init_sata(U16 info[256]) {
-    hba_mem = (U32*)ahci_mem_base;
-    cmd_header = (U32*)CLB_MEM_BASE;
-    fis_layout = (U32*)FIS_MEM_BASE;
-    cmd_table = (U32*)CMD_MEM_BASE;
+    video->write_string("AHCI Driver v0.0.1\n");
+
+    hba_mem = (struct HBA_mem*)ahci_mem_base;
+    cmd_header = (struct HBA_cmd_header*)CLB_MEM_BASE;
+    fis_layout = (struct HBA_fis_layout*)FIS_MEM_BASE;
+    cmd_table = (struct HBA_cmd_table*)CMD_MEM_BASE;
 
     memset(CMD_MEM_BASE, 0, 256);
 
@@ -216,9 +219,6 @@ U32 init_sata(U16 info[256]) {
     }
 
     ahci_scan_port();
-
-    cmd_header->ctba = CMD_MEM_BASE;
-    cmd_header->ctbau = 0;
 
     anci_identify_device(ncs);
 
