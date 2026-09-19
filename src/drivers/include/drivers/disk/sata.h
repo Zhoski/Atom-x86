@@ -54,8 +54,8 @@ struct HBA_mem {
 } __attribute__((packed));
 
 typedef struct HBA_cmd_header {
-    U16 prdtl;
     U16 w0;
+    U16 prdtl;
     U32 prdbc;
     U32 ctba;
     U32 ctbau;
