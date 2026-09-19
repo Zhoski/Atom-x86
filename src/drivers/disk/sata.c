@@ -196,7 +196,7 @@ U32 init_sata(U16 info[256]) {
     fis_layout = (U32*)FIS_MEM_BASE;
     cmd_table = (U32*)CMD_MEM_BASE;
 
-    memset(CMD_MEM_BASE, 0, 128);
+    memset(CMD_MEM_BASE, 0, 256);
 
     hba_mem->ghc |= 0x80000000;
 
