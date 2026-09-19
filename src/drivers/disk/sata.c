@@ -111,8 +111,6 @@ void ahci_scan_port() {
 }
 
 void anci_identify_device(U32 ncs) {
-    video->write_string("IDENTIFY START\n");
-
     U32 free_slot = 0;
     U32 cur_slot = 0;
     U32 cur_slot_detect = 0;
@@ -160,6 +158,8 @@ void anci_identify_device(U32 ncs) {
     while (hba_mem->port[0].tfd & (0x80 | 0x08));
 
     hba_mem->port[0].ci = 1;
+
+    video->write_string("Check...\n");
 
     if(hba_mem->port[0].tfd & 0x01) {
         video->write_string("Disk tfd error: ");
