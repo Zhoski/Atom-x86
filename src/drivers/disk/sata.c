@@ -111,6 +111,8 @@ void ahci_scan_port() {
 }
 
 void anci_identify_device(U32 ncs) {
+    video->write_string("IDENTIFY START\n");
+
     U32 free_slot = 0;
     U32 cur_slot = 0;
     U32 cur_slot_detect = 0;
@@ -125,6 +127,12 @@ void anci_identify_device(U32 ncs) {
             free_slot++;
         }
     }
+
+    video->write_string("Free slot: ");
+    video->write_int(free_slot);
+    video->write_string("\nSelect slot: ");
+    video->write_int(cur_slot);
+    video->write_char('\n');
 
     cmd_header->prdtl = 1;
     
@@ -149,10 +157,13 @@ void anci_identify_device(U32 ncs) {
 
     cmd_header->prdbc = 0;
 
+    video->write_string("Start waiting disk\n");
+
     while (hba_mem->port[0].tfd & (0x80 | 0x08));
 
     hba_mem->port[0].ci = 1;
 
+    video->write_string("Start waiting disk 2\n");
     while (hba_mem->port[0].ci & 0x01);
     
     U16* identify_buffer = 0x40000;
@@ -187,14 +198,6 @@ U32 init_sata(U16 info[256]) {
     video->write_char('\n');
 
     ahci_scan_port();
-
-    /*video->write_string("\nNumber of free slot: ");
-    video->write_int(free_slot);
-    video->write_char('\n');
-
-    video->write_string("Current slot: ");
-    video->write_int(cur_slot);
-    video->write_char('\n');*/
 
     cmd_header->ctba = CMD_MEM_BASE;
     cmd_header->ctbau = 0;
