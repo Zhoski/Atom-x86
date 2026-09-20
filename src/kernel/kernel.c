@@ -46,7 +46,9 @@ void kmain() {
    
     init_keyboard();                // Инициализация клавиатуры              
 
-    init_vga(VGA_640_480);          // Инициализация vga                       
+    init_vga(VGA_640_480);          // Инициализация vga             
+    
+    video->kprintf("Kernel v 0.0.1\n");
 
     uint16_t* disk_info = service.memory->malloc(512);
     uint32_t disk_status = disk_init(disk_info);
@@ -64,30 +66,14 @@ void kmain() {
         video->write_char('\n');
     }else {
         if(disk_status == DISK_NOT_FOUND) {
-            video->write_string("[ ");
-            video->terminal_fg_vbe_set(12);
-            video->write_string("FAIL");
-            video->terminal_fg_vbe_set(15);
-            video->write_string(" ] ATA driver ini: Disk not found\n");
+            video->kprintf("[ %f12FAIL%f15 ] ATA driver init: Disk not found\n");
         }
         else if(disk_status == DISK_DONT_SUPPORT_PATA) {
-            video->write_string("[ ");
-            video->terminal_fg_vbe_set(12);
-            video->write_string("FAIL");
-            video->terminal_fg_vbe_set(15);
-            video->write_string(" ] ATA driver init: Unsupported device type\n");
+            video->kprintf("[ %f12FAIL%f15 ] ATA driver init: Unsupported device type\n");
         }else if(disk_status == DISK_ERROR) {
-            video->write_string("[ ");
-            video->terminal_fg_vbe_set(12);
-            video->write_string("FAIL");
-            video->terminal_fg_vbe_set(15);
-            video->write_string(" ] ATA driver init: Disk I/O error\n");
+            video->kprintf("[ %f12FAIL%f15 ] ATA driver init: ATA driver init: Disk I/O error\n");
         }else if(disk_status == DISK_TIMEOUT) {
-            video->write_string("[ ");
-            video->terminal_fg_vbe_set(12);
-            video->write_string("FAIL");
-            video->terminal_fg_vbe_set(15);
-            video->write_string(" ] ATA driver init: Disk timeout\n");
+            video->kprintf("[ %f12FAIL%f15 ] ATA driver init: ATA driver init: Disk timeout\n");
         }
     }
 

@@ -693,7 +693,7 @@ PMentry:
 
     mov esi, 0x10000   
     mov edi, 0x100000   
-    mov ecx, 6144           
+    mov ecx, 10240           
     rep movsd  
 
     xor eax, eax

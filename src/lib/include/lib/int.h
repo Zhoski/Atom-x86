@@ -13,4 +13,8 @@ typedef U8   u8;
 typedef U16 u16;
 typedef U32 u32;
 
+typedef I8   i8;
+typedef I16 i16;
+typedef I32 i32;
+
 #endif

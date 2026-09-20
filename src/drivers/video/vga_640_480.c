@@ -6,7 +6,7 @@
 #define FONT8x16_IMPLEMENTATION
 #include "../../font/font8x16.h"
 
-#define VGA_640_480_MEMORY (U8*)0xA0000
+#define VGA_640_480_MEMORY (u8*)0xA0000
 
 #define INDEX_REGISTER             0x3CE
 #define DATA_REGISTER              0x3CF
@@ -26,13 +26,24 @@
 #define VESA_1024_768_WIDTH         1024
 #define VESA_1024_768_HEIGHT         768
 
-U32 screen_x_off = 0;
-U32 screen_y_off = 0;
+u32 screen_x_off = 0;
+u32 screen_y_off = 0;
 
-U8 terminal_fg_vbe = 15;   // Белый
-U8 terminal_bg_vbe = 0;    // Черный
+u8 terminal_fg_vbe = 15;
+u8 terminal_bg_vbe = 0;
 
-void vga_640_480_clear_screen(U8 color) {
+void vga_640_480_fg_opcode(u32 code) {
+    vga_640_480_fg_set(code);
+}
+
+void vga_640_480_bg_opcode(u32 code) {
+    vga_640_480_bg_set(code);
+}
+
+/**
+ *  Очищает экран в цвет color
+ */
+void vga_640_480_screen_clear(u8 color) {
     screen_x_off = 0;
     screen_y_off = 0;
 
@@ -51,10 +62,10 @@ void vga_640_480_clear_screen(U8 color) {
     outb(DATA_REGISTER, 0x00); 
 }
 
-void vga_640_480_write_row(U32 x, U32 y, U8 b, U8 fg, U8 bg) {
-    U32 offset = ((y << 6) + (y << 4)) + (x >> 3);
+void vga_640_480_write_row(u32 x, u32 y, u8 b, u8 fg, u8 bg) {
+    u32 offset = ((y << 6) + (y << 4)) + (x >> 3);
     
-    volatile U8 *address = VGA_640_480_MEMORY + offset;
+    volatile u8 *address = VGA_640_480_MEMORY + offset;
 
     outb(INDEX_REGISTER, GRAPHICS_MODE);
     outb(DATA_REGISTER, 0x00);
@@ -71,7 +82,7 @@ void vga_640_480_write_row(U32 x, U32 y, U8 b, U8 fg, U8 bg) {
     outb(INDEX_REGISTER, 0x08);
     outb(DATA_REGISTER, ~b);
 
-    volatile U8 dummy = *address;
+    volatile u8 dummy = *address;
     
     *address = 0xFF;
 
@@ -86,27 +97,33 @@ void vga_640_480_write_row(U32 x, U32 y, U8 b, U8 fg, U8 bg) {
     *address = 0xFF;
 }
 
-void vga_640_480_putpixel(U32 x, U32 y, U8 color) { 
-    U32 offset = ((y << 6) + (y << 4)) + (x >> 3);
-    U8 bit_mask = 0x80 >> (x & 7);
+/**
+ *  Закрашивает пиксель (x, y) в цвет color
+ */
+void vga_640_480_putpixel(u32 x, u32 y, u8 color) { 
+    u32 offset = ((y << 6) + (y << 4)) + (x >> 3);
+    u8 bit_mask = 0x80 >> (x & 7);
     
-    volatile U8 *address = VGA_640_480_MEMORY + offset;
+    volatile u8 *address = VGA_640_480_MEMORY + offset;
 
     outb(INDEX_REGISTER, GRAPHICS_MODE);
     outb(DATA_REGISTER, 0x02);
     outb(INDEX_REGISTER, BIT_MASK);
     outb(DATA_REGISTER, bit_mask);
 
-    U8 dummy = *address;
+    u8 dummy = *address;
     
     *address = color;
 }
 
+/**
+ *  Прокручивает экран вниз на один символ
+ */
 void vga_640_480_scroll() {
-    U32 offset = 80 + VGA_640_480_MEMORY;
-    U32 new_offset = 0 + VGA_640_480_MEMORY;
+    u32 offset = 80 + VGA_640_480_MEMORY;
+    u32 new_offset = 0 + VGA_640_480_MEMORY;
 
-    for(U32 i = 0; i < 480;i++) {
+    for(u32 i = 0; i < 480;i++) {
         service.memory->memcpy(offset, new_offset, 80);
         offset += 80;
         new_offset += 80;
@@ -115,38 +132,41 @@ void vga_640_480_scroll() {
     service.memory->memset(offset, terminal_bg_vbe, 80);
 }
 
-void vga_640_480_draw_char(U8 c) {
+/**
+ *  Выводит символ, прокручивает экран
+ */
+void vga_640_480_draw_char(u8 c) {
     if(c == '\n' || screen_x_off == 640) {
         screen_x_off = 0;
         screen_y_off += 16;
         if(screen_y_off == 464) {
-            for(U32 i = 0;i < 16;i++) {
+            for(u32 i = 0;i < 16;i++) {
                 vga_640_480_scroll();
             }
             screen_y_off -= 16;
         }
         return;
     }
-    for(U32 row = 0; row < 16;row++) {
-        U8 row_byte = font8x16[c][row];
+    for(u32 row = 0; row < 16;row++) {
+        u8 row_byte = font8x16[c][row];
         vga_640_480_write_row(screen_x_off, screen_y_off + row, row_byte, terminal_fg_vbe, terminal_bg_vbe);
     }
 
     screen_x_off+=8;
 }
 
-void vga_640_480_draw_string(const U8* s) {
+void vga_640_480_draw_string(const u8* s) {
     while(*s) {
         vga_640_480_draw_char(*s);
         s++; 
     }
 }
 
-void vga_640_480_draw_int(U32 x) {
-    U32 i = 0;
-    U32 isNegative = 0;
+void vga_640_480_draw_int(u32 x) {
+    u32 i = 0;
+    u32 isNegative = 0;
 
-    U8 buffer[10];
+    u8 buffer[10];
 
     if (x < 0) {
         isNegative = 1;
@@ -164,10 +184,10 @@ void vga_640_480_draw_int(U32 x) {
 
     buffer[i] = '\0';
 
-    U32 start = 0;
-    U32 end = i - 1;
+    u32 start = 0;
+    u32 end = i - 1;
     while (start < end) {
-        U8 temp = buffer[start];
+        u8 temp = buffer[start];
         buffer[start] = buffer[end];
         buffer[end] = temp;
         start++;
@@ -177,20 +197,117 @@ void vga_640_480_draw_int(U32 x) {
     vga_640_480_draw_string(buffer);
 }
 
-void vga_640_480_set_cursor_position(const U16 x, const U16 y) {
+void vga_640_480_cursor_set_position(const u16 x, const u16 y) {
     screen_x_off = x << 3;
     screen_y_off = y << 4;
 }
 
-void vga_640_480_get_cursor_position(U16* x, U16* y)  {
+void vga_640_480_cursor_get_position(u16* x, u16* y)  {
     *x = screen_x_off >> 3;
     *y = screen_y_off >> 4;
 }
 
-void vga_640_480_fg_vga_set(U8 color) {
+void vga_640_480_fg_set(u8 color) {
     terminal_fg_vbe = color;
 }
 
-void vga_640_480_bg_vga_set(U8 color) {
+void vga_640_480_bg_set(u8 color) {
     terminal_bg_vbe = color;
+}
+
+/**
+ *  Форматированный вывод бесконечного числа аргументов
+ */
+void vga_640_480_kprintf(const u8 *format, ...) {
+    va_list args;
+    va_start(args, format);
+
+    for(const i8 *p = format; *p != '\0'; p++) {
+        if(*p != '%') {
+            vga_640_480_draw_char(*p);
+            continue;
+        }
+
+        p++;
+
+        switch (*p)
+        {
+        case 'd':
+            i32 n = va_arg(args, i32);
+            i32 i = 0;
+            i32 isNegative = 0;
+
+            i8 buffer[10] = {0};
+
+            if (n < 0) {
+                isNegative = 1;
+                n = -n;
+            }
+
+            do {
+                buffer[i++] = (n % 10) + '0';
+                n /= 10;
+            } while (n > 0);
+
+            if (isNegative) {
+                buffer[i++] = '-';
+            }
+
+            buffer[i] = '\0';
+
+            i32 start = 0;
+            i32 end = i - 1;
+            while (start < end) {
+                i8 temp = buffer[start];
+                buffer[start] = buffer[end];
+                buffer[end] = temp;
+                start++;
+                end--;
+            }
+            
+            vga_640_480_draw_string(buffer);
+
+            break;
+        case 's':
+            i8 *s = va_arg(args, i8*);
+            vga_640_480_draw_string(s);
+            break;
+        case 'f': {
+            const i8 code[2] = {*(p+1), *(p+2)};
+            u32 result = 0;
+            i8 c = code[0];
+
+            result = result * 10 + (c - '0');
+
+            c = code[1];
+
+            result = result * 10 + (c - '0');
+
+            vga_640_480_fg_opcode(result);
+
+            p += 2;
+
+            break;
+        }
+        case 'b': {
+            const i8 code[2] = {*(p+1), *(p+2)};
+            u32 result = 0;
+            i8 c = code[0];
+
+            result = result * 10 + (c - '0');
+
+            c = code[1];
+
+            result = result * 10 + (c - '0');
+
+            vga_640_480_bg_opcode(result);
+
+            p += 2;
+
+            break;
+        }
+        default:
+            break;
+        }
+    }
 }

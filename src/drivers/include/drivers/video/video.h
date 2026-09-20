@@ -1,6 +1,7 @@
 #ifndef VGA_H
 #define VGA_H
 #include <lib/int.h>
+#include <stdarg.h>
 
 enum vga_color {
     VGA_COLOR_BLACK = 0,
@@ -35,7 +36,8 @@ typedef struct {
 	void(*terminal_fg_vbe_set) (U8 color);
 	void(*terminal_bg_vbe_set) (U8 color);
 	void (*terminal_set_cursor_position)(const U16 x, const U16 y);
-	void (*terminal_get_cursor_position)(U16* x, U16* y)
+	void (*terminal_get_cursor_position)(U16* x, U16* y);
+	void (*kprintf)(const u8 *format, ...);
 }VideoDriver;
 
 extern VideoDriver* video;
