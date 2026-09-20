@@ -23,7 +23,10 @@ struct HBA_fis_layout* fis_layout;
 
 U8 buffer[512] __attribute__((aligned(4)));
 
-U8* ahci_port_status(U32 port) {
+/**
+ *  Проверяет статус устройства на порту считывая регистр ssts
+ */
+U8* ahci_port_get_status(U32 port) {
     U32 status = hba_mem->port[port].ssts & 0x0F;
 
     switch (status)
@@ -35,7 +38,11 @@ U8* ahci_port_status(U32 port) {
     }
 }
 
-void ahci_dma_port_disable(U32 port) {
+/**
+ *  Выключает DMA-движок комманд порта (ST = 0)
+ *  И ожидает сброса регистра CR
+ */
+void ahci_port_dma_disable(u32 port) {
     hba_mem->port[port].cmd &= ~0x10;
 
     while (hba_mem->port[0].cmd & 0x4000);
@@ -45,7 +52,11 @@ void ahci_dma_port_disable(U32 port) {
     while (hba_mem->port[0].cmd & 0x8000);
 }
 
-void ahci_dma_port_enable(U32 port) {
+/**
+ *  Запускает DMA-движок комманд порта (ST = 1)
+ *  И ожидает взвода регистра CR
+ */
+void ahci_port_dma_enable(u32 port) {
     hba_mem->port[port].cmd |= 0x10;
 
     while (!(hba_mem->port[0].cmd & 0x4000));
@@ -55,26 +66,25 @@ void ahci_dma_port_enable(U32 port) {
     while (!(hba_mem->port[0].cmd & 0x8000));
 }
 
-// Сброс порта
-void ahci_port_reset(U32 port) {
-    // cmd.st сбросить
+/**
+ *   Выполняет аппаратный сброс SATA-порта (COMRESET)
+ *   Останавливает DMA-движок порта и вызывает физический сброс линии 
+ */
+void ahci_port_reset(u32 port) {
     hba_mem->port[port].cmd &= ~0x01;
 
-    // Ожидание сброса cmd.cr
     while (1)
     {
         if(hba_mem->port[port].cmd & 0x8000) continue;
         break;
     }
 
-    // сигнал COMRESET
     hba_mem->port[port].sctl &= ~0x0F;
     hba_mem->port[port].sctl |= 0x01;
     ksleep(5);
 
     hba_mem->port[port].sctl &= ~0x0F;
 
-    // Ждем соединения
     for(U32 timeout = 10; timeout > 0; timeout--) {
         ksleep(1);
         if((hba_mem->port[port].ssts & 0xF) == 0x03) {
@@ -85,8 +95,12 @@ void ahci_port_reset(U32 port) {
     hba_mem->port[port].serr = 0xFFFFFFFF;
 }
 
-void ahci_scan_port() {
-    for(U32 i = 0; i < 32; i++) {
+/** 
+ * Сканирует все существующие порты, определяет тип устройства на каждом порту
+ * Сбрасывает порт и приводит его в состояние готовности
+*/
+void ahci_port_scan() {
+    for(u32 i = 0; i < 32; i++) {
         if(hba_mem->pi & (1 << i)) {
             ahci_port_reset(i);
             video->write_string("Device found port: ");
@@ -107,7 +121,6 @@ void ahci_scan_port() {
 
                 hba_mem->port[i].cmd &= ~0x10;
 
-                // Ожидание сброса cmd.cr cmd.fr
                 while (1)
                 {
                     if(hba_mem->port[i].cmd & 0x4000) continue;
@@ -145,17 +158,21 @@ void ahci_scan_port() {
     
 }
 
-void anci_identify_device(U32 ncs) {
-    U8* port_status = ahci_port_status(0);
+/**
+ * Составляет и отправляет команду 0xEC для идентификации устройства
+ * Паспорт устройства приходит на 0x400000
+ */
+void anci_identify_device(u32 ncs) {
+    u8* port_status = ahci_port_get_status(0);
 
     video->write_string(port_status);
     video->write_char('\n');
 
-    U32 free_slot = 0;
-    U32 cur_slot = 0;
-    U32 cur_slot_detect = 0;
+    u32 free_slot = 0;
+    u32 cur_slot = 0;
+    u32 cur_slot_detect = 0;
 
-    for(U32 slot = 0; slot < ncs; slot++) {
+    for(u32 slot = 0; slot < ncs; slot++) {
         if (!(hba_mem->port[0].ci & (1 << slot)) && !(hba_mem->port[0].sact & (1 << slot))) {
             if(!cur_slot_detect) {
                 cur_slot_detect = 1;
@@ -174,16 +191,15 @@ void anci_identify_device(U32 ncs) {
 
     cmd_header->prdtl = 1;
     
-    // Размер команды 5 двойных слов
     cmd_header->w0 = 5;
 
-    cmd_table->prdt_entry.dba = 0x400000;    // Сюда придут данные о диске
+    cmd_table->prdt_entry.dba = 0x400000;   
     cmd_table->prdt_entry.dbau = 0;
 
-    cmd_table->prdt_entry.dbc = 511;        // Читаем 512 байт
-    cmd_table->prdt_entry.i = 0;            // Прерывания отключить
+    cmd_table->prdt_entry.dbc = 511;    
+    cmd_table->prdt_entry.i = 0;         
 
-    cmd_table->cfis[0] = H2D;   // От хоста к диску
+    cmd_table->cfis[0] = H2D;
     cmd_table->cfis[1] = 0x80;  
     cmd_table->cfis[2] = IDENTIFY_DEVICE;
     cmd_table->cfis[7] = 0xA0;
@@ -194,11 +210,11 @@ void anci_identify_device(U32 ncs) {
 
     while (hba_mem->port[0].tfd & (0x80 | 0x08)); 
 
-    ahci_dma_port_enable(0);
+    ahci_port_dma_enable(0);
 
     hba_mem->port[0].ci = 1;
 
-    U32 step = 0;
+    u32 step = 0;
 
     while (hba_mem->port[0].ci & 0x01) {
         video->write_string("Step: ");
@@ -227,13 +243,13 @@ void anci_identify_device(U32 ncs) {
         ksleep(5);
     }
     
-    U16* identify_buffer = 0x400000;
+    u16* identify_buffer = 0x400000;
 
     video->write_string("Disk: ");
 
-    for(U32 i = 27; i < 46; i++) {
-        U8 low = (identify_buffer[i] >> 8) & 0xFF;
-        U8 high = identify_buffer[i] & 0xFF;
+    for(u32 i = 27; i < 46; i++) {
+        u8 low = (identify_buffer[i] >> 8) & 0xFF;
+        u8 high = identify_buffer[i] & 0xFF;
 
         video->write_char(low);
         video->write_char(high);
@@ -242,8 +258,8 @@ void anci_identify_device(U32 ncs) {
     video->write_char('\n');
 }
 
-U32 init_sata(U16 info[256]) {
-    video->write_string("AHCI Driver v0.0.6\n");
+u32 init_sata(u16 info[256]) {
+    video->write_string("AHCI Driver v0.0.7\n");
 
     hba_mem = (struct HBA_mem*)ahci_mem_base;
     cmd_header = (struct HBA_cmd_header*)CLB_MEM_BASE;
@@ -254,14 +270,14 @@ U32 init_sata(U16 info[256]) {
 
     hba_mem->ghc |= 0x80000000;
 
-    U32 ncs = ((hba_mem->cap >> 8) & 0x1F) + 1;
+    u32 ncs = ((hba_mem->cap >> 8) & 0x1F) + 1;
 
     video->write_string("Number of command slot: ");
     video->write_int(ncs);
     video->write_char('\n');
 
     video->write_string("Bios Handoff: ");
-    U32 boh = hba_mem->cap2 & 0x01;
+    u32 boh = hba_mem->cap2 & 0x01;
 
     if(boh) {
         video->write_string("Yes\n");
@@ -269,11 +285,11 @@ U32 init_sata(U16 info[256]) {
         video->write_string("No\n");
     }
 
-    ahci_scan_port();
+    ahci_port_scan();
 
     anci_identify_device(ncs);
 
     return 2;
 }
-U8 sata_read_sector(U32 lba, U16 word[256]);
-U8 sata_write_sector(U32 lba, U16 word[256]);
+u8 sata_read_sector(u32 lba, u16 word[256]);
+u8 sata_write_sector(u32 lba, u16 word[256]);
