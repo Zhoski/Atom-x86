@@ -21,7 +21,36 @@ struct HBA_cmd_header* cmd_header;
 struct HBA_cmd_table* cmd_table;
 struct HBA_fis_layout* fis_layout;
 
-U8 buffer[512] __attribute__((aligned(4)));
+void ahci_ok_log(u8* msg) {
+    video->write_string("[  ");
+    video->terminal_fg_vbe_set(10);
+    video->write_string("OK");
+    video->terminal_fg_vbe_set(15);
+    video->write_string("  ] ");
+
+    video->write_string("AHCI Init: ");
+    video->write_string(msg);
+}
+
+void ahci_info_log(u8* msg) {
+    video->write_string("[ ");
+    video->write_string("INFO");
+    video->write_string(" ] ");
+
+    video->write_string("AHCI Init: ");
+    video->write_string(msg);
+}
+
+void ahci_fail_log(u8* msg) {
+    video->write_string("[ ");
+    video->terminal_fg_vbe_set(12);
+    video->write_string("FAIL");
+    video->terminal_fg_vbe_set(15);
+    video->write_string(" ] ");
+
+    video->write_string("AHCI Init: ");
+    video->write_string(msg);
+}
 
 /**
  *  Проверяет статус устройства на порту считывая регистр ssts
@@ -100,10 +129,11 @@ void ahci_port_reset(u32 port) {
  * Сбрасывает порт и приводит его в состояние готовности
 */
 void ahci_port_scan() {
+    ahci_info_log("Scan port...\n");
     for(u32 i = 0; i < 32; i++) {
         if(hba_mem->pi & (1 << i)) {
             ahci_port_reset(i);
-            video->write_string("Device found port: ");
+            ahci_info_log("Device found port: ");
             video->write_int(i);
             video->write_string("   Type: ");
             if(hba_mem->port[i].sig == SATA_SIG_ATA) {
@@ -165,7 +195,8 @@ void ahci_port_scan() {
 void anci_identify_device(u32 ncs) {
     u8* port_status = ahci_port_get_status(0);
 
-    video->write_string(port_status);
+    ahci_info_log(port_status);
+
     video->write_char('\n');
 
     u32 free_slot = 0;
@@ -183,9 +214,10 @@ void anci_identify_device(u32 ncs) {
         }
     }
 
-    video->write_string("Free slot: ");
+    ahci_info_log("Free slot: ");
     video->write_int(free_slot);
-    video->write_string("\nSelect slot: ");
+    video->write_char('\n');
+    ahci_info_log("Selected slot: ");
     video->write_int(cur_slot);
     video->write_char('\n');
 
@@ -217,23 +249,22 @@ void anci_identify_device(u32 ncs) {
     u32 step = 0;
 
     while (hba_mem->port[0].ci & 0x01) {
-        video->write_string("Step: ");
-        video->write_int(step);
-        video->write_string("\nPxIS: ");
-        video->write_int(hba_mem->port[0].is);
-        video->write_string("\nPRDBC: ");
-        video->write_int(cmd_header->prdbc);
-        video->write_char('\n');
+        if(step == 10) {
+            ahci_fail_log("Disk timeout\n");
+            for(;;) {
+                asm("hlt");
+            }
+        }
 
         if(hba_mem->port[0].tfd & 0x01) {
-            video->write_string("Disk tfd error: ");
+            ahci_fail_log("Disk tfd error: ");
             video->write_int((hba_mem->port[0].tfd >> 8) & ~0xFFFF00);
             video->write_char('\n');
             break;
         }
 
         if(hba_mem->port[0].serr) {
-            video->write_string("Disk serr error: ");
+            ahci_fail_log("Disk serr error: ");
             video->write_int(hba_mem->port[0].serr);
             video->write_char('\n');
             break;
@@ -245,7 +276,7 @@ void anci_identify_device(u32 ncs) {
     
     u16* identify_buffer = 0x400000;
 
-    video->write_string("Disk: ");
+    ahci_info_log("Device: ");
 
     for(u32 i = 27; i < 46; i++) {
         u8 low = (identify_buffer[i] >> 8) & 0xFF;
@@ -258,8 +289,12 @@ void anci_identify_device(u32 ncs) {
     video->write_char('\n');
 }
 
+/**
+ *  Инициализирует SATA-контроллер и получает его паспорт
+ *  Заполняет буффер info паспортом устройства полученным через IDENTIFY
+ */
 u32 init_sata(u16 info[256]) {
-    video->write_string("AHCI Driver v0.0.7\n");
+    video->write_string("AHCI Driver v0.0.8\n");
 
     hba_mem = (struct HBA_mem*)ahci_mem_base;
     cmd_header = (struct HBA_cmd_header*)CLB_MEM_BASE;
@@ -271,19 +306,6 @@ u32 init_sata(u16 info[256]) {
     hba_mem->ghc |= 0x80000000;
 
     u32 ncs = ((hba_mem->cap >> 8) & 0x1F) + 1;
-
-    video->write_string("Number of command slot: ");
-    video->write_int(ncs);
-    video->write_char('\n');
-
-    video->write_string("Bios Handoff: ");
-    u32 boh = hba_mem->cap2 & 0x01;
-
-    if(boh) {
-        video->write_string("Yes\n");
-    }else {
-        video->write_string("No\n");
-    }
 
     ahci_port_scan();
 
