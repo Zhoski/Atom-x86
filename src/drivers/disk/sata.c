@@ -278,6 +278,7 @@ u32 init_sata(u16 info[256]) {
 
     return 0;
 }
+
 u8 ahci_sector_read(u64 lba, u16 word[256]) { 
     cmd_header->w0 = 0x5;
 
@@ -320,7 +321,7 @@ u8 ahci_sector_read(u64 lba, u16 word[256]) {
         }
 
         step++;
-        ksleep(1);
+        ksleep(2);
     }
 
     memcpy(0x400000, word, 512);

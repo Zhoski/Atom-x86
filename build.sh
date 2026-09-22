@@ -114,6 +114,7 @@ cd ..
 ./utilities/afsm -push atom13.img rootFS/init.cfg
 ./utilities/afsm -push atom13.img rootFS/setup.bin
 ./utilities/afsm -push atom13.img rootFS/notepad.bin
+./utilities/afsm -push atom13.img atom13.img
 
 qemu-system-x86_64 -m 16M -no-reboot \
                    -device ich9-ahci,id=ahci \

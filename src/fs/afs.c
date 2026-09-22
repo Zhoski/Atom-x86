@@ -62,7 +62,6 @@ U32 afs_init() {
 
     while (*AFS_HEAD)
     {   
-        video->kprintf("File: %s\n", file->name);
         if(file_max_start_sec < file->start_sec) {
             file_max_start_sec = file->start_sec;
             file_size_in_sec = (file->size + 511) >> 9;
