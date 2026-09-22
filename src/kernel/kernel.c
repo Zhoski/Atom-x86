@@ -48,7 +48,7 @@ void kmain() {
 
     init_vga(VGA_640_480);          // Инициализация vga             
     
-    video->kprintf("Kernel v 0.0.1\n");
+    video->kprintf("Kernel v 0.0.2\n");
 
     uint16_t* disk_info = service.memory->malloc(512);
     uint32_t disk_status = disk_init(disk_info);
