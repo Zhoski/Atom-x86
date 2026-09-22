@@ -89,6 +89,8 @@ void kmain() {
         video->kprintf("AHCI read fail");
     }
 
+    video->kprintf("\nFS Type: %d\n", word[454]);
+
     //fs->open("INIT    BIN");
 
 	for(;;) {
