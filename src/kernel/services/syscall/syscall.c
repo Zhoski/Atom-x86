@@ -125,7 +125,9 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                     );
                     break;
                 case FILE_CHECK:
+                    video->kprintf("\n0x80 FILE CHECK\n");
                     eax = fs->check(file);
+                    video->kprintf("Result: %d\n", eax);
                     asm volatile(
                         "movl %%eax, %0"
                         :

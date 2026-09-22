@@ -54,16 +54,7 @@ void kmain() {
     uint32_t disk_status = disk_init(disk_info);
 
     if(disk_status == SUCCES_INIT_DISK) {
-        video->write_string("[  ");
-        video->terminal_fg_vbe_set(10);
-        video->write_string("OK");
-        video->terminal_fg_vbe_set(15);
-        video->write_string("  ] ATA driver initialized successfully\n[ INFO ] Disk Model: ");
-        for(uint32_t idx = 27;idx < 46;idx++) {
-            video->write_char((U8*)(((disk_info[idx] >> 8)) & 0xFF));
-            video->write_char((U8*)(disk_info[idx] & 0xFF));
-        }
-        video->write_char('\n');
+        video->kprintf("[  %f10OK%f15  ] ATA driver initialized successfully\n");
     }else {
         if(disk_status == DISK_NOT_FOUND) {
             video->kprintf("[ %f12FAIL%f15 ] ATA driver init: Disk not found\n");
@@ -77,37 +68,17 @@ void kmain() {
         }
     }
 
-    /*U32 fs_status = init_fs();    
-
-    if(fs_status == 0) {
-        video->write_string("[  ");
-        video->terminal_fg_vbe_set(10);
-        video->write_string("OK");
-        video->terminal_fg_vbe_set(15);
-        video->write_string("  ] FS initialized successfully\n");
-    }else if(fs_status == DISK_TIMEOUT) {
-        video->write_string("[ ");
-        video->terminal_fg_vbe_set(12);
-        video->write_string("FAIL");
-        video->terminal_fg_vbe_set(15);
-        video->write_string(" ] FS init: Disk timeout\n");
-    }else if(fs_status == DISK_NOT_FOUND) {
-        video->write_string("[ ");
-        video->terminal_fg_vbe_set(12);
-        video->write_string("FAIL");
-        video->terminal_fg_vbe_set(15);
-        video->write_string(" ] FS init: Disk not found\n");
-    }*/
+    u32 fs_status = init_fs();    
 
     init_timer(100);
 
-    U8* cpuid = service.memory->malloc(48);
+    u8* cpuid = service.memory->malloc(48);
     service.memory->memcpy(0x1008, cpuid, 48);
     video->write_string("[ INFO ] CPU: ");
     video->write_string(cpuid);
     video->write_char("\n");
 
-    //fs->open("INIT    BIN");
+    fs->open("INIT    BIN");
 
 	for(;;) {
         halt();

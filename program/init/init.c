@@ -1,5 +1,6 @@
 #include <slib/string.h>
 #include <slib/file.h>
+#include <slib/strio.h>
 
 void main() {
     if(!sys_check("init.cfg")) {
