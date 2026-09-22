@@ -104,20 +104,20 @@ make clean
 cd ..
 cd ..
 
-./utilities/afsm -c atom12.img
-./utilities/afsm -boot atom12.img boot.bin
-./utilities/afsm -push atom12.img rootFS/stage2.bin
-./utilities/afsm -push atom12.img rootFS/kernel.bin
-./utilities/afsm -push atom12.img rootFS/shell.bin
-./utilities/afsm -push atom12.img rootFS/LICENSE.txt
-./utilities/afsm -push atom12.img rootFS/init.bin
-./utilities/afsm -push atom12.img rootFS/init.cfg
-./utilities/afsm -push atom12.img rootFS/setup.bin
-./utilities/afsm -push atom12.img rootFS/notepad.bin
+./utilities/afsm -c atom13.img
+./utilities/afsm -boot atom13.img boot.bin
+./utilities/afsm -push atom13.img rootFS/stage2.bin
+./utilities/afsm -push atom13.img rootFS/kernel.bin
+./utilities/afsm -push atom13.img rootFS/shell.bin
+./utilities/afsm -push atom13.img rootFS/LICENSE.txt
+./utilities/afsm -push atom13.img rootFS/init.bin
+./utilities/afsm -push atom13.img rootFS/init.cfg
+./utilities/afsm -push atom13.img rootFS/setup.bin
+./utilities/afsm -push atom13.img rootFS/notepad.bin
 
 qemu-system-x86_64 -m 16M -no-reboot \
                    -device ich9-ahci,id=ahci \
-                   -drive file=atom12.img,if=none,id=disk \
+                   -drive file=atom13.img,if=none,id=disk \
                    -device ide-hd,bus=ahci.0,drive=disk
 
 
