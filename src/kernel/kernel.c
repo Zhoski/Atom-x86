@@ -74,11 +74,22 @@ void kmain() {
 
     u8* cpuid = service.memory->malloc(48);
     service.memory->memcpy(0x1008, cpuid, 48);
-    video->write_string("[ INFO ] CPU: ");
-    video->write_string(cpuid);
-    video->write_char("\n");
+    video->kprintf("[ INFO ] CPU: %s\n", cpuid);
 
-    fs->open("INIT    BIN");
+    u16* ahci_read_status = 0;
+
+    u8 word[512];
+    disk->read_sector(0, word);
+
+    ahci_read_status = &(word[510]);
+
+    if(*ahci_read_status == 0xAA55) {
+        video->kprintf("AHCI read succes");
+    }else {
+        video->kprintf("AHCI read fail");
+    }
+
+    //fs->open("INIT    BIN");
 
 	for(;;) {
         halt();
