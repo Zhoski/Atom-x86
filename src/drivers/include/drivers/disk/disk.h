@@ -12,13 +12,13 @@
 
 typedef struct
 {
-    U32 (*init)(U16 disk_info[256]);
-    U8 (*read_sector)(U32 lba, U16 word[256]);
-    U8 (*write_sector)(U32 lba, U16 word[256]);
+    u32 (*init)(u16 disk_info[256]);
+    u8 (*read_sector)(u64 lba, u16 word[256]);
+    u8 (*write_sector)(u64 lba, u16 word[256]);
 } Disk;
 
 extern Disk* disk;
 
-U8 disk_init(U16 disk_info[256]);
+u8 disk_init(u16 disk_info[256]);
 
 #endif

@@ -12,8 +12,8 @@ static Disk ATA_PIO = {
 
 static Disk SATA_AHCI = {
     .init = &init_sata,
-    .read_sector = &sata_read_sector,
-    .write_sector = &sata_write_sector
+    .read_sector = &ahci_sector_read,
+    .write_sector = &ahci_sector_write,
 };
 
 Disk* disk;

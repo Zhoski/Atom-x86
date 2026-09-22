@@ -15,6 +15,8 @@
 #define H2D                   0x27
 
 #define IDENTIFY_DEVICE       0xEC
+#define READ                  0x25
+#define WRITE                 0xC5
 
 #define AHCI_DRIVER_V_MAJOR      0
 #define AHCI_DRIVER_V_MINOR      1        
@@ -24,6 +26,7 @@ struct HBA_mem* hba_mem;
 struct HBA_cmd_header* cmd_header;
 struct HBA_cmd_table* cmd_table;
 struct HBA_fis_layout* fis_layout;
+struct FIS_H2D* fis_h2d;
 
 /**
  *  Проверяет статус устройства на порту считывая регистр ssts
@@ -261,6 +264,7 @@ u32 init_sata(u16 info[256]) {
     cmd_header = (struct HBA_cmd_header*)CLB_MEM_BASE;
     fis_layout = (struct HBA_fis_layout*)FIS_MEM_BASE;
     cmd_table = (struct HBA_cmd_table*)CMD_MEM_BASE;
+    fis_h2d = &cmd_table->cfis;
 
     memset(CMD_MEM_BASE, 0, 256);
 
@@ -272,7 +276,104 @@ u32 init_sata(u16 info[256]) {
 
     anci_identify_device(ncs);
 
-    return 2;
+    return 0;
 }
-u8 sata_read_sector(u32 lba, u16 word[256]);
-u8 sata_write_sector(u32 lba, u16 word[256]);
+u8 ahci_sector_read(u64 lba, u16 word[256]) { 
+    cmd_header->w0 = 0x5;
+
+    fis_h2d->type =  H2D;
+    fis_h2d->flag = 0x80;
+    fis_h2d->cmd =  READ;
+
+    fis_h2d->lba0 = lba & 0xFF;
+    fis_h2d->lba1 = (lba >> 8) & 0xFF;
+    fis_h2d->lba2 = (lba >> 16) & 0xFF;
+    fis_h2d->lba3 = (lba >> 24) & 0xFF;
+    fis_h2d->lba4 = (lba >> 32) & 0xFF;
+    fis_h2d->lba5 = (lba >> 40) & 0xFF;
+
+    fis_h2d->dev = 0x40;
+
+    fis_h2d->sec_count_low = 1;
+    fis_h2d->sec_count_hight = 0;
+
+    hba_mem->port[0].ci = 1;
+
+    u32 step = 0;
+
+    while (hba_mem->port[0].ci & 0x01) {
+        if(step == 10) {
+            video->kprintf("[ %f12FAIL%f15 ] AHCI: Disk timeout\n");
+            for(;;) {
+                asm("hlt");
+            }
+        }
+
+        if(hba_mem->port[0].tfd & 0x01) {
+            video->kprintf("[ %f12FAIL%f15 ] AHCI: Disk tfd error: %d\n", (hba_mem->port[0].tfd >> 8) & ~0xFFFF00);
+            break;
+        }
+
+        if(hba_mem->port[0].serr) {
+            video->kprintf("[ %f12FAIL%f15 ] AHCI: Disk serr error: %d\n", hba_mem->port[0].serr);
+            break;
+        }
+
+        step++;
+        ksleep(1);
+    }
+
+    memcpy(0x400000, word, 512);
+
+    return 0;
+    
+}
+u8 ahci_sector_write(u64 lba, u16 word[256]) {
+    memcpy(word, 0x400000, 512);
+
+    cmd_header->w0 = 0x45;
+
+    fis_h2d->type =  H2D;
+    fis_h2d->flag = 0x80;
+    fis_h2d->cmd =  READ;
+
+    fis_h2d->lba0 = lba & 0xFF;
+    fis_h2d->lba1 = (lba >> 8) & 0xFF;
+    fis_h2d->lba2 = (lba >> 16) & 0xFF;
+    fis_h2d->lba3 = (lba >> 24) & 0xFF;
+    fis_h2d->lba4 = (lba >> 32) & 0xFF;
+    fis_h2d->lba5 = (lba >> 40) & 0xFF;
+
+    fis_h2d->dev = 0x40;
+
+    fis_h2d->sec_count_low = 1;
+    fis_h2d->sec_count_hight = 0;
+
+    hba_mem->port[0].ci = 1;
+
+    u32 step = 0;
+
+    while (hba_mem->port[0].ci & 0x01) {
+        if(step == 10) {
+            video->kprintf("[ %f12FAIL%f15 ] AHCI: Disk timeout\n");
+            for(;;) {
+                asm("hlt");
+            }
+        }
+
+        if(hba_mem->port[0].tfd & 0x01) {
+            video->kprintf("[ %f12FAIL%f15 ] AHCI: Disk tfd error: %d\n", (hba_mem->port[0].tfd >> 8) & ~0xFFFF00);
+            break;
+        }
+
+        if(hba_mem->port[0].serr) {
+            video->kprintf("[ %f12FAIL%f15 ] AHCI: Disk serr error: %d\n", hba_mem->port[0].serr);
+            break;
+        }
+
+        step++;
+        ksleep(1);
+    }
+
+    return 0;
+}

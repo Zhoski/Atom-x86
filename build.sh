@@ -110,7 +110,6 @@ cd ..
 ./utilities/afsm -push atom12.img rootFS/kernel.bin
 ./utilities/afsm -push atom12.img rootFS/shell.bin
 ./utilities/afsm -push atom12.img rootFS/LICENSE.txt
-./utilities/afsm -push atom12.img rootFS/hello.bin
 ./utilities/afsm -push atom12.img rootFS/init.bin
 ./utilities/afsm -push atom12.img rootFS/init.cfg
 ./utilities/afsm -push atom12.img rootFS/setup.bin
