@@ -19,7 +19,7 @@
 #define WRITE                 0xC5
 
 #define AHCI_DRIVER_V_MAJOR      0
-#define AHCI_DRIVER_V_MINOR      1        
+#define AHCI_DRIVER_V_MINOR      2        
 #define AHCI_DRIVER_V_PATCH      0        
 
 struct HBA_mem* hba_mem;
