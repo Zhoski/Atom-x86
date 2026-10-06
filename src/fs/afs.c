@@ -21,11 +21,11 @@
 #define SUCCES               0
 
 File _file;
-static U16 next_free_sector = 0;
-static U16 file_lba_index = 0;
+static u16 next_free_sector = 0;
+static u16 file_lba_index = 0;
 
-static inline U8 cmpFileName(U8 *__restrict__ file_name1, U8 *__restrict__ file_name2) {
-    U8 counter = 0;
+static inline u8 cmpFileName(u8 *__restrict__ file_name1, u8 *__restrict__ file_name2) {
+    u8 counter = 0;
     while(counter != 11 && *file_name1 == *file_name2) {
         counter++;
         file_name1++;
@@ -35,30 +35,34 @@ static inline U8 cmpFileName(U8 *__restrict__ file_name1, U8 *__restrict__ file_
     return counter == 11;
 }
 
-U32 afs_init() {
+u32 afs_init() {
     if(!disk) {
         return DISK_NOT_FOUND;
     }
 
-    U8* AFS_ROOT = service.memory->malloc(8192);
-    U8* AFS_ROOT_MAX = AFS_ROOT + 8192 - RECORD_SIZE;
+    u8* AFS_ROOT = service.memory->malloc(8192);
+    u8* AFS_ROOT_MAX = AFS_ROOT + 8192 - RECORD_SIZE;
 
-    for(U32 i = 0;i < 8192;i++) {
-        AFS_ROOT[i] = 0;
-    }
+    service.memory->memset(AFS_ROOT, 0, 8192);
 
-    U8* AFS_HEAD = AFS_ROOT;
+    u8* AFS_HEAD = AFS_ROOT;
 
-    for(U32 i = 0;i < ROOT_SECTORS;i++) {
-        U32 disk_status = disk->read_sector(ROOT_BASE + i, (U16*)(AFS_ROOT + (i << 9)));
-        if(disk_status != SUCCES_INIT_DISK) {
-            return disk_status;
-        }
+    io_disk_packet_t packet = {
+        .command = IO_READ,
+        .lba_start = ROOT_BASE,
+        .sec_count = ROOT_SECTORS,
+        .buffer = AFS_ROOT,
+    };
+
+    disk->dispather(&packet);
+
+    if(packet.result) {
+        return packet.result;
     }
 
     File* file = (File*)AFS_HEAD;
-    U16 file_max_start_sec = file->start_sec;
-    U16 file_size_in_sec = (file->size + 511) >> 9;
+    u16 file_max_start_sec = file->start_sec;
+    u16 file_size_in_sec = (file->size + 511) >> 9;
 
     while (*AFS_HEAD)
     {   
@@ -76,19 +80,26 @@ U32 afs_init() {
     return SUCCES;
 }
 
-U32* afs_check_file(const U8 *__restrict__ file_name) {
-    U8* AFS_ROOT = service.memory->malloc(8192);
+u32* afs_check_file(const u8 *__restrict__ file_name) {
+    u8* AFS_ROOT = service.memory->malloc(8192);
 
-    for(U32 i = 0;i < 8192;i++) {
-        AFS_ROOT[i] = 0;
-    }
+    service.memory->memset(AFS_ROOT, 0, 8192);
 
     U8* AFS_ROOT_MAX = AFS_ROOT + 8192 - RECORD_SIZE;
 
     U8* AFS_HEAD = AFS_ROOT;
 
-    for(U32 i = 0;i < ROOT_SECTORS;i++) {
-        disk->read_sector(ROOT_BASE + i, AFS_ROOT + (i << 9));  // i << 9 == i * 512
+    io_disk_packet_t packet = {
+        .command = IO_READ,
+        .lba_start = ROOT_BASE,
+        .sec_count = ROOT_SECTORS,
+        .buffer = AFS_ROOT,
+    };
+
+    disk->dispather(&packet);
+
+    if(packet.result) {
+        return packet.result;
     }
 
     file_lba_index = 0;
@@ -121,19 +132,28 @@ U32* afs_check_file(const U8 *__restrict__ file_name) {
 
 U8 afs_open(const U8 *file_name) {
     U8 file = afs_check_file(file_name);
-    if(file == FILE_NOT_FOUND)
+    if(file == FILE_NOT_FOUND) {
         return FILE_NOT_FOUND;
+    }
+        
 
     U32 size_in_sec = (_file.size + 511) >> 9;
 
     /* Загрузка файла в память */
-    U16 buffer[256];
     U32 entry = 0x300000;       /* Сюда грузим программу */
     U32 offset = 0;
-    for(U32 i = 0;i < size_in_sec;i++) {
-        disk->read_sector(_file.start_sec + i, buffer);
-        service.memory->memcpy(buffer, (entry+offset), 512);
-        offset += 512;
+
+    io_disk_packet_t packet = {
+        .command = IO_READ,
+        .lba_start = _file.start_sec,
+        .sec_count = size_in_sec,
+        .buffer = entry
+    };
+
+    disk->dispather(&packet);
+
+    if(packet.result) {
+        return packet.result;
     }
 
     //program_spawn(entry);
@@ -148,14 +168,27 @@ U8 afs_read(const U8 *__restrict__ file_name, U32 n ,U8 *__restrict__  out) {
 
     U32 size_in_sec = (n + 511) >> 9;
 
-    U8 *file_buffer = service.memory->malloc(512);
+    /*U8 *file_buffer = service.memory->malloc(512);
     U8 *head_out = out;
 
     U32 bytes_left = n;
 
-    U32 i = 0;
+    U32 i = 0;*/
 
-    for(;i < size_in_sec;i++) {
+    io_disk_packet_t packet = {
+        .command = IO_READ,
+        .lba_start = _file.start_sec,
+        .sec_count = size_in_sec,
+        .buffer = out,
+    };
+
+    disk->dispather(&packet);
+    
+    if(packet.result) {
+        return packet.result;
+    }
+
+    /*for(;i < size_in_sec;i++) {
         disk->read_sector(_file.start_sec + i, file_buffer);
 
         U32 chunk = (bytes_left > 512) ? 512 : bytes_left;
@@ -165,7 +198,7 @@ U8 afs_read(const U8 *__restrict__ file_name, U32 n ,U8 *__restrict__  out) {
         bytes_left -= chunk;
     }
 
-    service.memory->free(file_buffer);
+    service.memory->free(file_buffer);*/
 
     return SUCCES;
 } 
@@ -174,8 +207,17 @@ U8 afs_delete(const U8 *__restrict__ file_name) {
     U8* AFS_ROOT_BUFFER = service.memory->malloc(512);
     U8* AFS_ROOT_HEAD = AFS_ROOT_BUFFER;
 
+    io_disk_packet_t packet = {
+        .command = IO_READ,
+        .buffer = AFS_ROOT_BUFFER,
+        .sec_count = 1,
+    };
+
     for(U32 sector = ROOT_BASE; sector < ROOT_BASE + ROOT_SECTORS;sector++) { 
-        disk->read_sector(sector, AFS_ROOT_BUFFER);
+        //disk->read_sector(sector, AFS_ROOT_BUFFER);
+        packet.lba_start = sector;
+        disk->dispather(&packet);
+
         for(U32 i = 0;i < 32;i++) {
             if(cmpFileName(file_name, AFS_ROOT_HEAD)) {
                 *AFS_ROOT_HEAD = FILE_DELETED;
@@ -198,8 +240,18 @@ U8 afs_create(const U8 *__restrict__ file_name, uint16_t size) {
     U8* AFS_ROOT_BUFFER = service.memory->malloc(512);
     U8* AFS_ROOT_HEAD = AFS_ROOT_BUFFER;
 
+    io_disk_packet_t packet = {
+        .command = IO_READ,
+        .buffer = AFS_ROOT_BUFFER,
+        .sec_count = 1,
+    };
+
+    video->kprintf("Creating\n");
+
     for(U32 sector = ROOT_BASE; sector < ROOT_BASE + ROOT_SECTORS;sector++) {   
-        disk->read_sector(sector, AFS_ROOT_BUFFER);
+        //disk->read_sector(sector, AFS_ROOT_BUFFER);
+        packet.lba_start = sector;
+        disk->dispather(&packet);
 
         for(U32 i = 0; i < 32;i++) {
             if(!*AFS_ROOT_HEAD || *AFS_ROOT_HEAD == FILE_DELETED) {
@@ -237,32 +289,25 @@ U8 afs_update(const U8 *__restrict__ file_name, U8 *__restrict__ in, U32 bytes) 
         return FILE_NOT_FOUND;
 
     U32 size_in_sec = (_file.size + 511) >> 9;
-    U8* t_buff = service.memory->malloc(512);
-    service.memory->memset(t_buff, 0, 512);
+    u8* buff = service.memory->malloc(bytes);
+    service.memory->memset(buff, 0, bytes);
 
-    for(U32 i = 0;i < size_in_sec;i++) {
-        disk->write_sector(_file.start_sec + i, t_buff);
-    }
+    io_disk_packet_t packet = {
+        .command = IO_WRITE,
+        .lba_start = _file.start_sec,
+        .sec_count = size_in_sec,
+        .buffer = buff,
+    };
+
+    disk->dispather(&packet);
 
     U32 size_in_sec_data = bytes >> 9;
     U8* head = in;
     U32 sector = 0;
     U32 bytes_left = bytes;
 
-    for(;sector < size_in_sec_data;sector++) {
-        service.memory->memcpy(head, t_buff, 512);
-        disk->write_sector(_file.start_sec + sector, t_buff);
-        head += 512;
-        bytes_left -= 512;
-    }
+    packet.buffer = in;
 
-    if(bytes > 0) {
-        service.memory->memset(t_buff, 0, 512);
-        service.memory->memcpy(head, t_buff, bytes_left);
-        disk->write_sector(_file.start_sec + sector, t_buff);
-    }
-
-    service.memory->free(t_buff);
 
     U32 off_sec_in_root = file_lba_index >> 5;
     U32 off_lba_in_sec = file_lba_index & 31;
@@ -275,8 +320,11 @@ U8 afs_update(const U8 *__restrict__ file_name, U8 *__restrict__ in, U32 bytes) 
     
     AFS_HEAD += (off_lba_in_sec << 4);
     service.memory->memcpy((U8*)&_file, AFS_HEAD, RECORD_SIZE);
-    
-    disk->write_sector(ROOT_BASE + off_sec_in_root, AFS_ROOT);
+
+    packet.lba_start = ROOT_BASE + off_sec_in_root;
+    packet.buffer = AFS_ROOT;
+
+    disk->dispather(&packet);
     
     service.memory->free(AFS_ROOT);
 
@@ -284,9 +332,12 @@ U8 afs_update(const U8 *__restrict__ file_name, U8 *__restrict__ in, U32 bytes) 
 }
 
 U8 afs_get_root(U8 *__restrict__ out) {
-    U8* out_head = out;
-    for(U32 i = 0;i < ROOT_SECTORS;i++) {
-        disk->read_sector(ROOT_BASE + i, out_head);
-        out_head+=512;
-    }
+    io_disk_packet_t packet = {
+        .command = IO_READ,
+        .lba_start = ROOT_BASE,
+        .sec_count = ROOT_SECTORS,
+        .buffer = out,
+    };
+
+    disk->dispather(&packet);
 }

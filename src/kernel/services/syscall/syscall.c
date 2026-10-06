@@ -1,7 +1,7 @@
 #include <kernel/syscall.h>
 #include <kernel/memory.h>
 #include <kernel/device.h>
-#include <kernel/services.h>
+#include <kernel/memory.h>
 #include <drivers/video/video.h>
 #include <fs/fs.h>
 #include <cpu/registers.h>
@@ -10,6 +10,7 @@
 extern uint32_t kernel_stack_base;
 
 void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) { 
+    __asm__ volatile("sti"); 
     switch(eax) {
         case SYSCALL_WRITE:  
             switch(ebx) {
@@ -55,7 +56,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                     video->terminal_set_cursor_position((uint8_t)(ecx >> 16), (uint8_t)ecx);
                     break;
                 case GET_CURSOR:
-                    video->terminal_get_cursor_position(ecx, edx);
+                    video->terminal_get_cursor_position((u16*)ecx, (u16*)edx);
                     break;
             }
             break;
@@ -94,7 +95,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
             switch (ebx)
             {
                 case CAT_FILE:
-                    eax = fs->read(file, ecx, edx);
+                    eax = fs->read(file, ecx, (u8*)edx);
                     asm volatile(
                         "movl %%eax, %0"
                         :
@@ -102,7 +103,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                     );
                     break;
                 case GET_ROOT:
-                    fs->get_root(ecx);
+                    fs->get_root((u8*)ecx);
                     break;
                 case WRITE_FILE: {
                     eax = fs->update(file, edi, ecx);
@@ -125,9 +126,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                     );
                     break;
                 case FILE_CHECK:
-                    video->kprintf("\n0x80 FILE CHECK\n");
-                    eax = fs->check(file);
-                    video->kprintf("Result: %d\n", eax);
+                    eax = (u32)(fs->check(file));
                     asm volatile(
                         "movl %%eax, %0"
                         :
@@ -171,8 +170,8 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                         break;
                     }
 
-                    Ret* ret = service.memory->malloc(sizeof(Ret) + f->size);
-                    service.memory->memset(ret, 0, sizeof(Ret) + f->size);
+                    Ret* ret = malloc(sizeof(Ret) + f->size);
+                    memset(ret, 0, sizeof(Ret) + f->size);
                     ret->bytes = f->size;
                     ret->base = (U8*)ret + sizeof(Ret);
                     ret->cur = ret->base;
@@ -202,11 +201,11 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
             switch (ebx)
             {
             case MALLOC:
-                uint32_t p = service.memory->malloc(ecx);
+                uint32_t p = (u32)malloc(ecx);
                 eax = p;
                 break;
             case FREE:
-                service.memory->free(esi);
+                free(esi);
                 break;
             }
             break;

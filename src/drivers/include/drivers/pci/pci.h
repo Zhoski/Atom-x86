@@ -3,7 +3,9 @@
 
 #include <lib/int.h>
 
-typedef struct pci_device {
+typedef struct pci_device pci_device_t;
+
+struct pci_device {
     U8 class;
     U8 subclass;
     U32 bar0;
@@ -13,6 +15,6 @@ typedef struct pci_device {
 U32 pci_read(U8 bus, U8 slot, U8 function, U8 offset);
 void pci_scan_bus0();
 
-extern struct pci_device pci_devices[128];
+extern pci_device_t pci_devices[128];
 
 #endif

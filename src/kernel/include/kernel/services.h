@@ -8,7 +8,7 @@ typedef struct {
    uint16_t (*memread_dw)(uint16_t*);
    uint32_t (*memread_dd)(uint32_t*);
    void (*memset)(void* in, uint8_t v, uint32_t c);
-   uint8_t* (*malloc)(uint32_t);
+   void* (*malloc)(uint32_t size);
    void (*free)(uint8_t*);
    void (*create_heap)();
 } memory;

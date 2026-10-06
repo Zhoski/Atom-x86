@@ -1,18 +1,20 @@
 #ifndef INT
 #define INT
 
-typedef unsigned char        U8;
-typedef unsigned short      U16;
-typedef unsigned int        U32;
+#include <stdint.h>
 
-typedef char   I8;
-typedef short I16;
-typedef int   I32;
+typedef uint8_t        U8;
+typedef uint16_t       U16;
+typedef uint32_t       U32;
+
+typedef int8_t   I8;
+typedef int16_t I16;
+typedef int32_t   I32;
 
 typedef U8   u8;
 typedef U16 u16;
 typedef U32 u32;
-typedef unsigned long int u64;
+typedef uint64_t u64;
 
 typedef I8   i8;
 typedef I16 i16;

@@ -27,8 +27,24 @@ start:
     mov si, atom_boot
     call print_string
 
-    call OPEN_FILE
+    mov ah, 0x42
+    mov si, lba
+    mov dl, [drive]
+    int 0x13
 
+    ;mov ax, word [0x8000]
+
+    ;cmp ax, 0xBBAA
+
+    ;jnz error
+
+    jmp 0x0000:0x8000
+
+    jmp $
+
+error:
+    mov si, err
+    call print_string
     jmp $
 
 ; Вывод строки
@@ -46,120 +62,15 @@ exit:
     popa
     ret
 
-;REBOOT:
-;    mov si, reboot_msg
-;    call print_string
-;
-;    mov ah, 0x00
-;    int 0x16
-;
-;    int 0x19
-
-; Загрузка корня фс на адрес 0x0000:0x0500
-LOAD_ROOT_TO_MEM:
-    pusha
-
-    mov ah, 0x42
-    mov si, lba
-    mov dl, [drive]
-    int 0x13
-
-    popa
-    ret
-
-.error:
-    mov si, disk_read_error
-    call print_string
-    jmp $
-
-
-; Открытие файла
-OPEN_FILE:
-    call LOAD_ROOT_TO_MEM
-
-    ; ES:BX на 0x0000:0x0500 
-    ; Для чтения содержимого корня фс
-    xor ax, ax
-    mov es, ax
-    mov bx, [LoadRootAddres]
-    
-    mov dx, 512     ; Максимальное количество файлов
-
-    ; Ищем stage2.bin
-    mov si, stage2_file
-
-; Цикл поиска файла
-.FIND_FILE_LOOP:
-    test dx, dx
-    jz .FILE_NOT_FOUND
-
-    mov di, bx
-
-    push si
-    mov cx, 11
-    repe cmpsb
-    pop si
-
-    jz .FOUND
-
-    dec dx
-    add bx, 16
-
-    jmp .FIND_FILE_LOOP
-
-; Если не нашли уход в ребут
-.FILE_NOT_FOUND:
-    mov si, file_not_found
-    call print_string
-    ;call REBOOT
-
-; Если нашли грузим stage2.bin на 0x0000:0x8000
-.FOUND:
-    mov si, file_found
-    call print_string
-
-    mov ax, [es:bx + 13]
-    mov cx, 512
-    xor dx, dx
-    div cx
-    
-    test dx, dx
-    je .skip
-
-    inc ax
-
-.skip
-
-    ; Меняем lba под загрузку stage2.bin
-
-    mov dx, [es:bx + 11]
-
-    mov word [lba],    0x0010
-    mov word [lba+2],  ax
-    mov word [lba+4],  0x8000
-    mov word [lba+6],  0x0000 
-    mov word [lba+8],  dx
-    mov word [lba+10], 0x0000
-
-    mov ah, 0x42
-    mov si, lba
-    mov dl, [drive]
-    int 0x13
-
-    ; Передача управления stage2.bin
-    jmp 0x0000:0x8000
-
-    jmp $
-
 ; Изначально тут рут директория фс
 align 4
 lba:
     db 0x10
     db 0x00
-    dw 16
-    dw 0x0500
+    dw 6
+    dw 0x8000
     dw 0x0000
-    dq 2          
+    dq 1          
 
 RootStartSector: db 2       ; Начиная с этого сектора лежат описание файлов
 RootSectors:     db 16      ; Сколько секторов выделено под описание файлов
@@ -175,6 +86,7 @@ file_not_found: db "STAGE2.BIN not found on disk",13,10,0
 file_found: db "STAGE2.BIN load",13,10,0
 reboot_msg: db "Press any key to reboot...",0
 disk_read_error: db "Disk read error",13,10,0
+err: db "STAGE2.BIN LOAD ERROR",13,10,0
 
 times 510 - ($ - $$) db 0
 dw 0xAA55

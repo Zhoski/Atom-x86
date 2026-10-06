@@ -8,7 +8,7 @@
 #define FREE                 1
 #define BUSY                 0
 #define NULL                 0
-#define MEMORY_NOT_FOUND    -1
+#define MEMORY_NOT_FOUND  0xFF
 
 static memory mem = {
     .memcpy = &memcpy,
@@ -35,7 +35,7 @@ void create_heap() {
     block_heap->next = NULL;
 }
 
-U8* malloc(U32 size) {
+void* malloc(U32 size) {
     U32 current_address = HEAP_BASE + sizeof(Heap) + size;
     Heap* current = block_heap;
     
@@ -44,7 +44,7 @@ U8* malloc(U32 size) {
         U32 heap_end_address = HEAP_BASE + HEAP_SIZE;
 
         if (current_address + sizeof(Heap) >= heap_end_address) {
-            return MEMORY_NOT_FOUND;
+            return 0;
         }
 
         if (current->size >= (size + sizeof(Heap)) && current->is_free == FREE) {
@@ -71,16 +71,19 @@ U8* malloc(U32 size) {
 
             current->next = (struct Heap*)current_address;
             
-            return (U8*)(current_address - size);
+            return (void*)(current_address - size);
         }
 
         current_address += (current->size + sizeof(Heap));
-        current = current->next;
+        current = (Heap*)current->next;
     }
 
-    return MEMORY_NOT_FOUND;
+    return 0;
 }
 
+/**
+ * Работает на костылях, исправить
+ */
 void free(U8* __restrict__ ptr) {
     U8* heap = ptr - sizeof(Heap);
     U8* next = heap;
@@ -91,7 +94,7 @@ void free(U8* __restrict__ ptr) {
 
     while (next[4] == FREE) {
         U32 new_size = *(U32*)next + *(U32*)heap + sizeof(Heap);
-        U8* t = (U32*)&new_size;
+        U8* t = (U8*)&new_size;
         for (U32 i = 0;i < 4;i++) {
             heap[i] = t[i];
         }

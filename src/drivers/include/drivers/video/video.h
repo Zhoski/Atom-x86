@@ -3,6 +3,8 @@
 #include <lib/int.h>
 #include <stdarg.h>
 
+void init_vga(U8 mode);
+
 enum vga_color {
     VGA_COLOR_BLACK = 0,
 	VGA_COLOR_BLUE = 1,
@@ -29,7 +31,7 @@ enum graphics_mode {
 };
 
 typedef struct {
-    void(*write_string)(U8* s);
+    void(*write_string)(const U8* s);
     void(*write_char)(U8 c);
 	void(*write_int)(U32 x);
     void(*clear_screen)(U8 color);

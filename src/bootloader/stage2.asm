@@ -24,14 +24,16 @@ start:
     
     call get_memmap     ; Получаем карту памяти                       
 
-    call kernel_load    ; Загрузка ядра 
+    ;call kernel_load    ; Загрузка ядра 
 
     call cpuid          ; Получаем модель процессора
+
+    call KERNEL_LOAD
 
     mov si, continue_msg
     call print
 
-    mov ah, 0x0
+    mov ah, 0x00
     int 0x16
 
     call kernel_launch  ; Запуск ядра
@@ -203,7 +205,6 @@ get_memmap:
 ; ============================== Диск ================================
 
 ; Загрузка секторов в оперативку
-; Вход es:bx al, cl
 disk_read:
     pusha
 
@@ -341,98 +342,97 @@ compare_strings:
     ret
 
 ; ================= Драйвер для работы с файлами ==================
-; Грузим 16 секторов начиная со 2-го по адресу 0x0000:0x0500
-LOAD_ROOT_TO_MEM:
-    pusha
 
-    mov ah, 0x42
-    mov si, LBA_ROOT
-    mov dl, [drive]
-    int 0x13
+; Код загрузки ядра требует исправления костыли!!!
+; Загрузчик не найдет ядро если папка system будет находиться не в 1 блоке корня
+; А также ядро будет находиться не в 1 блоке папки system
+; Загрузчик сможет загрузить ядро чей размер равен не более 64кб
+; Всю функцию под снос и исправления в будущем
+; Все захардкожено код в демку не впускать
+KERNEL_LOAD:
+    ; Чтение суперблока
+    mov si, LBA
+    call disk_read
 
-    popa
-    ret
+    mov eax, dword [0x500 + 8]
+    mov [block_size], eax
 
-.error:
-    mov si, disk_read_error
-    call print
-    jmp $
+    mov eax, dword [0x500 + 128 + 56]
+    mov [root_block_base], eax
 
+    mov eax, [block_size]
+    mov ecx, 512
+    div ecx
+    mov [sec_p_block], ax
 
-; Записываем в lba информацию о файле
-; Вход: si - имя файла
-OPEN_FILE:
-    call LOAD_ROOT_TO_MEM
+    ; Читаем корень
+    mov word [LBA + 2], ax
 
-    ; ES:BX на 0x0000:0x0500 
-    ; Для чтения содержимого корня фс
+    mov ecx, [root_block_base]
+    mov eax, [sec_p_block]
+    mul ecx
+
+    mov word [LBA + 8],  ax    
+    mov word [LBA + 10], 0x0000    
+
+    mov si, LBA
+    call disk_read
+
     xor ax, ax
     mov es, ax
-    mov bx, [LoadRootAddres]
-    
-    mov dx, 512     ; Максимальное количество файлов
+    mov bx, 0x500
 
-.FIND_FILE_LOOP:
+    mov dx, 32
+
+    mov si, u
+
+.FIND_SYSTEM_LOOP:
     test dx, dx
-    jz .FILE_NOT_FOUND
+    jz  .NOT_FOUND
 
     mov di, bx
 
     push si
-    mov cx, 11
+    mov cx, 6
     repe cmpsb
     pop si
 
     jz .FOUND
 
     dec dx
-    add bx, 16
+    add bx, 128
 
-    jmp .FIND_FILE_LOOP
+    jmp .FIND_SYSTEM_LOOP
 
-.FILE_NOT_FOUND:
-    mov ax, 1           ; Код: файл не найден
-    ret
+.NOT_FOUND:
+    mov si, system_not_found
+    call print
+
+    jmp $
 
 .FOUND:
-    mov ax, [es:bx + 13]
-    mov cx, 512
-    xor dx, dx
-    div cx
-    
-    test dx, dx
-    je .skip
+    mov word [LBA + 2], 64
+    mov word [LBA + 4], 0x0000
+    mov word [LBA + 6], 0x1000
+    mov word [LBA + 8], 64
+    mov word [LBA + 10], 0x0000
 
-    inc ax
-
-.skip
-    mov dx, [es:bx + 11]
-
-    mov word [LBA_FILE],    0x0010
-    mov word [LBA_FILE+2],      ax
-    mov word [LBA_FILE+8],      dx
-    mov word [LBA_FILE+10], 0x0000
-
-    mov ax, 0           ; Код: Файл найден
+    mov si, LBA
+    call disk_read
 
     ret
 
-LBA_FILE:
-    db 0x10
-    db 0
-    dw 0
-    dw 0
-    dw 0
-    dq 0
+k_segment: dw 0x1000
+k_offset:  dw 0x0000
+test: db "TEST",13,10,0
 
-LBA_ROOT:
+LBA:
     db 0x10
     db 0x00
-    dw 16
+    dw 2
     dw 0x0500
     dw 0x0000
-    dq 2
-
+    dq 8
 
 REBOOT:
     mov si, info_msg
@@ -476,6 +476,9 @@ CONTINUE:
 file_found: db "File found",13,10,0
 file_not_found: db "File not found",13,10,0
 kernel_image: db "KERNEL  BIN",0
+
+system_found: db "System dir found",13,10,0
+system_not_found: db "System dir not found",13,10,0
 ; Адреса
 
 ; E820 карта памяти
@@ -484,6 +487,14 @@ memmap_segment: dw 0x0000
 
 memmap_block_count: dw 0
 total_usable_ram_k: dw 0
+
+block_size: dw 0x00
+sec_p_block: dw 0x00
+root_block_base: dw 0x00
+
+sys: db "system",0
+
+u: db "system",0
 
 ; Системные сообщения
 get_memmap_msg: db "Getting memory map ",13,10,0
@@ -578,66 +589,6 @@ gdt_ptr:
     dd gdt_start
 
 ; ========================= Ядро =====================================
-kernel_load:
-    mov si, kernel_image
-    call OPEN_FILE
-
-    test ax, ax
-    jnz .kernel_not_found
-
-    mov word [LBA_FILE+4], 0x0000
-    mov word [LBA_FILE+6], 0x1000
-
-    mov si, LBA_FILE
-    call disk_read
-
-    mov bx, 0x0000
-    mov ax, 0x1000
-    mov es, ax
-
-    mov ax, word [es:bx]
-    cmp ax, 0xBBAA
-    jnz .kernel_signature
-
-    mov si, ok_msg
-    call print
-    mov si, kernel_load_status
-    call print
-
-    ret
-
-.kernel_not_found:
-    mov si, fail_msg
-    call print
-
-    mov si, kernel_load_status
-    call print
-
-    mov si, fail_msg
-    call print
-
-    mov si, kernel_not_found_error
-    call print
-
-.kernel_signature:
-    mov si, fail_msg
-    call print
-
-    mov si, kernel_load_status
-    call print
-
-    mov si, fail_msg
-    call print
-
-    mov si, kernel_load_error
-    call print 
-
-    mov si, kernel_signature_error
-    call print
-
-    jmp $
-
-    ret
 
 ; Загрузка ядра
 kernel_launch:
@@ -654,21 +605,10 @@ kernel_launch:
 
     repe movsw
 
-    jmp .after
-
-.after:
     ; Переключение видеорежима на 640x480 16 цветов 
     mov ah, 0x00
     mov al, 0x12
     int 0x10 
-
-    mov si, info_msg
-    call print
-
-    mov si, pm
-    call print
-
-.skip:
 
 ; Переключение в защищенный режим
 switch_to_PM:

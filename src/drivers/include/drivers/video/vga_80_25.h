@@ -3,8 +3,8 @@
 #include <lib/int.h>
 #include <stdarg.h>
 
-void vga_80_25_write_char(const U8 c, U8 color);
-void vga_80_25_write_string(const char* s, U8 color);
-void vga_80_25_clear_screen(U8 color);
+void vga_80_25_write_char(const u8 c);
+void vga_80_25_write_string(const u8* s);
+void vga_80_25_clear_screen(u8 color);
 
 #endif

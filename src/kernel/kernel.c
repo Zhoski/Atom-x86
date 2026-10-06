@@ -10,7 +10,7 @@
 #include <fs/fs.h>
 #include <kernel/program.h>
 #include <kernel/syscall.h>
-#include <kernel/services.h>
+#include <kernel/memory.h>
 #include <kernel/panic.h>
 
 #define BOOT_SECTOR         0
@@ -22,7 +22,7 @@ extern void isr33();
 extern void isr80();
 extern void isr46();
 
-services service;
+//services service;
 
 void kmain() {
     idt_load();                     // Загрузить IDT
@@ -42,7 +42,7 @@ void kmain() {
     pci_scan_bus0();
 
     init_memory();                  // Инициализация памяти
-    service.memory->create_heap();  // Создание кучи
+    create_heap();                  // Создание кучи
    
     init_keyboard();                // Инициализация клавиатуры              
 
@@ -50,8 +50,8 @@ void kmain() {
     
     video->kprintf("Kernel v 0.0.2\n");
 
-    uint16_t* disk_info = service.memory->malloc(512);
-    uint32_t disk_status = disk_init(disk_info);
+    u8* disk_info = (u8*)malloc(512);
+    u32 disk_status = disk_init((u16*)disk_info);
 
     if(disk_status == SUCCES_INIT_DISK) {
         video->kprintf("[  %f10OK%f15  ] ATA driver initialized successfully\n");
@@ -72,26 +72,30 @@ void kmain() {
 
     init_timer(100);
 
-    u8* cpuid = service.memory->malloc(48);
-    service.memory->memcpy(0x1008, cpuid, 48);
+    u8* cpuid = malloc(48);
+    memcpy((void*)0x1008, cpuid, 48);
     video->kprintf("[ INFO ] CPU: %s\n", cpuid);
 
-    u16* ahci_read_status = 0;
+    io_disk_packet_t packet = {
+        .command = IO_READ,
+        .lba_start = 0,
+        .sec_count = 1,
+        .buffer = disk_info,
+    };
 
-    u8 word[512];
-    disk->read_sector(0, word);
+    disk->dispather(&packet);
 
-    ahci_read_status = &(word[510]);
+    u16* magic = (u16*)&disk_info[510];
 
-    if(*ahci_read_status == 0xAA55) {
-        video->kprintf("AHCI read succes");
-    }else {
-        video->kprintf("AHCI read fail");
-    }
+    video->kprintf("Result: %d\nMagic: %d\n", packet.result, *magic);
 
-    video->kprintf("\nFS Type: %d\n", word[462]);
+    /*packet.lba_start = 2;
 
-    //fs->open("INIT    BIN");
+    disk->dispather(&packet);
+
+    video->kprintf("File: %s\n", disk_info);*/
+
+    fs->open("INIT    BIN");
 
 	for(;;) {
         halt();

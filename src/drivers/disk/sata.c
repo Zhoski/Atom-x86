@@ -1,11 +1,16 @@
 #include <drivers/disk/sata.h>
+#include <drivers/disk/disk.h>
 #include <drivers/video/video.h>
 #include <drivers/timer/timer.h>
 #include <kernel/memory.h>
 
-#define CLB_MEM_BASE       0x10000
-#define FIS_MEM_BASE       0x20000
-#define CMD_MEM_BASE       0x30000
+#define SUCCES                0x00
+#define TFD_ERROR             0x01
+#define SERR_ERROR            0x02
+
+#define CLB_MEM_BASE       (HBA_cmd_header_t*)0x10000
+#define FIS_MEM_BASE       (HBA_fis_layout_t*)0x20000
+#define CMD_MEM_BASE       (HBA_cmd_table_t*)0x30000
 
 #define SATA_SIG_ATA    0x00000101
 #define SATA_SIG_ATAPI  0xEB140101
@@ -22,17 +27,17 @@
 #define AHCI_DRIVER_V_MINOR      2        
 #define AHCI_DRIVER_V_PATCH      0        
 
-struct HBA_mem* hba_mem;
-struct HBA_cmd_header* cmd_header;
-struct HBA_cmd_table* cmd_table;
-struct HBA_fis_layout* fis_layout;
-struct FIS_H2D* fis_h2d;
+HBA_mem_t* hba_mem;
+HBA_cmd_header_t* cmd_header;
+HBA_cmd_table_t* cmd_table;
+HBA_fis_layout_t* fis_layout;
+FIS_H2D_t* fis_h2d;
 
 /**
  *  Проверяет статус устройства на порту считывая регистр ssts
  */
-U8* ahci_port_get_status(U32 port) {
-    U32 status = hba_mem->port[port].ssts & 0x0F;
+u8* ahci_port_get_status(u32 port) {
+    u32 status = hba_mem->port[port].ssts & 0x0F;
 
     switch (status)
     {
@@ -91,7 +96,7 @@ void ahci_port_reset(u32 port) {
     hba_mem->port[port].sctl &= ~0x0F;
 
     for(u32 timeout = 10; timeout > 0; timeout--) {
-        ksleep(1);
+        ksleep(0.25);
         if((hba_mem->port[port].ssts & 0xF) == 0x03) {
             break;
         }
@@ -131,13 +136,13 @@ void ahci_port_scan() {
                     break;
                 }
 
-                hba_mem->port[port].clb = CLB_MEM_BASE;
+                hba_mem->port[port].clb = (u32)CLB_MEM_BASE;
                 hba_mem->port[port].clbu = 0;
 
-                hba_mem->port[port].fb = FIS_MEM_BASE;
+                hba_mem->port[port].fb = (u32)FIS_MEM_BASE;
                 hba_mem->port[port].fbu = 0;
 
-                cmd_header->ctba = CMD_MEM_BASE & ~0x7F;
+                cmd_header->ctba = (u32)CMD_MEM_BASE & ~0x7F;
                 cmd_header->ctbau = 0;
 
                 hba_mem->port[0].cmd |= 0x10; 
@@ -166,7 +171,7 @@ void ahci_port_scan() {
  * Составляет и отправляет команду 0xEC для идентификации устройства
  * Паспорт устройства приходит на 0x400000
  */
-void anci_identify_device(u32 ncs) {
+void anci_identify_device(void* buffer, u32 ncs) {
     u8* port_status = ahci_port_get_status(0);
 
     video->kprintf("[ INFO ] AHCI: %s\n", port_status);
@@ -193,7 +198,7 @@ void anci_identify_device(u32 ncs) {
     
     cmd_header->w0 = 5;
 
-    cmd_table->prdt_entry.dba = 0x400000;   
+    cmd_table->prdt_entry.dba = (u32)buffer;   
     cmd_table->prdt_entry.dbau = 0;
 
     cmd_table->prdt_entry.dbc = 511;    
@@ -235,10 +240,10 @@ void anci_identify_device(u32 ncs) {
         }
 
         step++;
-        ksleep(5);
+        ksleep(1);
     }
     
-    u16* identify_buffer = 0x400000;
+    u16* identify_buffer = buffer;
 
     video->kprintf("[ INFO ] AHCI: Device: ");
 
@@ -257,14 +262,14 @@ void anci_identify_device(u32 ncs) {
  *  Инициализирует SATA-контроллер и получает его паспорт
  *  Заполняет буффер info паспортом устройства полученным через IDENTIFY
  */
-u32 init_sata(u16 info[256]) {
+u32 init_sata(void* buffer) {
     video->kprintf("AHCI driver v %d.%d.%d\n", AHCI_DRIVER_V_MAJOR, AHCI_DRIVER_V_MINOR, AHCI_DRIVER_V_PATCH);
 
-    hba_mem = (struct HBA_mem*)ahci_mem_base;
-    cmd_header = (struct HBA_cmd_header*)CLB_MEM_BASE;
-    fis_layout = (struct HBA_fis_layout*)FIS_MEM_BASE;
-    cmd_table = (struct HBA_cmd_table*)CMD_MEM_BASE;
-    fis_h2d = &cmd_table->cfis;
+    hba_mem = (HBA_mem_t*)ahci_mem_base;
+    cmd_header = (HBA_cmd_header_t*)CLB_MEM_BASE;
+    fis_layout = (HBA_fis_layout_t*)FIS_MEM_BASE;
+    cmd_table = (HBA_cmd_table_t*)CMD_MEM_BASE;
+    fis_h2d = (FIS_H2D_t*)cmd_table->cfis;
 
     memset(CMD_MEM_BASE, 0, 256);
 
@@ -274,17 +279,17 @@ u32 init_sata(u16 info[256]) {
 
     ahci_port_scan();
 
-    anci_identify_device(ncs);
+    anci_identify_device(buffer, ncs);
 
-    return 0;
+    return SUCCES;
 }
 
-u8 ahci_sector_read(u64 lba, u16 word[256]) { 
-    cmd_header->w0 = 0x5;
+u8 ahci_sector_read_write(u64 lba, u16 sec_count, void* buffer) { 
+    cmd_table->prdt_entry.dbc = (sec_count * 512) - 1; 
+    cmd_table->prdt_entry.dba = (u32)buffer;   
 
     fis_h2d->type =  H2D;
     fis_h2d->flag = 0x80;
-    fis_h2d->cmd =  READ;
 
     fis_h2d->lba0 = lba & 0xFF;
     fis_h2d->lba1 = (lba >> 8) & 0xFF;
@@ -295,8 +300,10 @@ u8 ahci_sector_read(u64 lba, u16 word[256]) {
 
     fis_h2d->dev = 0x40;
 
-    fis_h2d->sec_count_low = 1;
-    fis_h2d->sec_count_hight = 0;
+    fis_h2d->sec_count_low = sec_count & 0xFF;
+    fis_h2d->sec_count_hight = (sec_count >> 8) & 0xFF;
+
+    //ahci_port_dma_enable(0);
 
     hba_mem->port[0].ci = 1;
 
@@ -305,76 +312,48 @@ u8 ahci_sector_read(u64 lba, u16 word[256]) {
     while (hba_mem->port[0].ci & 0x01) {
         if(step == 10) {
             video->kprintf("[ %f12FAIL%f15 ] AHCI: Disk timeout\n");
-            for(;;) {
-                asm("hlt");
-            }
+            return DISK_TIMEOUT;
         }
 
         if(hba_mem->port[0].tfd & 0x01) {
             video->kprintf("[ %f12FAIL%f15 ] AHCI: Disk tfd error: %d\n", (hba_mem->port[0].tfd >> 8) & ~0xFFFF00);
-            break;
+            return TFD_ERROR;
         }
 
         if(hba_mem->port[0].serr) {
             video->kprintf("[ %f12FAIL%f15 ] AHCI: Disk serr error: %d\n", hba_mem->port[0].serr);
-            break;
-        }
-
-        step++;
-        ksleep(2);
-    }
-
-    memcpy(0x400000, word, 512);
-
-    return 0;
-    
-}
-u8 ahci_sector_write(u64 lba, u16 word[256]) {
-    memcpy(word, 0x400000, 512);
-
-    cmd_header->w0 = 0x45;
-
-    fis_h2d->type =  H2D;
-    fis_h2d->flag = 0x80;
-    fis_h2d->cmd =  READ;
-
-    fis_h2d->lba0 = lba & 0xFF;
-    fis_h2d->lba1 = (lba >> 8) & 0xFF;
-    fis_h2d->lba2 = (lba >> 16) & 0xFF;
-    fis_h2d->lba3 = (lba >> 24) & 0xFF;
-    fis_h2d->lba4 = (lba >> 32) & 0xFF;
-    fis_h2d->lba5 = (lba >> 40) & 0xFF;
-
-    fis_h2d->dev = 0x40;
-
-    fis_h2d->sec_count_low = 1;
-    fis_h2d->sec_count_hight = 0;
-
-    hba_mem->port[0].ci = 1;
-
-    u32 step = 0;
-
-    while (hba_mem->port[0].ci & 0x01) {
-        if(step == 10) {
-            video->kprintf("[ %f12FAIL%f15 ] AHCI: Disk timeout\n");
-            for(;;) {
-                asm("hlt");
-            }
-        }
-
-        if(hba_mem->port[0].tfd & 0x01) {
-            video->kprintf("[ %f12FAIL%f15 ] AHCI: Disk tfd error: %d\n", (hba_mem->port[0].tfd >> 8) & ~0xFFFF00);
-            break;
-        }
-
-        if(hba_mem->port[0].serr) {
-            video->kprintf("[ %f12FAIL%f15 ] AHCI: Disk serr error: %d\n", hba_mem->port[0].serr);
-            break;
+            return SERR_ERROR;
         }
 
         step++;
         ksleep(1);
     }
 
-    return 0;
+    return SUCCES;
+}
+
+void ahci_dispatcher_io(io_disk_packet_t* packet) {
+    u32 result = 0;
+    switch (packet->command)
+    {
+    case IO_READ:
+        //ahci_port_dma_disable(0);
+        cmd_header->w0 = 0x05;
+        fis_h2d->cmd = READ;
+        result = ahci_sector_read_write(packet->lba_start, packet->sec_count, packet->buffer);
+        break;
+    case IO_WRITE:
+        //ahci_port_dma_disable(0);
+        cmd_header->w0 = 0x45;
+        fis_h2d->cmd = WRITE;
+        result = ahci_sector_read_write(packet->lba_start, packet->sec_count, packet->buffer);
+        break;
+    case IO_INIT:
+        result = init_sata(packet->buffer);
+        break;
+    default:
+        break;
+    }
+
+    packet->result = result;
 }

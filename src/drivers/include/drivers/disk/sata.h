@@ -3,7 +3,15 @@
 
 #include <lib/int.h>
 
-typedef struct HBA_port_mem;
+typedef struct io_disk_packet io_disk_packet_t; 
+
+typedef struct HBA_port_mem HBA_port_mem_t;
+typedef struct HBA_mem HBA_mem_t;
+typedef struct HBA_cmd_header HBA_cmd_header_t;
+typedef struct HBA_prdt_entry HBA_prdt_entry_t;
+typedef struct HBA_cmd_table HBA_cmd_table_t;
+typedef struct HBA_fis_layout HBA_fis_layout_t;
+typedef struct FIS_H2D FIS_H2D_t;
 
 struct HBA_port_mem {
     u32  clb;
@@ -25,7 +33,7 @@ struct HBA_port_mem {
     u32  fbs;
     u32 devslp;
     u8  rsv1[56];
-} __attribute__((packed));
+};
 
 struct HBA_mem {
     u32 cap;
@@ -45,9 +53,9 @@ struct HBA_mem {
     u8  vendor[96]; 
 
     struct HBA_port_mem port[32]; 
-} __attribute__((packed));
+};
 
-typedef struct HBA_cmd_header {
+struct HBA_cmd_header {
     u16 w0;
     u16 prdtl;
     u32 prdbc;
@@ -56,9 +64,9 @@ typedef struct HBA_cmd_header {
 
     u8  rsv[16];
 
-} __attribute__((packed));
+};
 
-typedef struct HBA_prdt_entry {
+struct HBA_prdt_entry {
     u32  dba;
     u32 dbau;
     u32 rsv0;
@@ -67,18 +75,18 @@ typedef struct HBA_prdt_entry {
     u32 rsv1:9; 
     u32 i:1;
 
-} __attribute__((packed));
+};
 
-typedef struct HBA_cmd_table {
+struct HBA_cmd_table {
     u8       cfis[64];
     u8       acmd[16];
     u8        rsv[48];
 
     struct HBA_prdt_entry prdt_entry;
     
-} __attribute__((packed));
+};
 
-typedef struct HBA_fis_layout {
+struct HBA_fis_layout {
     u8 dsfis[28];
     u8   rsv0[4];
     u8 psfis[20];
@@ -89,9 +97,9 @@ typedef struct HBA_fis_layout {
     u8  ufis[64];
     u8  rsv3[96];
 
-} __attribute__((packed));
+};
 
-typedef struct FIS_H2D {
+struct FIS_H2D {
     u8 type;
     u8 flag;
     u8  cmd;
@@ -112,11 +120,9 @@ typedef struct FIS_H2D {
 
     u8 rsv2[6];
 
-}__attribute__((packed));
+};
 
-u32 init_sata(u16 info[256]);
-u8 ahci_sector_read(u64 lba, u16 word[256]);
-u8 ahci_sector_write(u64 lba, u16 word[256]);
+void ahci_dispatcher_io(io_disk_packet_t* packet);
 
 u32 ahci_mem_base = 0;
 

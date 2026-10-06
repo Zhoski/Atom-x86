@@ -11,9 +11,10 @@ static Disk ATA_PIO = {
 };
 
 static Disk SATA_AHCI = {
-    .init = &init_sata,
-    .read_sector = &ahci_sector_read,
-    .write_sector = &ahci_sector_write,
+    .init = 0,
+    .read_sector = 0,
+    .write_sector = 0,
+    .dispather = &ahci_dispatcher_io,
 };
 
 Disk* disk;
@@ -47,7 +48,13 @@ uint8_t disk_init(uint16_t disk_info[256]) {
     if(!ata_detect && !sata_detect) {
         return DISK_NOT_FOUND;
     }else {
-        return disk->init(disk_info);
+        io_disk_packet_t packet = {
+            .command = IO_INIT,
+            .buffer = disk_info
+        };
+        disk->dispather(&packet);
+
+        return packet.result;
     }
 }
 

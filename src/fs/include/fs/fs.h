@@ -13,7 +13,7 @@ typedef struct
     U8 (*delete)(const U8 *__restrict__ file_name);
     U8 (*update) (const U8 *__restrict__ file_name, U8* in, U32 bytes);
     U8 (*get_root) (U8 *__restrict__ out);
-    U8 (*init)();
+    U32 (*init)();
 } FileSystem;
 
 U32 init_fs();
