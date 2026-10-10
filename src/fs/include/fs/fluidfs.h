@@ -27,6 +27,7 @@ typedef struct super_block {
 
 u32 fluidfs_init();
 u32 fluidfs_fcheck(u8* file);
+u32 fluidfs_fopen(u8* file);
 
 extern node_t node;
 

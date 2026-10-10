@@ -7,20 +7,20 @@
 
 typedef struct File;
 
-typedef struct
+typedef struct FileSystem
 {
-    U32* (*check)(const U8 *__restrict__ file_name);
-    U8 (*open)(const U8 *__restrict__ file_name);
-    U8 (*read)(const U8 *__restrict__ file_name, U32 n,U8 *__restrict__ out);
-    U8 (*create)(const U8 *__restrict__ file_name, U16 size);
-    U8 (*delete)(const U8 *__restrict__ file_name);
-    U8 (*update) (const U8 *__restrict__ file_name, U8* in, U32 bytes);
-    U8 (*get_root) (U8 *__restrict__ out);
-    U32 (*init)();
-} FileSystem;
+    u32* (*check)(const u8 *__restrict__ file_name); // Возвращает 1 в случаи если файл есть и 0 в ином
+    u8 (*open)(const u8 *__restrict__ file_name);
+    u8 (*read)(const u8 *__restrict__ file_name, u32 n,u8 *__restrict__ out);
+    u8 (*create)(const u8 *__restrict__ file_name, u16 size);
+    u8 (*delete)(const u8 *__restrict__ file_name);
+    u8 (*update) (const u8 *__restrict__ file_name, u8* in, u32 bytes);
+    u8 (*get_root) (u8 *__restrict__ out);
+    u32 (*init)();
+} FileSystem_t;
 
-U32 init_fs(u32 type);
+u32 init_fs(u32 type);
 
-extern FileSystem* fs;
+extern FileSystem_t* fs;
 
 #endif

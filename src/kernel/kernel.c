@@ -91,9 +91,11 @@ void kmain() {
 
     //fs->open("INIT    BIN");
 
-    fs->check("/home/txt/license.txt");
-    fs->check("/system/kernel/log/kernel.log");
-    fs->check("user.cfg");
+    //video->kprintf("File: %d\n", fs->check("/home/license.txt"));
+
+    fs->open("/home/init.bin");
+    /*fs->check("/system/kernel/log/kernel.log");
+    fs->check("user.cfg");*/
 
 	for(;;) {
         halt();

@@ -251,8 +251,8 @@ void anci_identify_device(void* buffer, u32 ncs) {
         u8 low = (identify_buffer[i] >> 8) & 0xFF;
         u8 high = identify_buffer[i] & 0xFF;
 
-        video->write_char(low);
-        video->write_char(high);
+        video->kputc(low);
+        video->kputc(high);
     }
 
     video->kprintf("\n");

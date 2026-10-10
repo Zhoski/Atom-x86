@@ -15,10 +15,10 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
         case SYSCALL_WRITE:  
             switch(ebx) {
                 case WRITE_TEXT:
-                    video->write_string((uint8_t*)ecx); 
+                    video->kprintf("%s", (u8*)ecx); 
                     break; 
                 case WRITE_CHAR: 
-                    video->write_char((uint8_t)ecx);
+                    video->kputc((uint8_t)ecx);
                     break;
                 default:
                     break;

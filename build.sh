@@ -8,9 +8,6 @@ nasm -f bin src/bootloader/stage2.asm -o rootFS/stage2.bin
 gcc -m32 -ffreestanding -c src/drivers/video/vga_640_480.c -o vga_640_480.o \
     -I./src/cpu/include -I./src/drivers/include -I./src/kernel/include -I./src/lib/include -I./src/fs/include
 
-gcc -m32 -ffreestanding -c src/drivers/video/vga_80_25.c -o vga_80_25.o \
-    -I./src/cpu/include -I./src/drivers/include -I./src/kernel/include -I./src/lib/include -I./src/fs/include
-
 gcc -m32 -ffreestanding -c src/drivers/video/video.c -o video.o \
     -I./src/cpu/include -I./src/drivers/include -I./src/kernel/include -I./src/lib/include -I./src/fs/include
 
@@ -82,36 +79,38 @@ gcc -m32 -ffreestanding -c src/fs/fluidfs.c -w -o fluidfs.o \
 # ==============================================================================
 # ЛИНКОВКА 
 # ==============================================================================
-ld -m elf_i386 -T linker.ld kernel.o services.o vga_640_480.o vga_80_25.o video.o keyboard.o \
+ld -m elf_i386 -T linker.ld kernel.o services.o vga_640_480.o video.o keyboard.o \
                  ata.o sata.o disk.o timer.o pci.o idt.o pic.o isr8.o isr32.o isr33.o isr46.o isr80.o panic.o memory.o \
                  syscall.o afs.o fluidfs.o fs.o program.o -w -o kernel.elf
 
 objcopy -O binary kernel.elf rootFS/kernel.bin
 
-#cd program
-#cd shell
-#make
-#make clean
-#cd ..
-#cd init
-#make
-#make clean
-#cd ..
-#cd setup
-#make
-#make clean
-#cd ..
-#cd notepad
-#make
-#make clean
-#cd ..
-#cd ..
+cd program
+cd shell
+make
+make clean
+cd ..
+cd init
+make
+make clean
+cd ..
+cd setup
+make
+make clean
+cd ..
+cd notepad
+make
+make clean
+cd ..
+cd ..
 
-./utilities/FluidFSPacker/packer.elf -c out.img -K 512 -bs 4096 -b boot.bin -mb rootFS/stage2.bin
+echo '=================== Disk assembly ==================='
+./utilities/FluidFSPacker/packer.elf -c out.img -M 4 -bs 4096 -b boot.bin -mb rootFS/stage2.bin
 ./utilities/FluidFSPacker/packer.elf -d out.img -p rootFS/kernel.bin -o /system/
 ./utilities/FluidFSPacker/packer.elf -d out.img -p license.txt -o /
+./utilities/FluidFSPacker/packer.elf -d out.img -p rootFS/init.bin rootFS/shell.bin -o /home/
 
-qemu-system-x86_64 -m 16M -no-reboot \
+qemu-system-x86_64 -m 4M -no-reboot \
                    -device ich9-ahci,id=ahci \
                    -drive file=out.img,if=none,id=disk \
                    -device ide-hd,bus=ahci.0,drive=disk

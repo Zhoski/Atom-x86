@@ -61,11 +61,11 @@ void K_flag(char* argv[], u32 argc, u32* idx) {
     (*idx)++;
 
     if(request.disk_size > 256 * 1024 * 1024) {
-        printf("[ WARN ] Maximum disk size: 256 MB\n");
+        printf("[ \033[33mWARN\033[37m ] Maximum disk size: 256 MB\n");
         request.disk_size = 256 * 1024 * 1024;
-    }else if(request.disk_size < 32 * 1024) {
-        printf("[ WARN ] Minimum disk size: 32 Kb\n");
-        request.disk_size = 32 * 1024;
+    }else if(request.disk_size < 64 * 1024) {
+        printf("[ \033[33mWARN\033[37m ] Minimum disk size: 64 Kb\n");
+        request.disk_size = 64 * 1024;
     }
 }
 

@@ -3,7 +3,7 @@
 #include <fs/fluidfs.h>
 #include <drivers/video/video.h>
 
-static FileSystem AFS = {
+static FileSystem_t AFS = {
     .init = &afs_init,
     .open = &afs_open,
     .read = &afs_read,
@@ -14,14 +14,15 @@ static FileSystem AFS = {
     .check = &afs_check_file,
 };
 
-static FileSystem FluidFS = {
+static FileSystem_t FluidFS = {
     .init = &fluidfs_init,
     .check = &fluidfs_fcheck,
+    .open = &fluidfs_fopen,
 };
 
-FileSystem* fs;
+FileSystem_t* fs;
 
-U32 init_fs(u32 type) {
+u32 init_fs(u32 type) {
     if(type == AFS_T) {
         fs = &AFS;
     }else if(type == FLUIDFS_T) {

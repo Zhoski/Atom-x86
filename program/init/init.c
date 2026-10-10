@@ -6,13 +6,13 @@ void main() {
     clear_screen(0);
     printf("INIT.BIN work\n");
 
-    uint32 status = sys_check("init.cfg");
+    /*uint32 status = sys_check("init.cfg");
 
     if(status) {
         printf("init.cfg found\n");
     }
 
-    sys_run("setup.bin");
+    sys_run("setup.bin");*/
 
     for(;;) {
         asm("hlt");

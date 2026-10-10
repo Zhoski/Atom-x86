@@ -30,18 +30,18 @@ enum graphics_mode {
     VGA_320_200 = 0x13,        // VGA графический 320x200 256 цветов
 };
 
-typedef struct {
-    void(*write_string)(const U8* s);
-    void(*write_char)(U8 c);
-	void(*write_int)(U32 x);
-    void(*clear_screen)(U8 color);
-	void(*terminal_fg_vbe_set) (U8 color);
-	void(*terminal_bg_vbe_set) (U8 color);
-	void (*terminal_set_cursor_position)(const U16 x, const U16 y);
-	void (*terminal_get_cursor_position)(U16* x, U16* y);
+typedef struct VideoDriver{
+    //void(*write_string)(const U8* s);
+    void(*kputc)(u8 c);
+	void(*write_int)(u32 x);
+    void(*clear_screen)(u8 color);
+	void(*terminal_fg_vbe_set) (u8 color);
+	void(*terminal_bg_vbe_set) (u8 color);
+	void (*terminal_set_cursor_position)(const u16 x, const u16 y);
+	void (*terminal_get_cursor_position)(u16* x, u16* y);
 	void (*kprintf)(const u8 *format, ...);
-}VideoDriver;
+}VideoDriver_t;
 
-extern VideoDriver* video;
+extern VideoDriver_t* video;
 
 #endif

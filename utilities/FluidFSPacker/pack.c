@@ -78,6 +78,8 @@ void raw_filename_to_std_format(u8* raw, file_node_t* file) {
         j++;
     }
 
+    file->name[j] = '\0';
+
     j++;
     while (j < 32 && raw[j])
     {
@@ -152,8 +154,6 @@ u32 disk_img_create(request_t* req) {
 
     u32 bit = 0;
 
-    printf("BITMAP: %d\n", super_block->block_for_bitmap);
-
     for(u32 i = 0; i < RSV_BLOCK; i++) {
         *block_bitmap |= (1 << bit);
         bit++;
@@ -170,7 +170,7 @@ u32 disk_img_create(request_t* req) {
     fwrite(disk_buffer, 1, req->disk_size, disk);
     fclose(disk);
     
-    printf("FluidFSPacker: created disk: %s\n   size: %d\n   block size: %d\n", req->disk, req->disk_size    , req->block_size);
+    printf("[  \33[32mOK\33[37m  ] Disk image successfully built\n");
 }
 
 u32 boot_set(request_t* req) {
@@ -183,6 +183,7 @@ u32 boot_set(request_t* req) {
 
     FILE* boot = fopen(req->boot, "r");
     if(!boot) {
+        printf("[ \33[31mFAIL\33[37m ] Failed to read the file. { %s }\n", req->boot);
         return;
     }
 
@@ -195,6 +196,7 @@ u32 boot_set(request_t* req) {
 
     FILE* disk = fopen(req->disk, "r+b");
     if(!disk) {
+        printf("[ \33[31mFAIL\33[37m ] Failed to read the image { %s }\n", req->disk);
         return;
     }
 
@@ -215,6 +217,8 @@ u32 boot_set(request_t* req) {
     fclose(disk);
 
     free(disk_buffer);
+
+    printf("[  \33[32mOK\33[37m  ] The boot sector is installed in the image { %s }\n", req->disk);
 }
 
 u32 main_boot_set(request_t* req) {
@@ -225,6 +229,7 @@ u32 main_boot_set(request_t* req) {
 
     FILE* disk = fopen(req->disk, "r+b");
     if(!disk) {
+        printf("[ \33[31mFAIL\33[37m ] Failed to read the image { %s }\n", req->disk);
         return;
     }
 
@@ -246,6 +251,7 @@ u32 main_boot_set(request_t* req) {
 
     FILE* boot = fopen(req->main_boot, "r");
     if(!boot) {
+        printf("[ \33[31mFAIL\33[37m ] Failed to read the file. { %s }\n", req->main_boot);
         return;
     }
 
@@ -286,6 +292,8 @@ u32 main_boot_set(request_t* req) {
     fclose(disk);
 
     free(disk_buffer);
+
+    printf("[  \33[32mOK\33[37m  ] The primary bootloader is installed in the image { %s }\n", req->disk);
 }
 
 u32 file_push(request_t* req) {
@@ -316,7 +324,7 @@ u32 file_push(request_t* req) {
     fseek(disk, 0, SEEK_SET);
 
     for(u32 k = 0; k < req->argc; k++) {
-        //printf("cardex32: push %s to %s\n", req->argv[k], req->out_path);
+        printf("[ INFO ] Copying the file %s to the image %s path %s\n", req->argv[k], req->disk, req->out_path + 1);
 
         file_node_t file_node;
         u8* file_buffer;
@@ -326,7 +334,7 @@ u32 file_push(request_t* req) {
         
         FILE* file = fopen(req->argv[k], "r");
         if(!file) {
-            printf("[ FAIL ] File { %s } not found\n");
+            printf("[ \33[31mFAIL\33[37m ] File { %s } not found\n", req->argv[k]);
             continue;
         }
 
@@ -361,33 +369,37 @@ u32 file_push(request_t* req) {
         }
 
         u32 offset = 1;
-        file_node_t* dir = (file_node_t*)(disk_buffer + super_block->block_root_start * super_block->block_size);
+        //file_node_t* cur_node_dir = (file_node_t*)(disk_buffer + 0x1080);
+        file_node_t* cur_node = (file_node_t*)(disk_buffer + super_block->block_root_start * super_block->block_size);
+
         if(*(req->out_path + offset)) {
-            for(u32 i = 0; i < slash_count; i++) {
-                for(u32 j = 0; j < 32; j++) {
-                    if((strcmp(dir->name, req->out_path + offset) == 0)) {
-                        dir = (file_node_t*)(disk_buffer + dir->p_block[0] * super_block->block_size);
-                        offset += strlen(req->out_path + offset);
-                        break;
-                    }
-                    else {
-                        dir = (file_node_t*)((u8*)dir + 128);
-                    }
+            for(u32 i = 0; i < 32; i++) {
+                if(strcmp(cur_node, req->out_path + offset) == 0 && cur_node->flag == 0xFF) {
+                    cur_node = (file_node_t*)(disk_buffer + cur_node->p_block[0] * super_block->block_size);
+
+                    offset += strlen(req->out_path + offset) + 1;
+                    break;
                 }
 
-                if(dir->name[0] == 0) {
+                cur_node = (file_node_t*)((u8*)cur_node + 128);
+
+                if(cur_node->name[0] == 0) {
                     break;
                 }
             }
-        }   
-
-        while (*dir->name)
-        {
-            dir = (file_node_t*)((u8*)dir + 128);
         }
 
-        memcpy(dir, &file_node, 128);
-        
+        for(u32 i = 0; i < 32; i++) {
+            if(cur_node->name[0] == 0) {
+                break;
+            }
+
+            cur_node = (file_node_t*)((u8*)cur_node + 128);
+        }
+
+        memcpy(cur_node, &file_node, 128);
+
+        printf("[  \33[32mOK\33[37m  ] Successful copying\n");
     }
 
     fwrite(disk_buffer, 1, disk_size, disk);
@@ -398,7 +410,7 @@ u32 file_push(request_t* req) {
 
 void pack(request_t* req) {
     if(!req->disk) {
-        printf("[ WARN ] No disk selected\n");
+        printf("[ \033[31mFAIL\033[37 ] No disk selected\n[ INFO ] Program termination\n");
         return;
     }
 
