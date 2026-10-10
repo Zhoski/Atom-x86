@@ -222,7 +222,7 @@ U8 afs_delete(const U8 *__restrict__ file_name) {
             if(cmpFileName(file_name, AFS_ROOT_HEAD)) {
                 *AFS_ROOT_HEAD = FILE_DELETED;
 
-                disk->write_sector(sector, AFS_ROOT_BUFFER);
+                //disk->write_sector(sector, AFS_ROOT_BUFFER);
 
                 service.memory->free(AFS_ROOT_BUFFER);
                 return SUCCES;
@@ -266,7 +266,7 @@ U8 afs_create(const U8 *__restrict__ file_name, uint16_t size) {
 
                 service.memory->memcpy((U8*)&new_file, AFS_ROOT_HEAD, 16);
 
-                disk->write_sector(sector, AFS_ROOT_BUFFER);
+                //disk->write_sector(sector, AFS_ROOT_BUFFER);
 
                 service.memory->free(AFS_ROOT_BUFFER);
                 
@@ -314,7 +314,7 @@ U8 afs_update(const U8 *__restrict__ file_name, U8 *__restrict__ in, U32 bytes) 
     U8* AFS_ROOT = service.memory->malloc(512);
     U8* AFS_HEAD = AFS_ROOT;
 
-    disk->read_sector(ROOT_BASE + off_sec_in_root, AFS_ROOT);
+    //disk->read_sector(ROOT_BASE + off_sec_in_root, AFS_ROOT);
 
     _file.size = bytes;
     

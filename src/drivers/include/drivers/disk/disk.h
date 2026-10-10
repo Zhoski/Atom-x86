@@ -32,9 +32,6 @@ struct io_disk_packet {
 
 typedef struct
 {
-    u32 (*init)(u16 disk_info[256]);
-    u8 (*read_sector)(u64 lba, u16 word[256]);
-    u8 (*write_sector)(u64 lba, u16 word[256]);
     void (*dispather)(io_disk_packet_t* packet);
 } Disk;
 

@@ -76,12 +76,15 @@ gcc -m32 -ffreestanding -c src/fs/fs.c -o  fs.o \
 gcc -m32 -ffreestanding -c src/fs/afs.c -w -o afs.o \
     -I./src/cpu/include -I./src/drivers/include -I./src/kernel/include -I./src/lib/include -I./src/fs/include
 
+gcc -m32 -ffreestanding -c src/fs/fluidfs.c -w -o fluidfs.o \
+    -I./src/cpu/include -I./src/drivers/include -I./src/kernel/include -I./src/lib/include -I./src/fs/include
+
 # ==============================================================================
 # ЛИНКОВКА 
 # ==============================================================================
 ld -m elf_i386 -T linker.ld kernel.o services.o vga_640_480.o vga_80_25.o video.o keyboard.o \
                  ata.o sata.o disk.o timer.o pci.o idt.o pic.o isr8.o isr32.o isr33.o isr46.o isr80.o panic.o memory.o \
-                 syscall.o afs.o fs.o program.o -w -o kernel.elf
+                 syscall.o afs.o fluidfs.o fs.o program.o -w -o kernel.elf
 
 objcopy -O binary kernel.elf rootFS/kernel.bin
 
@@ -104,33 +107,18 @@ objcopy -O binary kernel.elf rootFS/kernel.bin
 #cd ..
 #cd ..
 
-./utilities/afsm -c atom.img
-./utilities/afsm -boot atom.img boot.bin
-./utilities/afsm -push atom.img rootFS/stage2.bin
-./utilities/afsm -push atom.img rootFS/kernel.bin
-./utilities/afsm -push atom.img rootFS/shell.bin
-./utilities/afsm -push atom.img rootFS/LICENSE.txt
-./utilities/afsm -push atom.img rootFS/init.bin
-./utilities/afsm -push atom.img rootFS/init.cfg
-./utilities/afsm -push atom.img rootFS/setup.bin
-./utilities/afsm -push atom.img rootFS/notepad.bin
-./utilities/afsm -push atom.img atom.img
-
-./utilities/cardex32/packer.elf -c out.img -M 256 -bs 4096 -b boot.bin -mb rootFS/stage2.bin
-./utilities/cardex32/packer.elf -d out.img -p rootFS/kernel.bin -o /system/
+./utilities/FluidFSPacker/packer.elf -c out.img -K 512 -bs 4096 -b boot.bin -mb rootFS/stage2.bin
+./utilities/FluidFSPacker/packer.elf -d out.img -p rootFS/kernel.bin -o /system/
+./utilities/FluidFSPacker/packer.elf -d out.img -p license.txt -o /
 
 qemu-system-x86_64 -m 16M -no-reboot \
                    -device ich9-ahci,id=ahci \
                    -drive file=out.img,if=none,id=disk \
                    -device ide-hd,bus=ahci.0,drive=disk
 
-
-rm binaries/boot.bin
-rm binaries/stage2.bin
-
 make clean
 rm *.o
 rm *bin
 rm rootFS/*bin
 rm *elf
-#rm *img
+rm *img

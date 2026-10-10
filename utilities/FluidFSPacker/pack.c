@@ -27,7 +27,8 @@ typedef struct super_block {
     u32 total_block;
     u32 block_for_bitmap;
     u32 block_root_start;
-    u8  rsv[4072];
+    u32 sec_p_block;
+    u8  rsv[4068];
 } super_block_t;
 
 u8* disk_buffer;
@@ -112,7 +113,7 @@ u32 disk_img_create(request_t* req) {
     disk_buffer = malloc(req->disk_size);
 
     super_block_t* super_block = (super_block_t*)(disk_buffer + 0x1000);
-    super_block->sig[0] = 'C';
+    super_block->sig[0] = 'F';
     super_block->sig[1] = 'F';
     super_block->sig[2] = 'S';
     super_block->sig[3] = '1';
@@ -120,15 +121,14 @@ u32 disk_img_create(request_t* req) {
     super_block->block_size = req->block_size;
     super_block->total_block = req->disk_size / req->block_size;
     super_block->block_for_bitmap = (super_block->total_block + 32767) / 32768;
-    super_block->block_root_start = RSV_BLOCK + super_block->block_for_bitmap - 1;
+    super_block->block_root_start = RSV_BLOCK + super_block->block_for_bitmap;
+    super_block->sec_p_block = super_block->block_size / 512;
 
     file_node_t* root = (file_node_t*)(disk_buffer + 0x1000 + 128);
     
     memcpy(root->name, "/", 1);
     root->flag = 0xFF;
     root->p_block[0] = super_block->block_root_start;
-
-    printf("MOPS: %d\n", super_block->block_root_start);
 
     file_node_t* boot = (file_node_t*)(disk_buffer + (super_block->block_root_start * req->block_size));
     
@@ -152,6 +152,8 @@ u32 disk_img_create(request_t* req) {
 
     u32 bit = 0;
 
+    printf("BITMAP: %d\n", super_block->block_for_bitmap);
+
     for(u32 i = 0; i < RSV_BLOCK; i++) {
         *block_bitmap |= (1 << bit);
         bit++;
@@ -168,7 +170,7 @@ u32 disk_img_create(request_t* req) {
     fwrite(disk_buffer, 1, req->disk_size, disk);
     fclose(disk);
     
-    printf("cardex32: created disk: %s   size: %d   block size: %d\n", req->disk, req->disk_size    , req->block_size);
+    printf("FluidFSPacker: created disk: %s\n   size: %d\n   block size: %d\n", req->disk, req->disk_size    , req->block_size);
 }
 
 u32 boot_set(request_t* req) {
@@ -404,6 +406,4 @@ void pack(request_t* req) {
     if(req->flag0 & 0x02) file_push(req);
     if(req->flag0 & 0x04) boot_set(req);
     if(req->flag0 & 0x08) main_boot_set(req);
-
-    printf("SIZE: %d", sizeof(file_node_t));
 }

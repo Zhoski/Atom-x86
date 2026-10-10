@@ -2,6 +2,9 @@
 #define FS
 #include <lib/int.h>
 
+#define AFS_T       0x01
+#define FLUIDFS_T   0x02
+
 typedef struct File;
 
 typedef struct
@@ -16,7 +19,7 @@ typedef struct
     U32 (*init)();
 } FileSystem;
 
-U32 init_fs();
+U32 init_fs(u32 type);
 
 extern FileSystem* fs;
 

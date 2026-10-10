@@ -68,7 +68,7 @@ void kmain() {
         }
     }
 
-    u32 fs_status = init_fs();    
+    u32 fs_status = init_fs(FLUIDFS_T);    
 
     init_timer(100);
 
@@ -89,13 +89,11 @@ void kmain() {
 
     video->kprintf("Result: %d\nMagic: %d\n", packet.result, *magic);
 
-    /*packet.lba_start = 2;
+    //fs->open("INIT    BIN");
 
-    disk->dispather(&packet);
-
-    video->kprintf("File: %s\n", disk_info);*/
-
-    fs->open("INIT    BIN");
+    fs->check("/home/txt/license.txt");
+    fs->check("/system/kernel/log/kernel.log");
+    fs->check("user.cfg");
 
 	for(;;) {
         halt();

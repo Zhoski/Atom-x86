@@ -232,7 +232,7 @@ void vga_640_480_kprintf(const u8 *format, ...) {
 
         switch (*p)
         {
-        case 'd':
+        case 'd': {
             i32 n = va_arg(args, i32);
             i32 i = 0;
             i32 isNegative = 0;
@@ -268,9 +268,46 @@ void vga_640_480_kprintf(const u8 *format, ...) {
             vga_640_480_draw_string(buffer);
 
             break;
+        }
+        case 'x': {
+            u32 n = va_arg(args, u32);
+            u32 i = 0;
+
+            i8 buffer[10] = {0};
+
+            do {
+                u32 hex = n % 16;
+                if (hex > 9) {
+                    hex += 55;
+                }
+                else {
+                    hex += '0';
+                }
+                buffer[i++] = hex;
+                n /= 16;
+            } while (n > 0);
+
+            //buffer[i] = '\0';
+
+            u32 start = 0;
+            u32 end = i - 1;
+            while (start < end) {
+                i8 temp = buffer[start];
+                buffer[start] = buffer[end];
+                buffer[end] = temp;
+                start++;
+                end--;
+            }
+            
+            vga_640_480_draw_string(buffer);
+        }
         case 's':
             i8 *s = va_arg(args, i8*);
             vga_640_480_draw_string(s);
+            break;
+        case 'c':
+            i8 *c = va_arg(args, i8*);
+            vga_640_480_draw_char(c);
             break;
         case 'f': {
             const i8 code[2] = {*(p+1), *(p+2)};

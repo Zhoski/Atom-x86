@@ -31,13 +31,7 @@ start:
     mov si, lba
     mov dl, [drive]
     int 0x13
-
-    ;mov ax, word [0x8000]
-
-    ;cmp ax, 0xBBAA
-
-    ;jnz error
-
+    
     jmp 0x0000:0x8000
 
     jmp $
@@ -62,7 +56,6 @@ exit:
     popa
     ret
 
-; Изначально тут рут директория фс
 align 4
 lba:
     db 0x10

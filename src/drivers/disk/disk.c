@@ -5,15 +5,10 @@
 #include <drivers/video/video.h>
 
 static Disk ATA_PIO = {
-    .init = &init_ata,
-    .read_sector = &ata_read_sector,
-    .write_sector = &ata_write_sector
+    
 };
 
 static Disk SATA_AHCI = {
-    .init = 0,
-    .read_sector = 0,
-    .write_sector = 0,
     .dispather = &ahci_dispatcher_io,
 };
 
