@@ -20,6 +20,8 @@ static FileSystem_t FluidFS = {
     .open = &fluidfs_fopen,
     .read = &fluidfs_fread,
     .update = &fluidfs_fwrite,
+    .delete = &fluidfs_fdel,
+    .create = &fluidfs_cnode,
 };
 
 FileSystem_t* fs;

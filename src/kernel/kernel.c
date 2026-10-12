@@ -96,15 +96,23 @@ void kmain() {
 
     memset(b, 67, 8192);
 
-    fs->update("license.txt", b, 8192);
+    //fs->update("license.txt", b, 8192);
 
-    fs->update("/system/kernel.bin", "taksa", 5);
+    //fs->update("/system/kernel.bin", "taksa", 5);
 
-    video->kprintf("license.txt: %s\n", b);
+    //video->kprintf("Before: %d\n", fs->check("/boot/stage2.bin"));
 
-    //video->kprintf("license.txt: %s\n", read);
+    fs->delete("/boot/stage2.bin");
+    fs->delete("/system/kernel.bin");
 
-    //fs->update("/home/init.bin", 0, 0);
+    //video->kprintf("After: %d\n", fs->check("/boot/stage2.bin"));
+
+    video->kprintf("result: %d\n",fs->create("/system/kernel", 0xFF));
+    video->kprintf("result: %d\n",fs->create("/system/kernel/test.txt", 0));
+    video->kprintf("result: %d\n",fs->create("/system/kernel/mops", 0xFF));
+    video->kprintf("result: %d\n",fs->create("/test", 0xFF));
+
+    fs->update("/system/kernel/test.txt", "mopsik spic", 12);
 
 	for(;;) {
         halt();

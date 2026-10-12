@@ -81,7 +81,7 @@ gcc -m32 -ffreestanding -c src/fs/fluidfs.c -w -o fluidfs.o \
 # ==============================================================================
 ld -m elf_i386 -T linker.ld kernel.o services.o vga_640_480.o video.o keyboard.o \
                  ata.o sata.o disk.o timer.o pci.o idt.o pic.o isr8.o isr32.o isr33.o isr46.o isr80.o panic.o memory.o \
-                 syscall.o afs.o fluidfs.o fs.o program.o -w -o kernel.elf
+                 syscall.o afs.o fluidfs.o fs.o program.o -w -Os -o kernel.elf
 
 objcopy -O binary kernel.elf rootFS/kernel.bin
 
