@@ -18,6 +18,8 @@ static FileSystem_t FluidFS = {
     .init = &fluidfs_init,
     .check = &fluidfs_fcheck,
     .open = &fluidfs_fopen,
+    .read = &fluidfs_fread,
+    .update = &fluidfs_fwrite,
 };
 
 FileSystem_t* fs;

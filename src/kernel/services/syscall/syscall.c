@@ -61,41 +61,10 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
             }
             break;
         case SYSCALL_DISK:
-            uint32_t i = 0;
-            uint32_t j = 0;
-            uint8_t  file[11];
-
-            while (esi[j] != '\0' && esi[j] != '.')
-            {
-                if(esi[j] >= 97) {
-                    file[i] = esi[j] - 32;
-                }else {
-                    file[i] = esi[j];
-                }
-                i++;
-                j++;
-            }
-
-            while (i < 8)
-            {
-                file[i++] = ' ';
-            }
-
-            while (i < 11)
-            {
-                j++;
-                if(esi[j] >= 97) {
-                    file[i] = esi[j] - 32;
-                }else {
-                    file[i] = esi[j];
-                }
-                i++;
-            }
-
             switch (ebx)
             {
                 case CAT_FILE:
-                    eax = fs->read(file, ecx, (u8*)edx);
+                    eax = fs->read(esi, (u8*)edx, ecx);
                     asm volatile(
                         "movl %%eax, %0"
                         :
@@ -106,7 +75,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                     fs->get_root((u8*)ecx);
                     break;
                 case WRITE_FILE: {
-                    eax = fs->update(file, edi, ecx);
+                    eax = fs->update(esi, edi, ecx);
                     asm volatile(
                         "movl %%eax, %0"
                         :
@@ -115,10 +84,10 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                     break;
                 }
                 case CREATE_FILE:
-                    fs->create(file, ecx);
+                    fs->create(esi, ecx);
                     break;
                 case DELETE_FILE:
-                    eax = fs->delete(file);
+                    eax = fs->delete(esi);
                     asm volatile(
                         "movl %%eax, %0"
                         :
@@ -126,7 +95,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                     );
                     break;
                 case FILE_CHECK:
-                    eax = (u32)(fs->check(file));
+                    eax = (u32)(fs->check(esi));
                     asm volatile(
                         "movl %%eax, %0"
                         :
@@ -135,7 +104,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                     break;
                 case FILE_RUN:
                     asm("sti");
-                    eax = fs->open(file);
+                    eax = fs->open(esi);
                     asm volatile(
                         "movl %%eax, %0"
                         :
@@ -159,7 +128,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                         unsigned char* base;
                     } Ret;
 
-                    File* f = (File*)fs->check(file);
+                    File* f = (File*)fs->check(esi);
                     if(!f) {
                         asm volatile(
                         "movl $0, %%eax"
@@ -176,7 +145,7 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                     ret->base = (U8*)ret + sizeof(Ret);
                     ret->cur = ret->base;
 
-                    fs->read(file, f->size, ret->base);
+                    fs->read(esi, f->size, ret->base);
                     
                     asm volatile(
                         "movl %0, %%eax"

@@ -10,9 +10,10 @@ void main() {
 
     if(status) {
         printf("init.cfg found\n");
-    }
+    }*/
 
-    sys_run("setup.bin");*/
+    /*unsigned int status = sys_run("/system/setup.bin");
+    printf("%d", status);*/
 
     for(;;) {
         asm("hlt");

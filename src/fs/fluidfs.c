@@ -5,21 +5,65 @@
 #include <drivers/video/video.h>
 #include <lib/string.h>
 
+#define FILE_NOT_FOUND          0x00
+#define FILE_FOUND              0x01
+
+#define OUT_OF_FILE_BOUNDS      0x02
+#define DISK_OWERFLOW           0x03
+
 super_block_t* super_block;
 node_t* root_node;
+node_t* g_cur_node;
 node_t node;
 u8* path;
 u32 slash_count = 0;
 
 u32 node_p_block;
 
+u8* g_fcheck_buffer;
+u32 g_cur_block;
+u8* block_bitmap;
+
+u32 get_block() {
+    u32 bit = 0;
+    
+    while (1)
+    {
+        u32 byte = bit / 8;
+        if(byte > 512) {
+            return 0;
+        }
+        u32 bit_in_byte = bit % 8;
+        if((block_bitmap[byte] & (1 << bit_in_byte)) == 0) {          
+            block_bitmap[byte] |= (1 << bit_in_byte);
+
+            return byte * 8 + bit_in_byte;
+        }else {
+            bit++;
+        }
+    }   
+}
+
+void free_block(u32 block) {
+    if(block == 0) {
+        return;
+    }
+
+    u32 bit = block;
+    
+    u32 byte = bit / 8;
+    u32 bit_in_byte = bit % 8;
+    block_bitmap[byte] &= ~(1 << bit_in_byte);
+
+    //video->kprintf("Block released: %d\n", block);
+}
+
 void raw_filename_to_std_format(u8* raw_name) {
     u32 j = 0, n = 0, k = 0;
     u32 last_slash = 0;
     slash_count = 0;
 
-    memset((void*)(&node.name), 0, 32);
-    memset((void*)(&node.ext), 0, 8);
+    memset((void*)&node, 0, 128);
 
     if(path) {
         free(path);
@@ -70,7 +114,8 @@ void raw_filename_to_std_format(u8* raw_name) {
 }
 
 u32 fluidfs_init() {
-    u8* super_block_buffer = malloc(4096);
+    u8* super_block_buffer = malloc(512);
+    block_bitmap = malloc(512);
     super_block = super_block_buffer;
     root_node = (node_t*)(super_block_buffer + 128);
 
@@ -83,26 +128,37 @@ u32 fluidfs_init() {
 
     disk->dispather(&packet);
 
+    packet.buffer = block_bitmap;
+    packet.lba_start += super_block->sec_p_block;
+
+    disk->dispather(&packet);
+
     node_p_block = super_block->block_size / sizeof(node);
+
+    g_fcheck_buffer = malloc(super_block->block_size);
 }
 
 /**
  *  Возвращает 1 если файл найден и 0 в ином случаи
  */
 u32 fluidfs_fcheck(u8* file) {
+    //video->kprintf("\n--------\n");
     raw_filename_to_std_format(file);
-    u8* block_buffer = malloc(super_block->block_size);
 
     io_disk_packet_t packet0 = {
         .command = IO_READ,
         .sec_count = super_block->sec_p_block,
-        .buffer = block_buffer,
+        .buffer = g_fcheck_buffer,
     };
 
-    node_t* cur_node = block_buffer;
-    node_t* cur_node_dir = root_node;
+    node_t* cur_node = g_fcheck_buffer;
+    node_t* cur_node_dir = (node_t*)malloc(128);
     u32 path_offset = 1;
     u32 dir_found = 0;
+
+    memcpy(root_node, cur_node_dir, 128);
+
+    //video->kprintf("Target path: %s\n", path + path_offset);
 
     for(u32 k = 0; k < slash_count - 1; k++) {
         dir_found = 0;
@@ -111,68 +167,87 @@ u32 fluidfs_fcheck(u8* file) {
                 break;
             }
 
+            if(cur_node_dir->p_block[i] == 0) {
+                free(cur_node_dir);
+                return FILE_NOT_FOUND;
+            }
+
             packet0.lba_start = cur_node_dir->p_block[i] * super_block->sec_p_block;
 
             disk->dispather(&packet0);
 
-            cur_node = block_buffer;
+            cur_node = g_fcheck_buffer;
+
+            //video->kprintf("Cur node dir: %s\n", cur_node_dir->name);
+            //video->kprintf("Root dir: %s\n", root_node->name);
 
             if(!cur_node->name[0]) {
-                free(block_buffer);
-                return 0;
+                free(cur_node_dir);
+                return FILE_NOT_FOUND;
             }
 
+            /*video->kprintf("Cur path: %s\n", path + path_offset);
+            video->kprintf("Cur node dir: %s\n", cur_node_dir->name);*/
+
             for(u32 j = 0; j < node_p_block; j++) {
-                //video->kprintf("step: %d    cmp %s and %s\n", j, path + path_offset, cur_node->name);
+                //video->kprintf("%s  ", cur_node->name);
                 if(strcmp(path + path_offset, cur_node->name) == 0 && cur_node->flag == 0xFF) {
                     path_offset += strlen(path + path_offset) + 1;
                     memcpy(cur_node, cur_node_dir, 128);
                     i = 0;
                     dir_found = 1;
+                    //video->kprintf("Dir found %s\n", cur_node_dir->name);
                     break;
                 }
 
                 cur_node = (node_t*)((u8*)cur_node + 128);
 
                 if(cur_node->name[0] == 0) {
+                    //video->kprintf("Leave\n");
                     break;
                 }
             }
         }
 
         if(!dir_found) {
-            free(block_buffer);
-            return 0;
+            free(cur_node_dir);
+            //video->kprintf("Leave2\n");
+            return FILE_NOT_FOUND;
         }
     }
+
+    //video->kprintf("Cur dir: %s\n", cur_node_dir->name);
 
     for(u32 i = 0; i < 16; i++) {
         packet0.lba_start = cur_node_dir->p_block[i] * super_block->sec_p_block;
 
         disk->dispather(&packet0);
 
-        cur_node = block_buffer;
+        cur_node = g_fcheck_buffer;
 
         if(cur_node->name[0] == 0) {;
-            break;
+            free(cur_node_dir);
+            return 0;
         }
 
         for(u32 j = 0; j < node_p_block; j++) {
             if((strcmp(node.name, cur_node->name) == 0) && (strcmp(node.ext, cur_node->ext) == 0)) {
                 memcpy(cur_node, &node, 128);
-                free(block_buffer);
-                return 1;
+                g_cur_node = cur_node;
+                g_cur_block = cur_node_dir->p_block[i];
+                free(cur_node_dir);
+                return FILE_FOUND;
             }
 
             cur_node = (node_t*)((u8*)cur_node + 128);
 
             if(cur_node->name[0] == 0) {
-                break;
+                free(cur_node_dir);
+                return 0;
             }
         }
     }
 
-    free(block_buffer);
     return 0;
 }
 
@@ -181,10 +256,8 @@ u32 fluidfs_fcheck(u8* file) {
  *  Загружает файл на 0x300000 после чего передает ему управление
  */
 u32 fluidfs_fopen(u8* file) {
-    video->kprintf("fopen\n");
     if(!fluidfs_fcheck(file)) {
-        video->kprintf("beda\n");
-        return 0;
+        return FILE_NOT_FOUND;
     }
 
     u32 offset = 0;
@@ -213,4 +286,136 @@ u32 fluidfs_fopen(u8* file) {
     video->kprintf("test: %x\n", *(u8*)0x300000);
 
     program_execute(entry, stack);
+}
+
+/**
+ *  Читает n количество байт file в out
+ */
+u32 fluidfs_fread(u8* file, u8* dest, u32 n) {
+    if(!fluidfs_fcheck(file)) {
+        return FILE_NOT_FOUND;
+    }
+
+    if(node.size < n) {
+        return OUT_OF_FILE_BOUNDS;
+    }
+
+    u8* temp_buffer = malloc(super_block->block_size);
+
+    io_disk_packet_t packet0 = {
+        .command = IO_READ,
+        .sec_count = super_block->sec_p_block,
+        .buffer = temp_buffer,
+    };
+
+    u32 blocks_p_read = (n + super_block->block_size - 1) / super_block->block_size;
+
+    for(u32 k = 0; k < blocks_p_read; k++) {
+        packet0.lba_start = node.p_block[k] * super_block->sec_p_block;
+
+        disk->dispather(&packet0);
+
+        if(n > super_block->block_size) {
+            memcpy(temp_buffer, dest, super_block->block_size);
+            n -= super_block->block_size;
+        }else {
+            memcpy(temp_buffer, dest, n % super_block->block_size);
+            break;
+        }
+    }
+
+    free(temp_buffer);
+}
+
+/**
+ *  Записывает в file из src n байт
+ */
+u32 fluidfs_fwrite(u8* file, u8* src, u32 n) {
+    //video->kprintf("fwrite\n");
+    if(!fluidfs_fcheck(file)) {
+        return FILE_NOT_FOUND;
+    }
+
+    u8* temp_buffer = malloc(super_block->block_size);
+
+    io_disk_packet_t packet0 = {
+        .command = IO_WRITE,
+        .buffer = temp_buffer,
+        .sec_count = super_block->sec_p_block
+    };
+
+    io_disk_packet_t packet1 = {
+        .command = IO_WRITE,
+        .buffer = g_fcheck_buffer,
+        .sec_count = super_block->sec_p_block,
+        .lba_start = g_cur_block * super_block->sec_p_block
+    };
+
+    u32 blocks_p_overwriting = (n + super_block->block_size - 1) / super_block->block_size;
+    u32 stop_flag = 0;
+
+    //video->kprintf("Overwriting file contents %s.%s\n", g_cur_node->name, g_cur_node->ext);
+    //video->kprintf("Total blocks to be rewritten: %d\n", blocks_p_overwriting);
+    for(u32 k = 0; k < blocks_p_overwriting; k++) {
+        if(stop_flag) {
+            break;
+        }
+
+        if(!g_cur_node->p_block[k]) {
+            g_cur_node->p_block[k] = get_block();
+            if(!g_cur_node->p_block[k]) {
+                video->kprintf("Disk overflow\n");
+                return DISK_OWERFLOW;
+            }
+        }
+
+        packet0.lba_start = g_cur_node->p_block[k] * super_block->sec_p_block;
+
+        if(n >= super_block->block_size) {
+            memcpy(src, temp_buffer, super_block->block_size);
+            n -= super_block->block_size;
+        }else {
+            memset(temp_buffer, 0, super_block->block_size);
+            memcpy(src, temp_buffer, n % super_block->block_size);
+            stop_flag = 1;
+        }
+
+        disk->dispather(&packet0);
+    }
+
+    memset(temp_buffer, 0, super_block->block_size);
+
+    //video->kprintf("g_cur_node.block[0]: %d\n", g_cur_node->p_block[0]);
+
+    //video->kprintf("Erasing previous content\n");
+    for(u32 k = blocks_p_overwriting; k < 16; k++) {
+        if(g_cur_node->p_block[k] == 0) {
+            break;
+        }
+        packet0.lba_start = g_cur_node->p_block[k] * super_block->sec_p_block;
+
+        disk->dispather(&packet0);
+
+        free_block(g_cur_node->p_block[k]);
+
+        g_cur_node->p_block[k] = 0;
+    }
+
+    // Изменение нода файла
+    g_cur_node->size = n;
+
+    disk->dispather(&packet1);
+
+    //video->kprintf("writing: %d\n", packet1.lba_start);
+
+    // Изменение битмап карты
+    packet0.lba_start = 2 * super_block->sec_p_block;
+    packet0.sec_count = 1;
+    packet0.buffer = block_bitmap;
+
+    disk->dispather(&packet0);
+
+    free(temp_buffer);
+
+    //video->kprintf("Cur node: %s", g_cur_node->name);
 }

@@ -56,6 +56,8 @@ u32 free_block_get() {
 }
 
 void raw_filename_to_std_format(u8* raw, file_node_t* file) {
+    memset(file, 0, 128);
+
     u32 j = 0, n = 0, k = 0;
     u32 last_slash = 0;
 

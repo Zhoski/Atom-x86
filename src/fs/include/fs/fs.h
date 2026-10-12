@@ -11,10 +11,10 @@ typedef struct FileSystem
 {
     u32* (*check)(const u8 *__restrict__ file_name); // Возвращает 1 в случаи если файл есть и 0 в ином
     u8 (*open)(const u8 *__restrict__ file_name);
-    u8 (*read)(const u8 *__restrict__ file_name, u32 n,u8 *__restrict__ out);
+    u8 (*read)(const u8 *__restrict__ file_name, u8 *__restrict__ dest, u32 n);
     u8 (*create)(const u8 *__restrict__ file_name, u16 size);
     u8 (*delete)(const u8 *__restrict__ file_name);
-    u8 (*update) (const u8 *__restrict__ file_name, u8* in, u32 bytes);
+    u8 (*update) (const u8 *__restrict__ file_name, u8* src, u32 n);
     u8 (*get_root) (u8 *__restrict__ out);
     u32 (*init)();
 } FileSystem_t;

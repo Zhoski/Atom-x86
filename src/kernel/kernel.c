@@ -89,13 +89,22 @@ void kmain() {
 
     video->kprintf("Result: %d\nMagic: %d\n", packet.result, *magic);
 
-    //fs->open("INIT    BIN");
+    /*fs->update("/system/kernel.bin", "test", 4);
 
-    //video->kprintf("File: %d\n", fs->check("/home/license.txt"));
+    u8* read = malloc(512);*/
+    u8* b = malloc(8192);
 
-    fs->open("/home/init.bin");
-    /*fs->check("/system/kernel/log/kernel.log");
-    fs->check("user.cfg");*/
+    memset(b, 67, 8192);
+
+    fs->update("license.txt", b, 8192);
+
+    fs->update("/system/kernel.bin", "taksa", 5);
+
+    video->kprintf("license.txt: %s\n", b);
+
+    //video->kprintf("license.txt: %s\n", read);
+
+    //fs->update("/home/init.bin", 0, 0);
 
 	for(;;) {
         halt();

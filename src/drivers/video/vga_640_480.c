@@ -302,17 +302,17 @@ void vga_640_480_kprintf(const u8 *format, ...) {
             vga_640_480_draw_string(buffer);
         }
         case 's':
-            i8 *s = va_arg(args, i8*);
+            u8 *s = va_arg(args, u8*);
             vga_640_480_draw_string(s);
             break;
         case 'c':
-            i8 *c = va_arg(args, i8*);
+            u8 *c = va_arg(args, u8*);
             vga_640_480_draw_char(c);
             break;
         case 'f': {
-            const i8 code[2] = {*(p+1), *(p+2)};
+            const u8 code[2] = {*(p+1), *(p+2)};
             u32 result = 0;
-            i8 c = code[0];
+            u8 c = code[0];
 
             result = result * 10 + (c - '0');
 
@@ -327,9 +327,9 @@ void vga_640_480_kprintf(const u8 *format, ...) {
             break;
         }
         case 'b': {
-            const i8 code[2] = {*(p+1), *(p+2)};
+            const u8 code[2] = {*(p+1), *(p+2)};
             u32 result = 0;
-            i8 c = code[0];
+            u8 c = code[0];
 
             result = result * 10 + (c - '0');
 
