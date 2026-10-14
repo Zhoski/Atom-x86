@@ -61,7 +61,7 @@ unsigned char sys_create(const unsigned char* __restrict__ file_name, const unsi
     );
 }
 
-unsigned char sys_delete(const unsigned char* __restrict__ file_name) {
+unsigned char sys_delete(const unsigned char* __restrict__ file) {
     int ret = 0;
     asm volatile(
         "movl $5, %%eax\n"
@@ -69,7 +69,7 @@ unsigned char sys_delete(const unsigned char* __restrict__ file_name) {
         "movl %[file], %%esi\n"
         "int $0x80"
         :
-        : [file] "m" ((int)file_name)
+        : [file] "m" ((int)file)
         : "eax", "ebx", "ecx", "esi", "edi", "memory"
     );
     asm volatile(
@@ -78,14 +78,14 @@ unsigned char sys_delete(const unsigned char* __restrict__ file_name) {
     );
 }
 
-unsigned char get_root(unsigned char *__restrict__ out) {
+unsigned char write_root(unsigned char *__restrict__ dir) {
     asm volatile(
         "movl $5, %%eax\n"
-        "movl $2, %%ebx\n"
-        "movl %0, %%ecx\n"
+        "movl $6, %%ebx\n"
+        "movl %0, %%esi\n"
         "int $0x80"
         :
-        : "r"((unsigned int)out)
+        : "r"((unsigned int)dir)
         : "eax", "ebx", "ecx", "memory"
     );
 }

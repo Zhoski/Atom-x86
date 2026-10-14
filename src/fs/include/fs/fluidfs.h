@@ -32,6 +32,7 @@ u32 fluidfs_fread(u8* file, u8* out, u32 n);
 u32 fluidfs_fwrite(u8* file, u8* src, u32 n);
 u32 fluidfs_fdel(u8* file);
 u32 fluidfs_cnode(u8* node, u8 flag);
+u32 fluidfs_write_dir(u8* dir);
 
 extern node_t g_node;
 

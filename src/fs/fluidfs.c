@@ -546,3 +546,103 @@ u32 fluidfs_cnode(u8* node, u8 flag) {
         }
     }
 }
+
+u32 fluidfs_write_dir(u8* dir) {
+    raw_filename_to_std_format(dir);
+
+    io_disk_packet_t packet0 = {
+        .command = IO_READ,
+        .sec_count = super_block->sec_p_block,
+        .buffer = g_fcheck_buffer,
+    };
+
+    node_t* cur_node = g_fcheck_buffer;
+    node_t* cur_node_dir = (node_t*)malloc(128);
+    u32 path_offset = 1;
+    u32 dir_found = 0;
+
+    memcpy(root_node, cur_node_dir, 128);
+
+    for(u32 k = 0; k < slash_count - 1; k++) {
+        dir_found = 0;
+        for(u32 i = 0; i < 16; i++) {
+            if(dir_found) {
+                break;
+            }
+
+            if(cur_node_dir->p_block[i] == 0) {
+                free(cur_node_dir);
+                return FILE_NOT_FOUND;
+            }
+
+            packet0.lba_start = cur_node_dir->p_block[i] * super_block->sec_p_block;
+
+            disk->dispather(&packet0);
+
+            cur_node = g_fcheck_buffer;
+
+            if(!cur_node->name[0]) {
+                free(cur_node_dir);
+                return FILE_NOT_FOUND;
+            }
+
+            for(u32 j = 0; j < node_p_block; j++) {
+                if(strcmp(path + path_offset, cur_node->name) == 0 && cur_node->flag == 0xFF) {
+                    path_offset += strlen(path + path_offset) + 1;
+                    memcpy(cur_node, cur_node_dir, 128);
+                    i = 0;
+                    dir_found = 1;
+                    break;
+                }
+
+                cur_node = (node_t*)((u8*)cur_node + 128);
+
+                if(cur_node->name[0] == 0) {
+                    break;
+                }
+            }
+        }
+
+        if(!dir_found) {
+            free(cur_node_dir);
+            return FILE_NOT_FOUND;
+        }
+    }
+
+    for(u32 i = 0; i < 16; i++) {
+        packet0.lba_start = cur_node_dir->p_block[i] * super_block->sec_p_block;
+
+        disk->dispather(&packet0);
+
+        cur_node = g_fcheck_buffer;
+
+        if(cur_node->name[0] == 0) {;
+            free(cur_node_dir);
+            return 0;
+        }
+
+        for(u32 j = 0; j < node_p_block; j++) {
+            if(cur_node->name[0] && cur_node->name[0] != 0xFF) {
+                u32 indent = 16 - strlen(cur_node->name);
+                video->kprintf("    %s", cur_node->name);
+                for(;indent > 0; indent--) {
+                    video->kputc(' ');
+                }
+
+                if(cur_node->flag != 0xFF) {
+                    video->kprintf("<%s>    %d\n", cur_node->ext, cur_node->size);
+                }
+                else {
+                    video->kprintf("<dir>\n", cur_node->name);
+                }
+            }
+
+            cur_node = (node_t*)((u8*)cur_node + 128);
+
+            if(cur_node->name[0] == 0) {
+                free(cur_node_dir);
+                return 0;
+            }
+        }
+    }
+}

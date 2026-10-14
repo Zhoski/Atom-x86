@@ -26,6 +26,6 @@ unsigned char sys_create(const unsigned char* __restrict__ __file, const unsigne
 unsigned char sys_delete(const unsigned char* __restrict__ __file);
 unsigned int sys_run(const unsigned char* __restrict__ file);
 unsigned int sys_died();
-unsigned char get_root(unsigned char *__restrict__ out);
+unsigned char write_root(unsigned char *__restrict__ dir);
 
 #endif

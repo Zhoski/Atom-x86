@@ -116,6 +116,8 @@ void kmain() {
 
     fs->open("/home/shell.bin");
 
+    //fs->write_dir("/");
+
 	for(;;) {
         halt();
     }

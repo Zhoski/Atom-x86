@@ -42,8 +42,8 @@
 #define CREATE_FILE             0x03
 #define DELETE_FILE             0x04
 #define FILE_CHECK              0x05
-#define DISK_DISPATCH           0x06
-#define FOPEN                   0x07
+#define WRITE_DIR               0x06
+#define DISK_DISPATCH           0x07
 
 /*------- SYSTEM -------*/
 #define SYSCALL_SYSTEM          0x06

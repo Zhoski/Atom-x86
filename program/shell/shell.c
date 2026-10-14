@@ -40,7 +40,7 @@ U32 cmd_sys();
 struct Command cmd[] = {
     {"help", cmd_help},
     {"clear", cmd_clear},
-    {"dir", cmd_dir},
+    {"ls", cmd_dir},
     {"exit", sys_died},
     {"cat", cmd_read},
     {"write", cmd_write},
@@ -56,7 +56,7 @@ U32 *argv_buff;
 U8** argv;
 
 U8* info = "Copyright (c) 2026 Zhoski. Licensed under the MIT License.\n"
-           "Type 'help' to get a list of commands.\n\n\n";
+           "Type 'help' to get a list of commands.\n\n";
 
 U32 cmd_help() {
     U8* help_msg =   "\n"
@@ -102,6 +102,7 @@ U32 cmd_read() {
     fclose(f);*/
 
     uint8* temp_buffer = malloc(4096);
+    memset(temp_buffer, 0, 4096);
     sys_read(argv[1], 4096, temp_buffer);
 
     printf("%s", temp_buffer);
@@ -152,49 +153,8 @@ U32 cmd_create() {
 }
 
 U32 cmd_dir() {
-    printf("\n\n/root:\n");
-    U8* root = malloc(8192);
-    get_root(root);
-    _File file;
-    
-    while (*root)
-    {
-        int i = 0;
-        int j = 0;
-        memcpy(root, (U8*)&file, 16);
-        if(file.name[i] != 0xFF) {
-            while (file.name[i] != ' ' && file.name[i] != 0)
-            {
-                putchar(file.name[i]);
-                i++;
-                j++;
-            }
-            putchar('.');
-
-            i = 0;
-
-            while (i < 3)
-            {
-                putchar(file.ext[i]);
-                i++;
-                j++;
-            }
-
-            while (j != 11)
-            {
-                putchar(' ');
-                j++;
-            }
-
-            printf("      %[03%d%[15",file.size);
-        
-            putchar('\n');
-        }
-
-        root += 16;
-    }   
-
-    free(root);
+    printf("\n");
+    write_root(argv[1]);
 }
 
 U32 cmd_sys() {
@@ -211,6 +171,7 @@ U32 cmd_sys() {
     printf("Memory: %dk\n", *ram); 
     printf("Display: VGA 640x480 16 colors\n"); 
     printf("Shell: Default\n");
+    printf("FS: FluidFS\n");
     printf("\n%[01\xDB\xDB%[02\xDB\xDB%[03\xDB\xDB%[04\xDB\xDB%[05\xDB\xDB"
         "%[06\xDB\xDB%[07\xDB\xDB%[08\xDB\xDB%[09\xDB\xDB%[10\xDB\xDB%[11\xDB\xDB"
         "%[12\xDB\xDB%[13\xDB\xDB%[14\xDB\xDB%[15\xDB\xDB%[07\n");

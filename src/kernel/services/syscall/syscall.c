@@ -97,6 +97,9 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                 case FILE_CHECK:
                     eax = (u32)(fs->check(esi));
                     break;
+                case WRITE_DIR:
+                    eax = fs->write_dir(esi);
+                    break;
 
                 /**
                  *  FIX: Добавить fopen

@@ -16,7 +16,7 @@ typedef struct FileSystem
     u8 (*create)(const u8 *__restrict__ file_name, u8 flag);
     u8 (*delete)(const u8 *__restrict__ file_name);
     u8 (*update) (const u8 *__restrict__ file_name, u8* src, u32 n);
-    u8 (*get_root) (u8 *__restrict__ out);
+    u32 (*write_dir) (u8 *__restrict__ out);
     u32 (*init)();
 } FileSystem_t;
 
