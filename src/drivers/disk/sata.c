@@ -91,12 +91,12 @@ void ahci_port_reset(u32 port) {
 
     hba_mem->port[port].sctl &= ~0x0F;
     hba_mem->port[port].sctl |= 0x01;
-    ksleep(5);
+    ksleep(1);
 
     hba_mem->port[port].sctl &= ~0x0F;
 
     for(u32 timeout = 10; timeout > 0; timeout--) {
-        ksleep(0.25);
+        ksleep(0.1);
         if((hba_mem->port[port].ssts & 0xF) == 0x03) {
             break;
         }

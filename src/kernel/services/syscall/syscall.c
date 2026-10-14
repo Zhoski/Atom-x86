@@ -2,10 +2,10 @@
 #include <kernel/memory.h>
 #include <kernel/device.h>
 #include <kernel/memory.h>
+#include <kernel/program.h>
 #include <drivers/video/video.h>
 #include <fs/fs.h>
 #include <cpu/registers.h>
-#include <kernel/program.h>
 #include <lib/string.h>
 
 extern uint32_t kernel_stack_base;

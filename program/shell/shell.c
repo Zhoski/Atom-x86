@@ -55,28 +55,20 @@ U8 *command_buffer;
 U32 *argv_buff;
 U8** argv;
 
-U8* info = "%[10    ___   __                      _  ______  _____\n"
-           "   /   | / /_____  ____ ___      | |/ / __ \\/ ___/\n"
-           "  / /| |/ __/ __ \\/ __ `__ \\_____|   / /_/ / __ \\ \n"
-           " / ___ / /_/ /_/ / / / / / /_____/   \\__, / /_/ / \n"
-           "/_/  |_\\__/\\____/_/ /_/ /_/     /_/|_/____/\\____/ \n\n\n%[15\n"
-           "Copyright (c) 2026 Zhoski. Licensed under the MIT License.\n"
-           "Type 'help' to get a list of commands.\n";
-
-U8 user[32];
-U8 pass[32];
+U8* info = "Copyright (c) 2026 Zhoski. Licensed under the MIT License.\n"
+           "Type 'help' to get a list of commands.\n\n\n";
 
 U32 cmd_help() {
     U8* help_msg =   "\n"
-                        "%[11[BASE]%[15\n"
+                        "[BASE]\n"
                         "   clear                -- clear screen\n"
-                        "%[11[DISK]%[15\n"
+                        "[DISK]\n"
                         "   touch  [file]        -- creates file\n"
                         "   rm     [file]        -- deletes file\n"
                         "   cat    [file]        -- read file\n"
                         "   write  [file] [data] -- write in file\n"
                         "   ls                   -- displays all files in a directory\n"
-                        "%[11[SYSTEM]%[15\n"
+                        "[SYSTEM]\n"
                         "   sys                  -- show system info\n"
                         "   setdrv [type] [file] -- change driver\n"
                         "   getdrv               -- show list cur drv";
@@ -119,9 +111,9 @@ U32 cmd_read() {
 U32 cmd_check() {
     int ret = sys_check(argv[1]);
     if(!ret) {
-        printf("\n%[12%s not found%[15", argv[1]);
+        printf("\n%[12%s not found%[07", argv[1]);
     }else {
-        printf("\n%[10%s found%[15", argv[1]);
+        printf("\n%[10%s found%[07", argv[1]);
     }
 }
 
@@ -148,15 +140,15 @@ U32 cmd_write() {
 U32 cmd_delete() {
     int ret = sys_delete(argv[1]);
     if(!ret) {
-        printf("\n%[12%s not found%[15", argv[1]);
+        printf("\n%[12%s not found%[07", argv[1]);
     }else {
-        printf("\n%[10%s succes deleted%[15", argv[1]);
+        printf("\n%[10%s succes deleted%[07", argv[1]);
     }
 }
 
 U32 cmd_create() {
     sys_create(argv[1], 512);
-    printf("\n%[10%s succes created%[15", argv[1]);
+    printf("\n%[10%s succes created%[07", argv[1]);
 }
 
 U32 cmd_dir() {
@@ -212,17 +204,16 @@ U32 cmd_sys() {
     memcpy(0x1008, cpu, 48);
 
     printf("\n");
-    printf("%[10       /\\          %[15%s@Atom-X86\n", user);
-    printf("%[10      /  \\         %[15-----------------\n");
-    printf("%[10     / /\\ \\        %[10OS:%[15 Atom-X86 Demo\n"); 
-    printf("%[10    / /  \\ \\       %[10Kernel:%[15 v0.0.1-custom\n");
-    printf("%[10   / /____\\ \\      %[10CPU:%[15 %s\n", cpu); 
-    printf("%[10  /__________\\     %[10Memory:%[15 %dk\n", *ram); 
-    printf("%[10 /____________\\    %[10Display:%[15 VGA 640x480 16 colors\n"); 
-    printf("                   %[10Shell:%[15 Default\n");
-    printf("\n                   %[01\xDB\xDB%[02\xDB\xDB%[03\xDB\xDB%[04\xDB\xDB%[05\xDB\xDB"
+    printf("-----------------\n");
+    printf("OS: NFOS86 Demo\n"); 
+    printf("Kernel: v0.0.1-custom\n");
+    printf("CPU: %s\n", cpu); 
+    printf("Memory: %dk\n", *ram); 
+    printf("Display: VGA 640x480 16 colors\n"); 
+    printf("Shell: Default\n");
+    printf("\n%[01\xDB\xDB%[02\xDB\xDB%[03\xDB\xDB%[04\xDB\xDB%[05\xDB\xDB"
         "%[06\xDB\xDB%[07\xDB\xDB%[08\xDB\xDB%[09\xDB\xDB%[10\xDB\xDB%[11\xDB\xDB"
-        "%[12\xDB\xDB%[13\xDB\xDB%[14\xDB\xDB%[15\xDB\xDB");
+        "%[12\xDB\xDB%[13\xDB\xDB%[14\xDB\xDB%[15\xDB\xDB%[07\n");
 }
 
 void execute() {
@@ -270,7 +261,7 @@ void execute() {
     if(!is_found) {
         U32 err = sys_run(argv[0]);
         if(err) {
-            printf("\n%[12Atom: Unknown command%[15");
+            printf("\n%[12NFOS86: Unknown command%[07");
         }
     }
 
@@ -281,11 +272,11 @@ void execute() {
 
 void shell_main() {
     SetBGColor(0);
-    SetFGColor(15);
+    SetFGColor(7);
     clear_screen(0);
 
     printf(info);
-    printf("%[10%s@/> %[15",user);
+    printf("NFOS86/> ");
     for(U32 i = 0;i < COMMAND_BUFFER_SIZE;i++) {
         command_buffer[i] = 0;
     }
@@ -297,7 +288,7 @@ void shell_main() {
         if(c) {
             if(c == ENTER) {
                 execute();
-                printf("\n%[10%s/> %[15",user);
+                printf("\nNFOS86/> ");
             }else if(c == BACKSPACE && command_index != 0) {
                 U32 x;
                 U32 y;
@@ -325,9 +316,9 @@ void shell_main() {
 void main() {
     command_buffer = malloc(COMMAND_BUFFER_SIZE);
 
-    uint8* user_cfg = malloc(512);
+    //uint8* user_cfg = malloc(512);
 
-    sys_read("/home/user.cfg", 512, user_cfg);
+    //sys_read("/home/user.cfg", 512, user_cfg);
     
     /*File* fUser = fopen("/home/user.cfg", FREAD);
     if(!fUser) {
@@ -346,7 +337,7 @@ void main() {
     //fread(fUser, fUser->bytes, user_cfg);
     /*fclose(fUser);*/
 
-    U32 i = 0;
+    /*U32 i = 0;
     U32 j = 0;
     if(user_cfg[i]) {
         while (user_cfg[i] != ':')
@@ -358,7 +349,7 @@ void main() {
             j++;
             i++;
         }
-    }
+    }*/
 
     shell_main();
 }

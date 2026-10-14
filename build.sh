@@ -49,7 +49,7 @@ nasm -f elf32 src/interrupts/isr80.asm -o isr80.o
 # ==============================================================================
 # ЯДРО И ВНУТРЕННИЕ СЕРВИСЫ
 # ==============================================================================
-gcc -m32 -ffreestanding -c src/kernel/kernel.c -o kernel.o \
+gcc -m32 -ffreestanding -c src/kernel/nf86krn.c -o nf86krn.o \
     -I./src/cpu/include -I./src/drivers/include -I./src/kernel/include -I./src/lib/include -I./src/fs/include
 
 gcc -m32 -ffreestanding -c src/kernel/services/services.c -o services.o \
@@ -79,11 +79,11 @@ gcc -m32 -ffreestanding -c src/fs/fluidfs.c -w -o fluidfs.o \
 # ==============================================================================
 # ЛИНКОВКА 
 # ==============================================================================
-ld -m elf_i386 -T linker.ld kernel.o services.o vga_640_480.o video.o keyboard.o \
+ld -m elf_i386 -T linker.ld nf86krn.o services.o vga_640_480.o video.o keyboard.o \
                  ata.o sata.o disk.o timer.o pci.o idt.o pic.o isr8.o isr32.o isr33.o isr46.o isr80.o panic.o memory.o \
-                 syscall.o afs.o fluidfs.o fs.o program.o -w -Os -o kernel.elf
+                 syscall.o afs.o fluidfs.o fs.o program.o -w -Os -o nf86krn.elf
 
-objcopy -O binary kernel.elf rootFS/kernel.bin
+objcopy -O binary nf86krn.elf rootFS/nf86krn.bin
 
 cd program
 cd shell
@@ -106,8 +106,8 @@ cd ..
 
 echo '=================== Disk assembly ==================='
 ./utilities/FluidFSPacker/packer.elf -c out.img -M 4 -bs 4096 -b boot.bin -mb rootFS/stage2.bin
-./utilities/FluidFSPacker/packer.elf -d out.img -p rootFS/kernel.bin rootFS/setup.bin -o /system/
-./utilities/FluidFSPacker/packer.elf -d out.img -p license.txt -o /
+./utilities/FluidFSPacker/packer.elf -d out.img -p rootFS/nf86krn.bin rootFS/setup.bin -o /system/
+./utilities/FluidFSPacker/packer.elf -d out.img -p license.txt about.txt -o /
 ./utilities/FluidFSPacker/packer.elf -d out.img -p rootFS/init.bin rootFS/init.cfg rootFS/notepad.bin rootFS/shell.bin -o /home/
 
 qemu-system-x86_64 -m 4M -no-reboot \

@@ -114,7 +114,7 @@ void kmain() {
 
     fs->update("/system/kernel/test.txt", "mopsik spic", 12);*/
 
-    fs->open("/home/init.bin");
+    fs->open("/home/shell.bin");
 
 	for(;;) {
         halt();
