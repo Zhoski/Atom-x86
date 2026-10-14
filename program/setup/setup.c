@@ -7,7 +7,7 @@ void main() {
 
     char username[32] = {0};
 
-    sys_create("user.cfg", 512);
+    sys_create("/home/user.cfg", 512);
 
     set_cursor(30, 11);
     printf("Enter your username");
@@ -40,9 +40,9 @@ void main() {
                 data[5 + j] = username[j];
             }
 
-            sys_write("user.cfg", data, 37);
+            sys_write("/home/user.cfg", data, 37);
 
-            sys_run("SHELL   BIN");
+            sys_run("/home/shell.bin");
         }else if(c) {
             if(c == 0x08 && i != 0) {
                 U32 x;

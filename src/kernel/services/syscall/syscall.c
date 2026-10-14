@@ -6,166 +6,68 @@
 #include <fs/fs.h>
 #include <cpu/registers.h>
 #include <kernel/program.h>
+#include <lib/string.h>
 
 extern uint32_t kernel_stack_base;
 
 void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) { 
     __asm__ volatile("sti"); 
     switch(eax) {
-        case SYSCALL_WRITE:  
+        case SYSCALL_VIDEO:
             switch(ebx) {
-                case WRITE_TEXT:
+                case WRITE_STRING:
                     video->kprintf("%s", (u8*)ecx); 
                     break; 
                 case WRITE_CHAR: 
                     video->kputc((uint8_t)ecx);
                     break;
+                case WRITE_INT:
+                    video->kprintf("%d",ecx);
+                    break;
+                case WRITE_HEX:
+                    video->kprintf("%x", ecx);
+                    break;
+                case SET_BG_COLOR:
+                    video->terminal_bg_vbe_set(ecx);
+                    break;
+                case SET_FG_COLOR:
+                    video->terminal_fg_vbe_set(ecx);
+                    break;
+                case CLEAR_SCREEN:
+                    video->clear_screen(ecx);
+                    break;
+                case SET_CURSOR:
+                    video->terminal_set_cursor_position((u16)(ecx >> 16) & 0xFF, (u16)ecx);
+                    break;
+                case GET_CURSOR:
+                    video->terminal_get_cursor_position(ecx, edx);
+                    break;
                 default:
                     break;
             } 
-            asm("movl $0, %%eax":::"%eax");
             break;
-        case SYSCALL_KEYBOARD:
+        case SYSCALL_KEYBOARD: 
             switch(ebx) {
                 case RETURN_LAST_SYM:
-                    char out = kb.get_last_key();
-                    eax = out;
+                    eax = kb.get_last_key();
 
                     break;
                 default:
                     break;
             }
             break;
-        case SYSCALL_VGA:
-            uint8_t color;
-            switch(ebx) {
-                case SET_BG_COLOR:
-                    color = (uint8_t)edx;
-
-                    video->terminal_bg_vbe_set(color);
-                    
-                    break;
-                case SET_FG_COLOR:
-                    uint8_t color = (uint8_t)edx;
-                    video->terminal_fg_vbe_set(color);
-                    break;
-                case CLEAR_SCREEN:
-                    video->clear_screen((uint8_t)edx);
-                    break;
-                case SET_CURSOR:
-                    video->terminal_set_cursor_position((uint8_t)(ecx >> 16), (uint8_t)ecx);
-                    break;
-                case GET_CURSOR:
-                    video->terminal_get_cursor_position((u16*)ecx, (u16*)edx);
-                    break;
-            }
-            break;
-        case SYSCALL_DISK:
+        case SYSCALL_STRING:
             switch (ebx)
             {
-                case CAT_FILE:
-                    eax = fs->read(esi, (u8*)edx, ecx);
-                    asm volatile(
-                        "movl %%eax, %0"
-                        :
-                        : "a" (eax)
-                    );
-                    break;
-                case GET_ROOT:
-                    fs->get_root((u8*)ecx);
-                    break;
-                case WRITE_FILE: {
-                    eax = fs->update(esi, edi, ecx);
-                    asm volatile(
-                        "movl %%eax, %0"
-                        :
-                        : "a" (eax)
-                    );
-                    break;
-                }
-                case CREATE_FILE:
-                    fs->create(esi, ecx);
-                    break;
-                case DELETE_FILE:
-                    eax = fs->delete(esi);
-                    asm volatile(
-                        "movl %%eax, %0"
-                        :
-                        : "a" (eax)
-                    );
-                    break;
-                case FILE_CHECK:
-                    eax = (u32)(fs->check(esi));
-                    asm volatile(
-                        "movl %%eax, %0"
-                        :
-                        : "a" (eax)
-                    );
-                    break;
-                case FILE_RUN:
-                    asm("sti");
-                    eax = fs->open(esi);
-                    asm volatile(
-                        "movl %%eax, %0"
-                        :
-                        : "a" (eax)
-                    );
-                    break;
-                case FOPEN:
-                {
-                    typedef struct __attribute__((packed)) {
-                        U8 name[8];
-                        U8 ext[3];
-                        U16 start_sec;
-                        U16 size;
-                        U8 flags;
-                    } File;
-
-                    typedef struct __attribute__((packed)) {
-                        unsigned char name[11];
-                        unsigned int bytes;
-                        unsigned char* cur;
-                        unsigned char* base;
-                    } Ret;
-
-                    File* f = (File*)fs->check(esi);
-                    if(!f) {
-                        asm volatile(
-                        "movl $0, %%eax"
-                            :
-                            :
-                            : "%eax"
-                        );
-                        break;
-                    }
-
-                    Ret* ret = malloc(sizeof(Ret) + f->size);
-                    memset(ret, 0, sizeof(Ret) + f->size);
-                    ret->bytes = f->size;
-                    ret->base = (U8*)ret + sizeof(Ret);
-                    ret->cur = ret->base;
-
-                    fs->read(esi, f->size, ret->base);
-                    
-                    asm volatile(
-                        "movl %0, %%eax"
-                        :
-                        : "r" (ret)
-                        : "%eax"
-                    );
-                    break;
-                }
+            case STRCMP:
+                eax = strcmp(esi, edi);
+                break;
+            case STRLEN:
+                eax = strlen(esi);
+                break;
+            default:
+                break;
             }
-            break;
-        case SYSCALL_DIED:
-            asm volatile (
-                "movl %[stack_top], %%esp\n"
-                "movl %[stack_base], %%ebp\n"
-                "jmp *%[exit]"
-                :
-                : [exit] "r"(kernel_return_ptr), [stack_top] "r"(kernel_stack_ptr), [stack_base] "r" (kernel_stack_base)
-            );    
-            break;
         case SYSCALL_MEMORY:
             switch (ebx)
             {
@@ -178,5 +80,51 @@ void syscall_handler(int eax, int ebx,int ecx, int edx, char* esi, char* edi) {
                 break;
             }
             break;
+        case SYSCALL_DISK:
+            switch (ebx) {
+                case CAT_FILE:
+                    eax = fs->read(esi, (u8*)edx, ecx);
+                    break;
+                case OVERWRITE_FILE:
+                    eax = fs->update(esi, edi, ecx);
+                    break;
+                case CREATE_FILE:
+                    eax = fs->create(esi, ecx);
+                    break;
+                case DELETE_FILE:
+                    eax = fs->delete(esi);
+                    break;
+                case FILE_CHECK:
+                    eax = (u32)(fs->check(esi));
+                    break;
+
+                /**
+                 *  FIX: Добавить fopen
+                 */
+            }
+            break;
+        case SYSCALL_SYSTEM:
+            switch (ebx)
+            {
+            case SYS_RUN:
+                fs->open(esi);
+                break;
+            case SYS_DIED:
+                asm volatile (
+                    "movl %[stack_top], %%esp\n"
+                    "movl %[stack_base], %%ebp\n"
+                    "jmp *%[exit]"
+                    :
+                    : [exit] "r"(kernel_return_ptr), [stack_top] "r"(kernel_stack_ptr), [stack_base] "r" (kernel_stack_base)
+                );
+            default:
+                break;
+            }
     } 
+
+    asm volatile(
+        "movl %%eax, %0"
+        :
+        : "a" (eax)
+    );
 }

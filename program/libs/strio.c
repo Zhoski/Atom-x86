@@ -100,8 +100,8 @@ int __strcmp(const char *s1, const char *s2) {
 
 void SetFGColor(unsigned char color) {
     asm volatile(
-        "movl $3, %%eax\n"
-        "movl $1, %%ebx\n"
+        "movl $1, %%eax\n"
+        "movl $6, %%ebx\n"
         "movl %0, %%ecx\n"
         "int $0x80"
         :
@@ -112,8 +112,8 @@ void SetFGColor(unsigned char color) {
 
 void SetBGColor(unsigned char color) {
     asm volatile(
-        "movl $3, %%eax\n"
-        "movl $2, %%ebx\n"
+        "movl $1, %%eax\n"
+        "movl $5, %%ebx\n"
         "movl %0, %%ecx\n"
         "int $0x80"
         :
@@ -230,8 +230,8 @@ void putchar(unsigned char c) {
 
 void clear_screen(unsigned char color) {
     asm volatile (
-        "movl $3, %%eax\n"
-        "movl $3, %%ebx\n"
+        "movl $1, %%eax\n"
+        "movl $7, %%ebx\n"
         "movl %0, %%edx\n"
         "int $0x80"
         :
@@ -246,8 +246,8 @@ void set_cursor(const unsigned short x, const unsigned short y) {
     pos |= y;
     
     asm volatile (
-        "movl $3, %%eax\n"
-        "movl $4, %%ebx\n"
+        "movl $1, %%eax\n"
+        "movl $8, %%ebx\n"
         "movl %0, %%ecx\n"
         "int $0x80"
         :
@@ -258,8 +258,8 @@ void set_cursor(const unsigned short x, const unsigned short y) {
 
 void get_cursor(unsigned int* x, unsigned int* y) { 
     asm volatile (
-        "movl $3, %%eax\n"
-        "movl $5, %%ebx\n"
+        "movl $1, %%eax\n"
+        "movl $9, %%ebx\n"
         "movl %0, %%ecx\n"
         "movl %1, %%edx\n"
         "int $0x80"

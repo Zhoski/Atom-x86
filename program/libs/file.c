@@ -15,7 +15,7 @@ unsigned int sys_check(const unsigned char* __restrict__ file_name) {
     int ret = 0;
     asm volatile(
         "movl $5, %%eax\n"
-        "movl $6, %%ebx\n"
+        "movl $5, %%ebx\n"
         "movl %[file], %%esi\n"
         "int $0x80"
         :
@@ -33,7 +33,7 @@ unsigned int sys_write(const unsigned char* __restrict__ file_name, unsigned cha
     int ret = 0;
     asm volatile(
         "movl $5, %%eax\n"
-        "movl $3, %%ebx\n"
+        "movl $2, %%ebx\n"
         "movl %[c], %%ecx\n"
         "movl %[file], %%esi\n"
         "movl %[in], %%edi\n"
@@ -51,7 +51,7 @@ unsigned int sys_write(const unsigned char* __restrict__ file_name, unsigned cha
 unsigned char sys_create(const unsigned char* __restrict__ file_name, const unsigned int s) {
     asm volatile(
         "movl $5, %%eax\n"
-        "movl $4, %%ebx\n"
+        "movl $3, %%ebx\n"
         "movl %[s], %%ecx\n"
         "movl %[file], %%esi\n"
         "int $0x80"
@@ -65,7 +65,7 @@ unsigned char sys_delete(const unsigned char* __restrict__ file_name) {
     int ret = 0;
     asm volatile(
         "movl $5, %%eax\n"
-        "movl $5, %%ebx\n"
+        "movl $4, %%ebx\n"
         "movl %[file], %%esi\n"
         "int $0x80"
         :
@@ -93,8 +93,8 @@ unsigned char get_root(unsigned char *__restrict__ out) {
 unsigned int sys_run(const unsigned char* __restrict__ file) {
     int ret = 0;
     asm volatile(
-        "movl $5, %%eax\n"
-        "movl $7, %%ebx\n"
+        "movl $6, %%eax\n"
+        "movl $1, %%ebx\n"
         "movl %0, %%esi\n"
         "int $0x80"
         :
@@ -111,7 +111,8 @@ unsigned int sys_run(const unsigned char* __restrict__ file) {
 
 unsigned int sys_died() {
     asm volatile(
-        "movl $60, %%eax\n"
+        "movl $6, %%eax\n"
+        "movl $60, %%ebx\n"
         "int $0x80"
         :
         : 
@@ -149,7 +150,7 @@ File* fopen(unsigned char *__restrict__ file, const unsigned int mode) {
 void fclose(File* file) {
     asm volatile(
         "movl $4, %%eax\n"
-        "movl $7, %%ebx\n"
+        "movl $2, %%ebx\n"
         "movl %[file], %%esi\n"
         "int $0x80"
         :
@@ -173,7 +174,7 @@ void fread(File* stream, unsigned int n, unsigned char* out) {
 void fwrite(File* stream, unsigned int n, unsigned char* in) {
     asm volatile(
         "movl $5, %%eax\n"
-        "movl $3, %%ebx\n"
+        "movl $2, %%ebx\n"
         "movl %[c], %%ecx\n"
         "movl %[file], %%esi\n"
         "movl %[in], %%edi\n"

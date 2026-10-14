@@ -1,54 +1,54 @@
 #ifndef __SYSCALL__
 #define __SYSCALL__
 
-/*-------- Вывод --------*/
-#define SYSCALL_WRITE           1
-/*----- Виды вывода -----*/
-#define WRITE_TEXT              1
-#define WRITE_CHAR              2
-#define PUTPIXEL                3
+/* VIDEO */
 
-/*----- Клавиатура ------*/
-#define SYSCALL_KEYBOARD        2
-/*--- Вернуть символ ----*/
-#define RETURN_LAST_SYM         1
+#define SYSCALL_VIDEO           0x01
 
-/*------ GRAPHICS -------*/
-#define SYSCALL_VGA             3
-#define SET_FG_COLOR            1
-#define SET_BG_COLOR            2
-#define CLEAR_SCREEN            3
-#define SET_CURSOR              4
-#define GET_CURSOR              5
+#define WRITE_STRING            0x01
+#define WRITE_CHAR              0x02
+#define WRITE_INT               0x03
+#define WRITE_HEX               0x04
+#define SET_BG_COLOR            0x05
+#define SET_FG_COLOR            0x06
+#define CLEAR_SCREEN            0x07
+#define SET_CURSOR              0x08
+#define GET_CURSOR              0x09
+
+/* ----- Keyboard ------ */
+
+#define SYSCALL_KEYBOARD        0x02
+#define RETURN_LAST_SYM         0x01
+
+/* ------- STRING ------ */
+
+#define SYSCALL_STRING          0x03
+
+#define STRCMP                  0x01
+#define STRLEN                  0x02              
 
 /* ------- MEMORY -------*/
-#define SYSCALL_MEMORY          4
-#define READ_MEMORY_B           1
-#define READ_MEMORY_DW          2
-#define READ_MEMORY_DD          3
-#define WRITE_MEMORY            4
-#define COPY_MEMORY             5
-#define MALLOC                  6
-#define FREE                    7
+
+#define SYSCALL_MEMORY          0x04
+
+#define MALLOC                  0x01
+#define FREE                    0x02
 
 /*-------- DISK --------*/      
-#define SYSCALL_DISK            5
-#define CAT_FILE                1
-#define GET_ROOT                2
-#define WRITE_FILE              3
-#define CREATE_FILE             4
-#define DELETE_FILE             5
-#define FILE_CHECK              6
-#define FILE_RUN                7
-#define FOPEN                   8
-#define FWRITE                  9
+
+#define SYSCALL_DISK            0x05
+#define CAT_FILE                0x01
+#define OVERWRITE_FILE          0x02
+#define CREATE_FILE             0x03
+#define DELETE_FILE             0x04
+#define FILE_CHECK              0x05
+#define DISK_DISPATCH           0x06
+#define FOPEN                   0x07
 
 /*------- SYSTEM -------*/
-#define SYSCALL_SYSTEM          6
-#define SYS_RUN                 1
-
-/*----- Завершение ------*/
-#define SYSCALL_DIED            60
+#define SYSCALL_SYSTEM          0x06
+#define SYS_RUN                 0x01
+#define SYS_DIED                0x60
 
 #define KERNEL_READ_ERROR       -1
 #define SUCCES_READ             0

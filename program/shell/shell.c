@@ -89,9 +89,12 @@ U32 cmd_clear() {
     printf(info);
 }
 
+/**
+ *  FIX: Исправить на fopen в будущем
+ */
 U32 cmd_read() {
     printf("\n");
-    File* f = fopen(argv[1], FREAD);
+    /*File* f = fopen(argv[1], FREAD);
     if(!f) {
         printf("%[12Can't open [%s]%[15",argv[1]);
         return;
@@ -104,7 +107,13 @@ U32 cmd_read() {
         buffer[f->bytes] = '\0';
         printf("%s",buffer);
     }
-    fclose(f);
+    fclose(f);*/
+
+    uint8* temp_buffer = malloc(4096);
+    sys_read(argv[1], 4096, temp_buffer);
+
+    printf("%s", temp_buffer);
+    free(temp_buffer);
 }
 
 U32 cmd_check() {
@@ -116,8 +125,11 @@ U32 cmd_check() {
     }
 }
 
+/**
+ *  FIX: Исправить на fopen в будущем
+ */
 U32 cmd_write() {
-    int size = 0;
+    /*int size = 0;
     File* f = fopen(argv[1], FWRITE);
     if(!f) {
         printf("%[12Can't write [%s]%[15",argv[1]);
@@ -129,7 +141,8 @@ U32 cmd_write() {
         //sys_write(f->name, argv[2], s);
         fwrite(f, s, argv[2]);
     }
-    fclose(f);
+    fclose(f);*/
+    sys_write(argv[1], argv[2], strlen(argv[2]));
 }
 
 U32 cmd_delete() {
@@ -256,7 +269,7 @@ void execute() {
 
     if(!is_found) {
         U32 err = sys_run(argv[0]);
-        if(!err) {
+        if(err) {
             printf("\n%[12Atom: Unknown command%[15");
         }
     }
@@ -306,16 +319,32 @@ void shell_main() {
     }
 }
 
+/**
+ *  FIX: Исправить на fopen в будущем
+ */
 void main() {
     command_buffer = malloc(COMMAND_BUFFER_SIZE);
+
+    uint8* user_cfg = malloc(512);
+
+    sys_read("/home/user.cfg", 512, user_cfg);
     
-    /*File* fUser = fopen("user.cfg", FREAD);
+    /*File* fUser = fopen("/home/user.cfg", FREAD);
     if(!fUser) {
         printf("Error\n");
     }
+
+    printf("AAA%s", fUser->name);
+    
+    while (1)
+    {
+        /* code 
+    }
+    
+
     U8* user_cfg = malloc(fUser->bytes);
-    fread(fUser, fUser->bytes, user_cfg);
-    fclose(fUser);
+    //fread(fUser, fUser->bytes, user_cfg);
+    /*fclose(fUser);*/
 
     U32 i = 0;
     U32 j = 0;
@@ -329,7 +358,7 @@ void main() {
             j++;
             i++;
         }
-    }*/
+    }
 
     shell_main();
 }

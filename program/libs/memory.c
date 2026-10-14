@@ -39,7 +39,7 @@ void memcpy(void *__restrict__ from,void *__restrict__ in, unsigned int size) {
 unsigned char* malloc(unsigned int size) {
     asm volatile(
         "movl $4, %%eax\n"
-        "movl $6, %%ebx\n"
+        "movl $1, %%ebx\n"
         "movl %0, %%ecx\n"
         "int $0x80"
         :
@@ -62,7 +62,7 @@ unsigned char* malloc(unsigned int size) {
 unsigned char free(unsigned char *__restrict__ data) {
     asm volatile(
         "movl $4, %%eax\n"
-        "movl $7, %%ebx\n"
+        "movl $2, %%ebx\n"
         "movl %0, %%ecx\n"
         "int $0x80"
         :

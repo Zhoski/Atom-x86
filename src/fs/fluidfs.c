@@ -279,7 +279,7 @@ u32 fluidfs_fread(u8* file, u8* dest, u32 n) {
     }
 
     if(g_node.size < n) {
-        return OUT_OF_FILE_BOUNDS;
+        n = g_node.size;
     }
 
     u8* temp_buffer = malloc(super_block->block_size);

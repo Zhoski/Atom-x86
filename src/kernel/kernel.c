@@ -102,8 +102,8 @@ void kmain() {
 
     //video->kprintf("Before: %d\n", fs->check("/boot/stage2.bin"));
 
-    fs->delete("/boot/stage2.bin");
-    fs->delete("/system/kernel.bin");
+    //fs->delete("/boot/stage2.bin");
+    //fs->delete("/system/kernel.bin");
 
     //video->kprintf("After: %d\n", fs->check("/boot/stage2.bin"));
 
@@ -114,7 +114,7 @@ void kmain() {
 
     fs->update("/system/kernel/test.txt", "mopsik spic", 12);*/
 
-    //fs->open("/home/init.bin");
+    fs->open("/home/init.bin");
 
 	for(;;) {
         halt();
