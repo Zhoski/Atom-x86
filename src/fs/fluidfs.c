@@ -55,8 +55,6 @@ void free_block(u32 block) {
     u32 byte = bit / 8;
     u32 bit_in_byte = bit % 8;
     block_bitmap[byte] &= ~(1 << bit_in_byte);
-
-    //video->kprintf("Block released: %d\n", block);
 }
 
 void raw_filename_to_std_format(u8* raw_name) {
@@ -269,8 +267,6 @@ u32 fluidfs_fopen(u8* file) {
         offset += super_block->sec_p_block * 512;
     }
 
-    video->kprintf("test: %x\n", *(u8*)0x300000);
-
     program_execute(entry, stack);
 }
 
@@ -347,7 +343,6 @@ u32 fluidfs_fwrite(u8* file, u8* src, u32 n) {
         if(!g_cur_node->p_block[k]) {
             g_cur_node->p_block[k] = get_block();
             if(!g_cur_node->p_block[k]) {
-                video->kprintf("Disk overflow\n");
                 return DISK_OWERFLOW;
             }
         }
@@ -463,8 +458,6 @@ u32 fluidfs_cnode(u8* node, u8 flag) {
 
     memcpy(root_node, cur_node_dir, 128);
 
-    video->kprintf("cur dir: %s\n", cur_node_dir->name);
-
     for(u32 k = 0; k < slash_count - 1; k++) {
         dir_found = 0;
         for(u32 i = 0; i < 16; i++) {
@@ -510,9 +503,6 @@ u32 fluidfs_cnode(u8* node, u8 flag) {
             return FILE_NOT_FOUND;
         }
     }
-
-    video->kprintf("cur node: %s\n", cur_node_dir->name);
-    video->kprintf("cur node block: %d\n", cur_node_dir->p_block[0]);
 
     for(u32 i = 0; i < 16; i++) {
         packet0.lba_start = cur_node_dir->p_block[i] * super_block->sec_p_block;

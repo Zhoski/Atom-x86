@@ -273,26 +273,21 @@ void vga_640_480_kprintf(const u8 *format, ...) {
             u32 n = va_arg(args, u32);
             u32 i = 0;
 
-            i8 buffer[10] = {0};
+            u8 buffer[10] = {0};
 
             do {
+                u8* chars = "0123456789ABCDEF";
                 u32 hex = n % 16;
-                if (hex > 9) {
-                    hex += 55;
-                }
-                else {
-                    hex += '0';
-                }
-                buffer[i++] = hex;
+                buffer[i++] = chars[hex];
                 n /= 16;
             } while (n > 0);
 
-            //buffer[i] = '\0';
+            buffer[i] = '\0';
 
             u32 start = 0;
             u32 end = i - 1;
             while (start < end) {
-                i8 temp = buffer[start];
+                u8 temp = buffer[start];
                 buffer[start] = buffer[end];
                 buffer[end] = temp;
                 start++;
@@ -300,6 +295,7 @@ void vga_640_480_kprintf(const u8 *format, ...) {
             }
             
             vga_640_480_draw_string(buffer);
+            break;
         }
         case 's':
             u8 *s = va_arg(args, u8*);

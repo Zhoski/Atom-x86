@@ -14,6 +14,7 @@ void main() {
 
     /*unsigned int status = sys_run("/system/setup.bin");
     printf("%d", status);*/
+    sys_run("/home/shell.bin");
 
     for(;;) {
         asm("hlt");

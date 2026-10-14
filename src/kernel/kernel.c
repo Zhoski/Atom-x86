@@ -87,7 +87,7 @@ void kmain() {
 
     u16* magic = (u16*)&disk_info[510];
 
-    video->kprintf("Result: %d\nMagic: %d\n", packet.result, *magic);
+    video->kprintf("Result: %d\nMagic: %x\n", packet.result, *magic);
 
     /*fs->update("/system/kernel.bin", "test", 4);
 
@@ -107,12 +107,14 @@ void kmain() {
 
     //video->kprintf("After: %d\n", fs->check("/boot/stage2.bin"));
 
-    video->kprintf("result: %d\n",fs->create("/system/kernel", 0xFF));
+    /*video->kprintf("result: %d\n",fs->create("/system/kernel", 0xFF));
     video->kprintf("result: %d\n",fs->create("/system/kernel/test.txt", 0));
     video->kprintf("result: %d\n",fs->create("/system/kernel/mops", 0xFF));
     video->kprintf("result: %d\n",fs->create("/test", 0xFF));
 
-    fs->update("/system/kernel/test.txt", "mopsik spic", 12);
+    fs->update("/system/kernel/test.txt", "mopsik spic", 12);*/
+
+    //fs->open("/home/init.bin");
 
 	for(;;) {
         halt();

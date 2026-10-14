@@ -309,7 +309,7 @@ void shell_main() {
 void main() {
     command_buffer = malloc(COMMAND_BUFFER_SIZE);
     
-    File* fUser = fopen("user.cfg", FREAD);
+    /*File* fUser = fopen("user.cfg", FREAD);
     if(!fUser) {
         printf("Error\n");
     }
@@ -329,7 +329,7 @@ void main() {
             j++;
             i++;
         }
-    }
+    }*/
 
     shell_main();
 }
