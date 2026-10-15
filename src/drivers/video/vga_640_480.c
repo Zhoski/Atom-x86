@@ -120,16 +120,9 @@ void vga_640_480_putpixel(u32 x, u32 y, u8 color) {
  *  Прокручивает экран вниз на один символ
  */
 void vga_640_480_scroll() {
-    u32 offset = 80;
-    u32 new_offset = 0;
+    service.memory->memcpy((VGA_640_480_MEMORY + 80 * 16), (VGA_640_480_MEMORY), 80 * 480);
 
-    for(u32 i = 0; i < 480;i++) {
-        service.memory->memcpy((VGA_640_480_MEMORY + offset), (VGA_640_480_MEMORY + new_offset), 80);
-        offset += 80;
-        new_offset += 80;
-    }
-
-    service.memory->memset((VGA_640_480_MEMORY + offset), terminal_bg_vbe, 80);
+    //service.memory->memset((VGA_640_480_MEMORY + 80), terminal_bg_vbe, 80);
 }
 
 /**
@@ -140,9 +133,7 @@ void vga_640_480_draw_char(u8 c) {
         screen_x_off = 0;
         screen_y_off += 16;
         if(screen_y_off == 464) {
-            for(u32 i = 0;i < 16;i++) {
-                vga_640_480_scroll();
-            }
+            vga_640_480_scroll();
             screen_y_off -= 16;
         }
         return;

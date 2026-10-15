@@ -85,7 +85,7 @@ U32 cmd_clear() {
  *  FIX: Исправить на fopen в будущем
  */
 U32 cmd_read() {
-    printf("\n");
+    putchar('\n');
     /*File* f = fopen(argv[1], FREAD);
     if(!f) {
         printf("%[12Can't open [%s]%[15",argv[1]);
@@ -103,18 +103,22 @@ U32 cmd_read() {
 
     uint8* temp_buffer = malloc(4096);
     memset(temp_buffer, 0, 4096);
-    sys_read(argv[1], 4096, temp_buffer);
+    U32 read_status = sys_read(argv[1], 4096, temp_buffer);
 
-    printf("%s", temp_buffer);
+    if(read_status) {
+        printf("%s", temp_buffer);
+    }else {
+        printf("[ %[12FAIL%[07 ] File %s not found", argv[1]);
+    }
     free(temp_buffer);
 }
 
 U32 cmd_check() {
-    int ret = sys_check(argv[1]);
-    if(!ret) {
-        printf("\n%[12%s not found%[07", argv[1]);
+    putchar('\n');
+    if(!sys_check(argv[1])) {
+        printf("File %s not found", argv[1]);
     }else {
-        printf("\n%[10%s found%[07", argv[1]);
+        printf("File %s found", argv[1]);
     }
 }
 
@@ -122,6 +126,7 @@ U32 cmd_check() {
  *  FIX: Исправить на fopen в будущем
  */
 U32 cmd_write() {
+    putchar('\n');
     /*int size = 0;
     File* f = fopen(argv[1], FWRITE);
     if(!f) {
@@ -135,21 +140,30 @@ U32 cmd_write() {
         fwrite(f, s, argv[2]);
     }
     fclose(f);*/
-    sys_write(argv[1], argv[2], strlen(argv[2]));
+    if(sys_write(argv[1], argv[2], strlen(argv[2])) == 0x01) {
+        printf("[  %[10OK%[07  ] File %s overwrite", argv[1]);
+    }else {
+        printf("[ %[12FAIL%[07 ] File %s not found", argv[1]);
+    }
 }
 
 U32 cmd_delete() {
+    putchar('\n');
     int ret = sys_delete(argv[1]);
     if(!ret) {
-        printf("\n%[12%s not found%[07", argv[1]);
+        printf("[ %[12FAIL%[07 ] File %s not found", argv[1]);
     }else {
-        printf("\n%[10%s succes deleted%[07", argv[1]);
+        printf("[  %[10OK%[07  ] File %s succes deleted", argv[1]);
     }
 }
 
 U32 cmd_create() {
-    sys_create(argv[1], 512);
-    printf("\n%[10%s succes created%[07", argv[1]);
+    putchar('\n');
+    if(sys_create(argv[1], 512)) {
+        printf("[  %[10OK%[07  ] File %s succes created", argv[1]);
+    } else {
+        printf("\n[ %[12FAIL%[07 ] File %s create error", argv[1]);
+    }
 }
 
 U32 cmd_dir() {

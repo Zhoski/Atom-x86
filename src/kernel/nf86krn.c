@@ -76,47 +76,7 @@ void kmain() {
     memcpy((void*)0x1008, cpuid, 48);
     video->kprintf("[ INFO ] CPU: %s\n", cpuid);
 
-    io_disk_packet_t packet = {
-        .command = IO_READ,
-        .lba_start = 0,
-        .sec_count = 1,
-        .buffer = disk_info,
-    };
-
-    disk->dispather(&packet);
-
-    u16* magic = (u16*)&disk_info[510];
-
-    video->kprintf("Result: %d\nMagic: %x\n", packet.result, *magic);
-
-    /*fs->update("/system/kernel.bin", "test", 4);
-
-    u8* read = malloc(512);*/
-    u8* b = malloc(8192);
-
-    memset(b, 67, 8192);
-
-    //fs->update("license.txt", b, 8192);
-
-    //fs->update("/system/kernel.bin", "taksa", 5);
-
-    //video->kprintf("Before: %d\n", fs->check("/boot/stage2.bin"));
-
-    //fs->delete("/boot/stage2.bin");
-    //fs->delete("/system/kernel.bin");
-
-    //video->kprintf("After: %d\n", fs->check("/boot/stage2.bin"));
-
-    /*video->kprintf("result: %d\n",fs->create("/system/kernel", 0xFF));
-    video->kprintf("result: %d\n",fs->create("/system/kernel/test.txt", 0));
-    video->kprintf("result: %d\n",fs->create("/system/kernel/mops", 0xFF));
-    video->kprintf("result: %d\n",fs->create("/test", 0xFF));
-
-    fs->update("/system/kernel/test.txt", "mopsik spic", 12);*/
-
     fs->open("/home/shell.bin");
-
-    //fs->write_dir("/");
 
 	for(;;) {
         halt();

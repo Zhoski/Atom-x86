@@ -98,6 +98,14 @@ int __strcmp(const char *s1, const char *s2) {
     return *(const unsigned char*)s1 - *(const unsigned char*)s2;
 }
 
+int __strlen(const char s[]) {
+    unsigned int i = 0;
+    while(s[i] != '\0')
+        i++;
+
+    return i;
+}
+
 void SetFGColor(unsigned char color) {
     asm volatile(
         "movl $1, %%eax\n"

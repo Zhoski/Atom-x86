@@ -9,6 +9,8 @@
 #define FILE_FOUND              0x01
 #define NODE_CREATED            0x02
 
+#define FILE_OVERWRITE          0x01
+
 #define OUT_OF_FILE_BOUNDS      0x02
 #define DISK_OWERFLOW           0x03
 
@@ -389,6 +391,8 @@ u32 fluidfs_fwrite(u8* file, u8* src, u32 n) {
     disk->dispather(&packet0);
 
     free(temp_buffer);
+
+    return FILE_OVERWRITE;
 }
 
 /**
@@ -641,6 +645,7 @@ u32 fluidfs_write_dir(u8* dir) {
 
             if(cur_node->name[0] == 0) {
                 free(cur_node_dir);
+
                 return 0;
             }
         }
